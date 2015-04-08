@@ -1,0 +1,63 @@
+# Other fields include: skip_lines, skip_startswith
+Database:
+    pyclass: TextFilesDatabase
+    missing_values: ["-9", "-99", "-88", "-77"]
+    db_filename: "sgol1.db"
+
+    files:
+        - filename: /Users/legaultmarc/projects/StatGen/sgol1/cohort/pheno/COHORTE.txt
+          separator: ";"
+          sample_col: "ProjectId"
+          key: 2
+
+        - filename: /Users/legaultmarc/projects/StatGen/sgol1/cohort/pheno/CVHx.txt
+          separator: ";"
+          sample_col: "ProjectId"
+          key: 2
+
+        - filename: /Users/legaultmarc/projects/StatGen/sgol1/data/pheno/C1-C10.txt
+          separator: "\t"
+          sample_col: "IID"
+          key: 1
+
+    key:
+        filename: /Users/legaultmarc/projects/StatGen/sgol1/cohort/key.csv
+        separator: ","
+
+Variables:
+    - name: Infarctus
+      icd10: I21
+      type: discrete
+
+    - name: Valve
+      type: discrete
+
+    - name: BMI
+      type: continuous
+      normality_check: Yes
+
+    - name: PC1
+      type: continuous
+      covariate: Yes
+
+    - name: PC2
+      type: continuous
+      covariate: Yes
+
+    - name: PC3
+      type: continuous
+      covariate: Yes
+
+# Other fields include: variant_list
+Genotypes:
+    file:
+        pyclass: Impute2File
+        filename: /Users/legaultmarc/projects/StatGen/sgol1/data/filtered_imputed_sgol1.impute2
+
+    samples: /Users/legaultmarc/projects/StatGen/sgol1/samples.txt
+    use_key: 1
+
+Experiments:
+    - pyclass: GLM
+      outcomes: all
+      covariates: [PC1, PC2, PC3]
