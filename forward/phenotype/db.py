@@ -63,7 +63,7 @@ class Database(object):
 
     def create_sample_table(self):
         """Create the table containing all the sample information."""
-        self.cur.execute(
+        self._query(
             "CREATE TABLE Sample ("
             "   sample TEXT PRIMARY KEY,"
             "   order_key INTEGER"
@@ -77,7 +77,7 @@ class Database(object):
         identifiers.
 
         """
-        self.cur.execute(
+        self._query(
             "CREATE TABLE Key ("
             "   key1 TEXT,"
             "   key2 TEXT,"
@@ -85,11 +85,14 @@ class Database(object):
             ");"
         )
 
-    def _query(self, query):
+    def _query(self, query, tu=None):
         """Execute an arbitrary SQL query on the database."""
-        self.cur.execute(query)
+        if tu:
+            self.cur.execute(query, tu)
+        else:
+            self.cur.execute(query)
 
-    def get_variable(self):
+    def get_variable(self, phenotype):
         """Get an array of phenotypes for all the samples in database."""
         raise NotImplementedError()
 
@@ -111,6 +114,15 @@ class Database(object):
                     "WHERE order_key IS NOT NULL "
                     "ORDER BY order_key ASC")
         return self.cur.fetchall()
+
+    def add_sample(self, sample):
+        # Check if sample already exists.
+        self._query("SELECT * from Sample WHERE sample=?", (sample, ))
+        if self.cur.fetchone():
+            return
+
+        # Add the sample
+        self._query("INSERT INTO Sample (sample) VALUES (?)", (sample, ))
 
     @property
     def order_is_set(self):
@@ -159,4 +171,129 @@ class TextFilesDatabase(Database):
 
                 columns.update(obj.header)
 
-                self.create_phenotype_table(columns)
+            self.fill_sample_table(file_objects)
+            self.create_phenotype_table(columns, file_objects)
+            self.fill_phenotype_table(file_objects)
+
+            self.commit()
+
+    def fill_sample_table(self, file_objects):
+        for file_object in file_objects:
+            for line in file_object:
+                header_key = file_object.header[file_object.sample_col]
+                sample = line[header_key]
+                self.add_sample(sample)
+            file_object.reset()
+
+    def create_phenotype_table(self, columns, file_objects):
+        dtype_map = {
+            int: "INTEGER",
+            float: "REAL",
+            str: "TEXT",
+            unicode: "TEXT"
+        }
+
+        sql = ("CREATE TABLE Phenotype (\n"
+               "    sample TEXT PRIMARY KEY,\n")
+
+        for file_object in file_objects:
+            # Get the dtypes.
+            dtypes = file_object.infer_dtypes()
+
+            # Get the columns that are in this file.
+            fields = columns & set(file_object.header)
+            for field in fields:
+                # Skip the sample column.
+                if field == file_object.header[file_object.sample_col]:
+                    continue
+
+                sql += "    `{}` {},\n".format(
+                    field, dtype_map[dtypes[field]] 
+                )
+
+        sql = sql.rstrip(",\n")
+        sql += "\n)"
+
+        self._query(sql)
+
+    def fill_phenotype_table(self, file_objects):
+        for file_object in file_objects:
+            # Get the dtypes
+            dtypes = file_object.infer_dtypes()
+
+            file_object.reset()
+
+            for line in file_object:
+                sample_col = file_object.header[file_object.sample_col]
+                sample = line[sample_col]
+
+                # Check if phenotypes for this sample are already in db.
+                # If it is, we update information instead of creating a new
+                # row.
+                self._query(
+                    "SELECT * FROM Phenotype WHERE sample=?",
+                    (sample, )
+                )
+                if self.cur.fetchone():
+                    set_stmt = ""
+                    for field, value in line.items():
+                        if field != sample_col and value is not None:
+                            set_stmt += "`{}`=".format(field)
+                            if dtypes[field] in (int, float):
+                                try:
+                                    dtypes[field](value)
+                                    set_stmt += str(value)
+                                except ValueError:
+                                    dtypes[field] = str
+                                    set_stmt += "\"{}\"".format(value)
+                            else:
+                                set_stmt += "\"{}\"".format(value)
+                            set_stmt += ","
+
+                    set_stmt = set_stmt.rstrip(",")
+
+                    sql = ("UPDATE Phenotype \n"
+                           "    SET {}\n"
+                           "    WHERE sample=?".format(set_stmt))
+
+                    try:
+                        self._query(sql, (sample, ))
+                    except Exception as e:
+                        logger.critical("Failed SQL command: " + sql)
+                        raise e
+
+                # Add this sample to the db.
+                else:
+                    sql = "INSERT INTO Phenotype (`sample`,"
+
+                    for field in line.keys():
+                        value = line[field]
+                        if field != sample_col and value is not None:
+                            sql += "`{}`,".format(field)
+                    sql = sql.rstrip(",") + ") VALUES ("
+
+                    sql += "\"{}\",".format(line[sample_col])
+
+                    for field in line.keys():
+                        value = line[field]
+                        if field != sample_col and value is not None:
+                            if dtypes[field] in (int, float):
+                                try:
+                                    dtypes[field](value)
+                                    sql += str(value)
+                                except ValueError:
+                                    dtypes[field] = str
+                                    sql += "\"{}\"".format(line[field])
+                            else:
+                                sql += "\"{}\"".format(line[field])
+                            sql += ","
+
+                    sql = sql.rstrip(",") + ")"
+
+                    try:
+                        self._query(sql)
+                    except Exception:
+                        logger.critical("Failed SQL command: " + sql)
+                        raise e
+
+# import forward.configuration; forward.configuration.parse_configuration("sample_experiment/experiment.yaml")

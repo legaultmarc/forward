@@ -38,8 +38,11 @@ class DelimitedFile(object):
         else:
             self.header = None
 
-    def __next__(self):
-        line = next(self._f).rstrip().split(self.separator)
+    def __next__(self, sql_safe=True):
+        line = next(self._f).rstrip()
+        if sql_safe:
+            line = line.replace("\"", "")
+        line = line.split(self.separator)
         line = [i if i != "" else None for i in line]  # Replace missings.
 
         if not self.header:
@@ -49,9 +52,9 @@ class DelimitedFile(object):
 
     next = __next__
 
-    def readline(self):
+    def readline(self, sql_safe=True):
         try:
-            line = self.__next__()
+            line = self.__next__(sql_safe)
             return line
         except StopIteration:
             return ""
@@ -68,11 +71,19 @@ class DelimitedFile(object):
         except Exception:
             pass
 
+    def reset(self):
+        self._f.seek(0)
+        if self.header:
+            self._f.readline()  # Skip the header
+
     def close(self):
         return self._f.close()
 
     def infer_dtypes(self):
         """Infer the dtype for every column and return a list."""
+        if hasattr(self, "dtypes"):
+            return self.dtypes
+
         inital_position = self._f.tell()
 
         dtypes = (int, float, str, unicode)
@@ -87,8 +98,15 @@ class DelimitedFile(object):
         while None in inferred_dtypes.values() and line:
             for field in header:
                 col = line[field]
-                if col is None or inferred_dtypes[field] is not None:
+                if col is None:
                     continue
+
+                if inferred_dtypes[field] is not None:
+                    # Make sure the inferred type is valid.
+                    try:
+                        inferred_dtypes[field](col)
+                    except Exception:
+                        inferred_dtypes[field] = None
 
                 for dtype in dtypes:
                     try:
@@ -104,5 +122,8 @@ class DelimitedFile(object):
         for col in inferred_dtypes:
             if inferred_dtypes[col] is None:
                 inferred_dtypes[col] = str
+
+        self._f.seek(inital_position)
+        self.dtypes = inferred_dtypes
 
         return inferred_dtypes

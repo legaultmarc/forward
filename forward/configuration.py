@@ -7,7 +7,7 @@
 
 """
 This module provides utilities to parse the yaml configuration file into
-`foward` objects.
+`forward` objects.
 """
 
 import logging
