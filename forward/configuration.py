@@ -42,16 +42,26 @@ def parse_configuration(filename):
     if genotypes:
         genotypes = _parse_genotypes(genotypes)
 
+    return (database, variables, genotypes)
+
 def _parse_database(database):
     class_name = database.pop("pyclass", None)
-    if not class_name:
-        raise AttributeError("You need to provide a 'pyclass' field for the "
-                             "'Database' configuration.")
-    if class_name in globals():
-        globals()[class_name](**database)
+    return get_class(class_name, "database")(**database)
 
 def _parse_variables(variables):
     pass
 
 def _parse_genotypes(genotypes):
-    pass
+    class_name = genotypes.pop("pyclass", None)
+    return get_class(class_name, "genotypes")(**genotypes)
+
+def get_class(name, class_type=None):
+    if not class_name:
+        raise AttributeError("You need to provide a 'pyclass' field for the "
+                             "'Database' configuration.")
+    if class_name in globals():
+        # TODO We will certainly use some kind of dynamic imports so that the
+        # use can easily add classes.
+        return globals()[class_name]
+    else:
+        raise AttributeError("Could not find class '{}'.".format(class_name))
