@@ -1,28 +1,9 @@
 # Other fields include: skip_lines, skip_startswith
 Database:
-    pyclass: TextFilesDatabase
+    pyclass: ExcelPhenotypeDatabase
     missing_values: ["-9", "-99", "-88", "-77"]
-    db_filename: "sgol1.db"
-
-    files:
-        - filename: /Users/legaultmarc/projects/StatGen/sgol1/cohort/pheno/COHORTE.txt
-          separator: ";"
-          sample_col: "ProjectId"
-          key: 2
-
-        - filename: /Users/legaultmarc/projects/StatGen/sgol1/cohort/pheno/CVHx.txt
-          separator: ";"
-          sample_col: "ProjectId"
-          key: 2
-
-        - filename: /Users/legaultmarc/projects/StatGen/sgol1/data/pheno/C1-C10.txt
-          separator: "\t"
-          sample_col: "IID"
-          key: 1
-
-    key:
-        filename: /Users/legaultmarc/projects/StatGen/sgol1/cohort/key.csv
-        separator: ","
+    sample_column: "Sample"
+    filename: /Users/legaultmarc/projects/StatGen/adcy9/data/phenotypes/cohort_phenotypes.xlsx
 
 Variables:
     - name: Infarctus
