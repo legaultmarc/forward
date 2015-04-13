@@ -29,8 +29,6 @@ The important concept and modules are as follows:
              of interest and their data type (discrete vs. continuous).
 
 - tasks: Tasks implement the actual statistical testing or genetic analysis.
-         They should make the bridge between phenotype and genotype
-         information.
 
 - experiment: An experiment wraps all the different components of forward. It
               is used to make sure that everything is clean and will be
