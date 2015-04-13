@@ -29,16 +29,17 @@ Variables:
       type: continuous
       covariate: Yes
 
-# Other fields include: variant_list
 Genotypes:
-    file:
-        pyclass: Impute2File
-        filename: /Users/legaultmarc/projects/StatGen/sgol1/data/filtered_imputed_sgol1.impute2
-
+    pyclass: Impute2Genotypes
+    filename: /Users/legaultmarc/projects/StatGen/sgol1/data/filtered_imputed_sgol1.impute2
     samples: /Users/legaultmarc/projects/StatGen/sgol1/samples.txt
-    use_key: 1
 
 Experiments:
-    - pyclass: GLM
-      outcomes: all
-      covariates: [PC1, PC2, PC3]
+    name: "ADCY9_forward"
+    correction: gao
+
+    tasks:
+        - pyclass: GLMTest
+          outcomes: all
+          covariates: [PC1, PC2, PC3]
+

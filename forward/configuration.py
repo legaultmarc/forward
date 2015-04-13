@@ -13,7 +13,12 @@ This module provides utilities to parse the yaml configuration file into
 import logging
 logging.basicConfig()
 
+from .phenotype.variables import DiscreteVariable, ContinuousVariable
+from .experiment import Experiment
+
 from .phenotype.db import *
+from .genotype import *
+from .tasks import *
 
 try:
     import yaml
@@ -35,33 +40,67 @@ def parse_configuration(filename):
     # Parse the Variables section:
     variables = config.pop("Variables", None)
     if variables:
-        variables = _parse_variables(variables)
+        variables = _parse_variables(variables, database)
 
     # Parse the Genotypes section:
     genotypes = config.pop("Genotypes", None)
     if genotypes:
         genotypes = _parse_genotypes(genotypes)
 
-    return (database, variables, genotypes)
+    # Parse the "Experiments" section which is actually a list of analysis
+    # to do.
+    tasks = config.pop("Experiments", None)
+    if tasks:
+        tasks = _parse_tasks(tasks.pop("tasks"))
+
+    # Create the experiment object
+    return Experiment(database, genotypes, variables, tasks)
+
 
 def _parse_database(database):
     class_name = database.pop("pyclass", None)
     return get_class(class_name, "database")(**database)
 
-def _parse_variables(variables):
-    pass
+
+def _parse_variables(variables, database):
+    variable_objects = []
+    for variable in variables:
+        var_type = variable.pop("type", None)
+        name = variable.pop("name", None)
+        is_covar = variable.pop("covariate", False)
+
+        if var_type == "discrete":
+            variable_objects.append(DiscreteVariable(name, database, is_covar))
+
+        elif var_type == "continuous":
+            variable_objects.append(ContinuousVariable(name, database,
+                                                       is_covar))
+
+        else:
+            raise Exception("Unknown variable type '{}'.".format(var_type))
+
+    return variable_objects
+
 
 def _parse_genotypes(genotypes):
     class_name = genotypes.pop("pyclass", None)
     return get_class(class_name, "genotypes")(**genotypes)
 
+
+def _parse_tasks(tasks):
+    task_objects = []
+    for task in tasks:
+        class_name = task.pop("pyclass", None)
+        task_objects.append(get_class(class_name, "tasks")(**task))
+    return task_objects
+
+
 def get_class(name, class_type=None):
-    if not class_name:
-        raise AttributeError("You need to provide a 'pyclass' field for the "
-                             "'Database' configuration.")
-    if class_name in globals():
+    if not name:
+        raise AttributeError("You need to provide a 'pyclass' field.")
+    if name in globals():
         # TODO We will certainly use some kind of dynamic imports so that the
         # use can easily add classes.
-        return globals()[class_name]
+        return globals()[name]
     else:
-        raise AttributeError("Could not find class '{}'.".format(class_name))
+        raise AttributeError("Could not find class '{}'.".format(name))
