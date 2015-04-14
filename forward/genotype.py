@@ -138,3 +138,8 @@ class Impute2Genotypes(GenotypeDatabaseInterface):
         ))
         with open(names_list, "r") as f:
             self.names = set([i.rstrip() for i in f.readlines()])
+
+    def exclude_samples(self, samples_list):
+        # TODO: Adjuste the iterator to not give these samples to the user.
+        # Also make sure to adjust the self.samples attribute.
+        pass

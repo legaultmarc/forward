@@ -38,7 +38,7 @@ Genotypes:
     filter_completion: 0.98
     filter_maf: 0.05
     filter_name: /Users/legaultmarc/projects/StatGen/adcy9/data/impute2/chr16.imputed.good_sites
-    exclude_sample: "exm9210"
+    exclude_samples: ["exm9210", ]
 
 Experiments:
     name: "ADCY9_forward"
