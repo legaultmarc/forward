@@ -29,10 +29,16 @@ Variables:
       type: continuous
       covariate: Yes
 
+# Variants can be filtered in the genotype db or on a task specific basis.
 Genotypes:
     pyclass: Impute2Genotypes
-    filename: /Users/legaultmarc/projects/StatGen/sgol1/data/filtered_imputed_sgol1.impute2
-    samples: /Users/legaultmarc/projects/StatGen/sgol1/samples.txt
+    filename: /Users/legaultmarc/projects/StatGen/adcy9/data/impute2/impute2_extractor.impute2
+    samples: /Users/legaultmarc/projects/StatGen/adcy9/data/impute2/forward_samples.txt
+    filter_probability: 0.90
+    filter_completion: 0.98
+    filter_maf: 0.05
+    filter_name: /Users/legaultmarc/projects/StatGen/adcy9/data/impute2/chr16.imputed.good_sites
+    exclude_sample: "exm9210"
 
 Experiments:
     name: "ADCY9_forward"
@@ -42,4 +48,3 @@ Experiments:
         - pyclass: GLMTest
           outcomes: all
           covariates: [PC1, PC2, PC3]
-

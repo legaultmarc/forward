@@ -26,3 +26,11 @@ class Experiment(object):
         self.genotypes = genotype_container
         self.variables = variables
         self.tasks = tasks
+
+        # Make the genotypes and phenotypes sample order consistent.
+        self.phenotypes.set_order(self.genotypes.get_sample_order(),
+                                  allow_subset=True)
+
+    def run_tasks(self):
+        for task in self.tasks:
+            task.run_task(self)

@@ -20,7 +20,7 @@ class Task(object):
         self.covariates = covariates
         self.variants = variants
 
-    def run_test(self):
+    def run_test(self, experiment):
         raise NotImplementedError()
 
 class GLMTest(Task):
@@ -28,5 +28,5 @@ class GLMTest(Task):
     def __init__(self, outcomes="all", covariates="all", variants="all"):
         super(GLMTest, self).__init__(outcomes, covariates, variants)
 
-    def run_test(self):
+    def run_task(self, experiment):
         print "Running a GLM"
