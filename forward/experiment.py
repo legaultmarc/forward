@@ -28,8 +28,8 @@ class Experiment(object):
         self.tasks = tasks
 
         # Make the genotypes and phenotypes sample order consistent.
-        self.phenotypes.set_order(self.genotypes.get_sample_order(),
-                                  allow_subset=True)
+        self.phenotypes.set_sample_order(self.genotypes.get_sample_order(),
+                                         allow_subset=True)
 
     def run_tasks(self):
         for task in self.tasks:

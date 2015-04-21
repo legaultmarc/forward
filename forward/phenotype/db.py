@@ -30,11 +30,11 @@ class PhenotypeDatabaseInterface(object):
     def get_phenotype_vector(self, name):
         raise NotImplementedError()
 
-    def set_order(self, sequence):
+    def set_sample_order(self, sequence):
         """Set the order of the samples."""
         raise NotImplementedError()
 
-    def get_order(self):
+    def get_sample_order(self):
         """Get the order of the samples."""
         raise NotImplementedError()
 
@@ -56,7 +56,7 @@ class ExcelPhenotypeDatabase(PhenotypeDatabaseInterface):
         # User will be warned if the required sample order was not defined.
         self._order_is_set = False
 
-    def set_order(self, sequence, allow_subset=False):
+    def set_sample_order(self, sequence, allow_subset=False):
         # Make sure that all the elements are in the provided sequence.
         set_phen = set(self.data.index.values)
         set_given = set(sequence)
@@ -85,7 +85,7 @@ class ExcelPhenotypeDatabase(PhenotypeDatabaseInterface):
         self.data = self.data.loc[sequence, :]
         self._order_is_set = True
 
-    def get_order(self):
+    def get_sample_order(self):
         if not self._order_is_set:
             logger.warning("No sample order was given for the phenotype "
                            "database.")

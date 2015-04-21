@@ -52,6 +52,12 @@ class Impute2Genotypes(GenotypeDatabaseInterface):
         self.impute2file = Impute2File(filename, "dosage",
                                        prob_threshold=filter_probability)
 
+        # Filters (init)
+        self.thresh_completion = 0
+        self.thresh_maf = 0
+        self.names = set()
+        self.samples_mask = None
+
         # Extra arguments could be method calls.
         called_methods = []
         for key, value in kwargs.items():
@@ -67,11 +73,6 @@ class Impute2Genotypes(GenotypeDatabaseInterface):
                 kwargs
             )
             raise TypeError(message)
-
-        # Filters
-        self.thresh_completion = 0
-        self.thresh_maf = 0
-        self.names = set()
                 
     # Context manager interface.
     def __enter__(self):
@@ -108,6 +109,10 @@ class Impute2Genotypes(GenotypeDatabaseInterface):
             if completion < self.thresh_completion:
                 return self.__next__()
 
+        # Remove samples if needed.
+        if self.samples_mask is not None:
+            dosage = dosage[self.samples_mask]
+
         # Note that probability is already filtered by gepyto.
 
         return dosage
@@ -120,9 +125,9 @@ class Impute2Genotypes(GenotypeDatabaseInterface):
     def load_samples(self, filename):
         logger.info("Loading samples from {}".format(filename))
         with open(filename, "r") as f:
-            samples = set([i.rstrip() for i in f])
+            samples = [i.rstrip() for i in f]
 
-        return samples
+        return np.array(samples, dtype=str)
 
     def filter_completion(self, rate):
         logger.info("Setting the completion threshold to {}".format(rate))
@@ -140,6 +145,24 @@ class Impute2Genotypes(GenotypeDatabaseInterface):
             self.names = set([i.rstrip() for i in f.readlines()])
 
     def exclude_samples(self, samples_list):
-        # TODO: Adjuste the iterator to not give these samples to the user.
-        # Also make sure to adjust the self.samples attribute.
-        pass
+        # Build a mask.
+        self.samples_mask = np.ones(len(self.samples), dtype=bool)
+
+        # Find the index of the samples to mask.
+        for i in samples_list:
+            try:
+                idx = np.where(self.samples == i)[0]
+            except ValueError as e:
+                logger.critical("Can't remove samples that are not in the "
+                                "genotype database ('{}')".format(i))
+                raise e
+
+            if idx.shape[0] > 1:
+                raise ValueError("Samples are not unique ('{}').".format(i))
+
+            idx = idx[0]
+
+            self.samples_mask[idx] = False
+
+        # Also remove from the list of samples.
+        self.samples = self.samples[self.samples_mask]
