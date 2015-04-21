@@ -35,6 +35,19 @@ class Experiment(object):
         self.phenotypes.set_sample_order(self.genotypes.get_sample_order(),
                                          allow_subset=True)
 
+        # Build variant information database.
+        # Refactor as function.
+        variant_info = []
+        for data in self.genotypes:
+            variant_info.append((data.name, data.chrom, data.pos, data.major,
+                                 data.minor))
+
+        variant_info = pd.DataFrame(variant_info, columns=["name", "chrom",
+                                                           "pos", "major",
+                                                           "minor"])
+
+        print variant_info
+
     def run_tasks(self):
         for task in self.tasks:
             task.run_task(self)

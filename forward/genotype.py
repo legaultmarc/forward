@@ -11,6 +11,7 @@ from __future__ import division
 This module provides utilities to handle genotype data.
 """
 
+import collections
 import logging
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,11 @@ import numpy as np
 
 __all__ = ["Impute2Genotypes"]
 
+
+# We standardize the information returned by genotype databases.
+VariantGenotypes = collections.namedtuple(
+    "VariantGenotype", ["name", "chrom", "pos", "major", "minor", "genotypes"]
+)
 
 class GenotypeDatabaseInterface(object):
     """Abstract class representing the genotypes for the study.
@@ -116,7 +122,8 @@ class Impute2Genotypes(GenotypeDatabaseInterface):
 
         # Note that probability is already filtered by gepyto.
 
-        return dosage
+        return VariantGenotypes(name, info["chrom"], info["pos"],
+                                info["major"], info["minor"], dosage)
 
     next = __next__
 
