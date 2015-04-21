@@ -40,9 +40,10 @@ Genotypes:
     filter_name: /Users/legaultmarc/projects/StatGen/adcy9/data/impute2/chr16.imputed.good_sites
     exclude_samples: ["9210", ]
 
-Experiments:
+Experiment:
     name: "ADCY9_forward"
     correction: gao
+    cpu: 4
 
     tasks:
         - pyclass: GLMTest

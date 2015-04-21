@@ -9,6 +9,10 @@
 This module provides actual implementations of the genetic tests.
 """
 
+import logging
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
 
 __all__ = ["GLMTest", ]
 
@@ -20,7 +24,7 @@ class Task(object):
         self.covariates = covariates
         self.variants = variants
 
-    def run_test(self, experiment):
+    def run_task(self, experiment):
         raise NotImplementedError()
 
 class GLMTest(Task):
@@ -29,4 +33,25 @@ class GLMTest(Task):
         super(GLMTest, self).__init__(outcomes, covariates, variants)
 
     def run_task(self, experiment):
-        print "Running a GLM"
+        """Run the GLM.
+
+        In forward, we will launch 1 variant, all phenotypes in parallel.
+        The opposite approach, 1 phenotype all variants can easily be achieved
+        using existing tools and a bit of bash scripting.
+
+        """
+        logger.info("Running a GLM analysis.")
+        logger.info("Phens: {}".format(self.outcomes))
+        if self.outcomes == "all":
+            self.outcomes = [i for i in experiment.variables
+                             if not i.is_covariate]
+
+        if self.covariates == "all":
+            self.covariates = [i for i in experiment.variables
+                               if i.is_covariate]
+
+        if self.variants != "all":
+            raise NotImplementedError()
+
+        for variant in experiment.genotypes:
+            pass

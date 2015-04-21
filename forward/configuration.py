@@ -49,12 +49,18 @@ def parse_configuration(filename):
 
     # Parse the "Experiments" section which is actually a list of analysis
     # to do.
-    tasks = config.pop("Experiments", None)
+    tasks = config["Experiment"].pop("tasks")
     if tasks:
-        tasks = _parse_tasks(tasks.pop("tasks"))
+        tasks = _parse_tasks(tasks)
 
     # Create the experiment object
-    return Experiment(database, genotypes, variables, tasks)
+    experiment_name = config["Experiment"].pop("name", "forward_experiment")
+    experiment_correction = config["Experiment"].pop("correction",
+                                                     "bonferroni")
+    experiment_cpu = int(config["Experiment"].pop("cpu", 1))
+
+    return Experiment(experiment_name, database, genotypes, variables, tasks,
+                      cpu=experiment_cpu, correction=experiment_correction)
 
 
 def _parse_database(database):

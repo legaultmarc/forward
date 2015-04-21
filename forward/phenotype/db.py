@@ -27,6 +27,9 @@ class PhenotypeDatabaseInterface(object):
     def __init__(self):
         raise NotImplementedError()
 
+    def get_phenotypes(self):
+        raise NotImplementedError()
+
     def get_phenotype_vector(self, name):
         raise NotImplementedError()
 
@@ -55,6 +58,9 @@ class ExcelPhenotypeDatabase(PhenotypeDatabaseInterface):
 
         # User will be warned if the required sample order was not defined.
         self._order_is_set = False
+
+    def get_phenotypes(self):
+        return self.data.columns
 
     def set_sample_order(self, sequence, allow_subset=False):
         # Make sure that all the elements are in the provided sequence.

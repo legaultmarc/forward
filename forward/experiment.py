@@ -20,12 +20,16 @@ Overall goals for this module will be to provide:
 
 class Experiment(object):
     """Class representing an experiment."""
-    def __init__(self, phenotype_container, genotype_container, variables,
-                 tasks):
+    def __init__(self, name, phenotype_container, genotype_container,
+                 variables, tasks, cpu=1, correction="bonferonni"):
+        self.name = name
         self.phenotypes = phenotype_container
         self.genotypes = genotype_container
         self.variables = variables
         self.tasks = tasks
+
+        self.cpu = min(1, cpu)
+        self.correction = correction
 
         # Make the genotypes and phenotypes sample order consistent.
         self.phenotypes.set_sample_order(self.genotypes.get_sample_order(),

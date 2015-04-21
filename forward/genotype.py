@@ -44,6 +44,7 @@ class GenotypeDatabaseInterface(object):
     def get_sample_order(self):
         raise NotImplementedError()
 
+
 class Impute2Genotypes(GenotypeDatabaseInterface):
     def __init__(self, filename, samples, filter_probability=0, **kwargs):
         self.filename = filename
@@ -73,7 +74,7 @@ class Impute2Genotypes(GenotypeDatabaseInterface):
                 kwargs
             )
             raise TypeError(message)
-                
+
     # Context manager interface.
     def __enter__(self):
         return self
@@ -138,6 +139,9 @@ class Impute2Genotypes(GenotypeDatabaseInterface):
         self.thresh_maf = maf
 
     def filter_name(self, names_list):
+        # TODO. By modifying gepyto, we could to better filtering on variant
+        # names. We would simply not compute the dosage vector for variants
+        # we want to ignore.
         logger.info("Keeping only variants with IDs in file: '{}'".format(
             names_list
         ))
