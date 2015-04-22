@@ -11,6 +11,7 @@ from __future__ import division
 This module provides utilities to handle genotype data.
 """
 
+import sqlite3
 import collections
 import logging
 logger = logging.getLogger(__name__)
@@ -126,6 +127,37 @@ class Impute2Genotypes(GenotypeDatabaseInterface):
                                 info["major"], info["minor"], dosage)
 
     next = __next__
+
+    def build_database(self, db_path):
+        """Add a table containing information on all variants."""
+        con = sqlite3.connect(db_path)
+        cur = con.cursor()
+
+        # CREATE
+        cur.execute("""
+            CREATE TABLE variants (
+                name TEXT PRIMARY KEY,
+                chrom TEXT,
+                pos INTEGER,
+                major TEXT,
+                minor TEXT,
+                tell REAL
+            )
+        """)
+
+        # INSERTS
+        self.impute2file.reset()
+        tell = self.impute2file.tell()
+        for dosage, info in self.impute2file:
+            cur.execute(
+                "INSERT INTO variants VALUES (?, ?, ?, ?, ?, ?)",
+                (info["name"], info["chrom"], info["pos"],
+                 info["major"], info["minor"], tell)
+            )
+            tell = self.impute2file.tell()
+
+        con.commit()
+        con.close()
 
     def get_sample_order(self):
         return self.samples

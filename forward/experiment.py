@@ -18,6 +18,11 @@ Overall goals for this module will be to provide:
 
 """
 
+import os
+import logging
+logger = logging.getLogger()
+
+
 class Experiment(object):
     """Class representing an experiment."""
     def __init__(self, name, phenotype_container, genotype_container,
@@ -31,22 +36,26 @@ class Experiment(object):
         self.cpu = min(1, cpu)
         self.correction = correction
 
+        # Create a directory for the experiment.
+        try:
+            os.makedirs(name)
+        except OSError as e:
+            logger.critical("Please delete the {} directory manually if you "
+                            "want to overwrite it. Alternatively, choose "
+                            "another experiment name.".format(name))
+
+        db_path = os.path.join(name, "forward_database.db")
+
         # Make the genotypes and phenotypes sample order consistent.
         self.phenotypes.set_sample_order(self.genotypes.get_sample_order(),
                                          allow_subset=True)
 
         # Build variant information database.
-        # Refactor as function.
-        variant_info = []
-        for data in self.genotypes:
-            variant_info.append((data.name, data.chrom, data.pos, data.major,
-                                 data.minor))
+        logger.info(
+            "Building variant information database for the experiment."
+        )
+        self.genotypes.build_database(db_path)
 
-        variant_info = pd.DataFrame(variant_info, columns=["name", "chrom",
-                                                           "pos", "major",
-                                                           "minor"])
-
-        print variant_info
 
     def run_tasks(self):
         for task in self.tasks:
