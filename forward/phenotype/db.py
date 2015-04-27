@@ -41,6 +41,7 @@ class PhenotypeDatabaseInterface(object):
         """Get the order of the samples."""
         raise NotImplementedError()
 
+
 class ExcelPhenotypeDatabase(PhenotypeDatabaseInterface):
     """Collection of phenotypes based on an Excel file.
 
@@ -77,9 +78,9 @@ class ExcelPhenotypeDatabase(PhenotypeDatabaseInterface):
 
         elif missing:
             message = ("Some samples were discarded when reordering "
-                       "phenotype information ({} discarded). This could be "
-                       "because not genotype information is available for "
-                       "these samples.")
+                       "phenotype information ({} samples discarded). This "
+                       "could be because not genotype information is "
+                       "available for these samples.")
             message = message.format(len(missing))
             logger.warning(message)
 

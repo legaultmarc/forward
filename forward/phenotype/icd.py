@@ -19,7 +19,3 @@ If they are, they will be matched against the provided IDC database in order
 to automatically generate the annotations.
 
 """
-
-import sqlite3
-from pkg_resources import resource_filename
-

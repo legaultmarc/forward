@@ -12,7 +12,7 @@ Gao, X. (2011), Multiple testing corrections for imputed SNPs. Genet.
 Epidemiol., 34: 154-158. doi: 10.1002/gepi.20563
 
 It uses the number of effective tests to correct for multiple hypothesis
-testing. The threshold becomes alpha / (SNP_eff + Phenotype_eff) where 
+testing. The threshold becomes alpha / (SNP_eff + Phenotype_eff) where
 alpha is a nominal p-value threshold (e.g. 5%), SNP_eff is the effective
 number of variant when taking LD into account and Phenotype_eff is the
 effective number of tested phenotypes when taking correlation into account.
@@ -30,9 +30,10 @@ logger = logging.getLogger(__name__)
 import numpy as np
 import sklearn.decomposition
 
-def effective_number(x, variance_t = 0.995):
+
+def effective_number(x, variance_t=0.995):
     """Given a design matrix, this computes the effective number of variables.
-    
+
     :param x: A genotype matrix with rows representing samples and columns
               representing variables.
     :type x: np.ndarray
@@ -48,7 +49,7 @@ def effective_number(x, variance_t = 0.995):
     """
 
     logger.info("Design matrix has {} variables for {} samples.".format(
-        x.shape[1], x.shape[0], 
+        x.shape[1], x.shape[0],
     ))
 
     # Compute the correlation.

@@ -14,6 +14,7 @@ experiment.
 
 import numpy as np
 
+
 class Variable(object):
     def __init__(self, name, phenotypes_db, covariate=False):
         self.is_covariate = covariate

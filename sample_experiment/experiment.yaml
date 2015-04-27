@@ -31,12 +31,12 @@ Variables:
 
 # Variants can be filtered in the genotype db or on a task specific basis.
 Genotypes:
-    pyclass: Impute2Genotypes
+    pyclass: MemoryImpute2Geno
     filename: /Users/legaultmarc/projects/StatGen/adcy9/data/impute2/impute2_extractor.impute2
     samples: /Users/legaultmarc/projects/StatGen/adcy9/data/impute2/forward_samples.txt
     filter_probability: 0.90
-    filter_completion: 0.98
-    filter_maf: 0.05
+    filter_completion: 0.95
+    filter_maf: 0.01
     filter_name: /Users/legaultmarc/projects/StatGen/adcy9/data/impute2/chr16.imputed.good_sites
     exclude_samples: ["9210", ]
 

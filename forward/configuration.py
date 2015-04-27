@@ -28,6 +28,7 @@ except ImportError as e:
                     "https://pypi.python.org/pypi/PyYAML")
     raise e
 
+
 def parse_configuration(filename):
     with open(filename, "r") as f:
         config = yaml.load(f)

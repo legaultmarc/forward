@@ -22,11 +22,33 @@ import os
 import logging
 logger = logging.getLogger()
 
+import sqlalchemy
+
+from . import SQLAlchemySession, SQLAlchemyBase
+
 
 class Experiment(object):
     """Class representing an experiment."""
     def __init__(self, name, phenotype_container, genotype_container,
                  variables, tasks, cpu=1, correction="bonferonni"):
+
+        # Create a directory for the experiment.
+        try:
+            os.makedirs(name)
+        except OSError as e:
+            logger.critical("Please delete the {} directory manually if you "
+                            "want to overwrite it. Alternatively, choose "
+                            "another experiment name.".format(name))
+            raise e
+
+        db_path = os.path.join(name, "forward_database.db")
+
+        # Create a sqlalchemy engine and bind it to the session.
+        self.engine = sqlalchemy.create_engine("sqlite:///{}".format(db_path))
+        SQLAlchemySession.configure(bind=self.engine)
+        self.session = SQLAlchemySession()
+
+        # Bind the different components.
         self.name = name
         self.phenotypes = phenotype_container
         self.genotypes = genotype_container
@@ -36,26 +58,12 @@ class Experiment(object):
         self.cpu = min(1, cpu)
         self.correction = correction
 
-        # Create a directory for the experiment.
-        try:
-            os.makedirs(name)
-        except OSError as e:
-            logger.critical("Please delete the {} directory manually if you "
-                            "want to overwrite it. Alternatively, choose "
-                            "another experiment name.".format(name))
-
-        db_path = os.path.join(name, "forward_database.db")
-
         # Make the genotypes and phenotypes sample order consistent.
         self.phenotypes.set_sample_order(self.genotypes.get_sample_order(),
                                          allow_subset=True)
 
-        # Build variant information database.
-        logger.info(
-            "Building variant information database for the experiment."
-        )
-        self.genotypes.build_database(db_path)
-
+        # Do experiment initialization on the database objects.
+        self.genotypes.experiment_init(self)
 
     def run_tasks(self):
         for task in self.tasks:

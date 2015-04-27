@@ -9,6 +9,7 @@
 This module provides diverse utility classes.
 """
 
+
 class DelimitedFile(object):
     """Representation of a delimited text file.
 

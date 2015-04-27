@@ -25,7 +25,23 @@ class Task(object):
         self.variants = variants
 
     def run_task(self, experiment):
-        raise NotImplementedError()
+        if self.outcomes == "all":
+            self.outcomes = [i for i in experiment.variables
+                             if not i.is_covariate]
+        else:
+            self.outcomes = [i for i in experiment.variables
+                             if i.name in self.outcomes]
+
+        if self.covariates == "all":
+            self.covariates = [i for i in experiment.variables
+                               if i.is_covariate]
+        else:
+            self.covariates = [i for i in experiment.variables
+                               if i.name in self.covariates]
+
+        if self.variants != "all":
+            raise NotImplementedError()
+
 
 class GLMTest(Task):
     """Generalized linear model genetic test."""
@@ -33,25 +49,22 @@ class GLMTest(Task):
         super(GLMTest, self).__init__(outcomes, covariates, variants)
 
     def run_task(self, experiment):
-        """Run the GLM.
+        """Run the GLM."""
+        super(GLMTest, self).run_task(experiment)
 
-        In forward, we will launch 1 variant, all phenotypes in parallel.
-        The opposite approach, 1 phenotype all variants can easily be achieved
-        using existing tools and a bit of bash scripting.
+        # Get a database session from the experiment.
+        session = experiment.session
 
-        """
         logger.info("Running a GLM analysis.")
-        logger.info("Phens: {}".format(self.outcomes))
-        if self.outcomes == "all":
-            self.outcomes = [i for i in experiment.variables
-                             if not i.is_covariate]
 
-        if self.covariates == "all":
-            self.covariates = [i for i in experiment.variables
-                               if i.is_covariate]
+        # Get the list of variants to analyze.
+        # No extra filtering for now (TODO).
+        variants = experiment.genotypes.query_variants(session).all()
 
-        if self.variants != "all":
-            raise NotImplementedError()
+        # if experiment.cpu != 1:
+        #     self.pool = multiprocessing.Pool(experiment.cpu)
+        #     _map = self.pool.map
+        # else:
+        #     _map = map
 
-        for variant in experiment.genotypes:
-            pass
+        # results = map()
