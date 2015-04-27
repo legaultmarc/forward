@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 import pandas as pd
 
+from .variables import Variable
+
 
 __all__ = ["ExcelPhenotypeDatabase"]
 
@@ -103,6 +105,10 @@ class ExcelPhenotypeDatabase(PhenotypeDatabaseInterface):
             logger.warning("The order of samples for the database has not "
                            "been set. Make sure that it is consistent with "
                            "the genetic database (consistent order).")
+
+        # Potentially a Variable object.
+        if hasattr(name, "name"):
+            name = name.name
 
         if name not in self.data.columns:
             raise Exception("'{}' is not in the database.".format(name))

@@ -90,7 +90,26 @@ class GenotypeDatabaseInterface(object):
         self.samples = np.array(samples, dtype=str)
 
     # Interrogate the variant database.
-    def query_variants(self, session):
+    def query_variants(self, session, fields=None):
+        """Return a query object for variants.
+
+        If fields are given, they are queried. Alternatively a query for the
+        Variant objects is returned.
+
+        """
+        if fields:
+            args = []
+            if not hasattr(fields, "__iter__"):
+                fields = [fields]
+
+            for field in fields:
+                if hasattr(Variant, field):
+                    args.append(getattr(Variant, field))
+                else:
+                    raise TypeError("No column {} for Variants.".format(field))
+
+            return session.query(*args)
+
         return session.query(Variant)
 
     # Get a numpy vector of variants.
@@ -117,7 +136,7 @@ class GenotypeDatabaseInterface(object):
 
         """
         # Create the tables corresponding to the SQLAlchemyBase subclasses.
-        SQLAlchemyBase.metadata.create_all(experiment.engine)
+        Variant.__table__.create(experiment.engine)
 
     # Filtering methods.
     def extract_variants(self, variant_list):
@@ -241,7 +260,7 @@ class MemoryImpute2Geno(GenotypeDatabaseInterface):
             num_inserts += len(db_buffer)
             del db_buffer
 
-        logger.info("Build the variant database ({} entries).".format(
+        logger.info("Built the variant database ({} entries).".format(
             num_inserts
         ))
 
@@ -254,6 +273,13 @@ class MemoryImpute2Geno(GenotypeDatabaseInterface):
 
         # Freeze the database.
         self._frozen = True
+
+    def get_genotypes(self, variant_name):
+        try:
+            vect = self._mat.loc[variant_name, :].values
+            return vect
+        except KeyError:
+            return None
 
     def filter_completion(self, rate):
         if self._frozen:

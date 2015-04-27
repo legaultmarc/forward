@@ -9,12 +9,21 @@
 This module provides actual implementations of the genetic tests.
 """
 
+import multiprocessing
 import logging
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
+import random  # REMOVE ME TODO
 
 
 __all__ = ["GLMTest", ]
+
+
+try:
+    _range = range
+    range = xrange
+except NameError:  # Python3
+    pass
 
 
 class Task(object):
@@ -24,7 +33,7 @@ class Task(object):
         self.covariates = covariates
         self.variants = variants
 
-    def run_task(self, experiment):
+    def run_task(self, experiment, task_name):
         if self.outcomes == "all":
             self.outcomes = [i for i in experiment.variables
                              if not i.is_covariate]
@@ -48,9 +57,9 @@ class GLMTest(Task):
     def __init__(self, outcomes="all", covariates="all", variants="all"):
         super(GLMTest, self).__init__(outcomes, covariates, variants)
 
-    def run_task(self, experiment):
+    def run_task(self, experiment, task_name):
         """Run the GLM."""
-        super(GLMTest, self).run_task(experiment)
+        super(GLMTest, self).run_task(experiment, task_name)
 
         # Get a database session from the experiment.
         session = experiment.session
@@ -59,12 +68,73 @@ class GLMTest(Task):
 
         # Get the list of variants to analyze.
         # No extra filtering for now (TODO).
-        variants = experiment.genotypes.query_variants(session).all()
+        variants = experiment.genotypes.query_variants(session, "name").all()
+        variants = [i[0] for i in variants]  # Keep only the names.
 
-        # if experiment.cpu != 1:
-        #     self.pool = multiprocessing.Pool(experiment.cpu)
-        #     _map = self.pool.map
-        # else:
-        #     _map = map
+        # Setup the processes.
+        lock = multiprocessing.Lock()
+        job_queue = multiprocessing.Queue()
+        results_queue = multiprocessing.Queue()
+        pool = []
+        for cpu in range(experiment.cpu):
+            p = multiprocessing.Process(
+                target=GLMTest._glm_process,
+                args=(lock, job_queue, results_queue)
+            )
+            p.start()
+            pool.append(p)
 
-        # results = map()
+        num_tests = 0
+        for variant in variants:
+            # Get the genotype vector.
+            x = experiment.genotypes.get_genotypes(variant)
+
+            # Get the covariates and build the design matrix.
+            # TODO.
+
+            # Get the phenotypes and fill the job queue.
+            for phenotype in self.outcomes:
+                y = experiment.phenotypes.get_phenotype_vector(phenotype)
+
+                job_queue.put((variant, phenotype, x, y))
+                num_tests += 1
+
+        job_queue.put(None)
+        job_queue.close()
+
+        # We can start parsing the results.
+        while num_tests > 0:
+            result = results_queue.get()
+
+            # Process the result.
+            variant, pheno, p, odds_ratio = result
+            experiment.add_result("variant", task_name, variant, pheno, p,
+                                  odds_ratio)
+            num_tests -= 1
+
+
+    @staticmethod
+    def _glm_process(lock, job_queue, results_queue):
+        while True:
+            with lock:
+                data = job_queue.get()
+
+                if data is None:
+                    job_queue.put(data)  # Put the sentinel back.
+                    break
+
+            results = GLMTest._glm(*data)
+
+            with lock:
+                results_queue.put(results)
+
+        return
+
+    @staticmethod
+    def _glm(variant, phenotype, x, y):
+        """Run a GLM using the y ~ x model.
+        
+        Returns the p-value and odds ratio.
+
+        """
+        return (variant, phenotype, random.random(), random.random())

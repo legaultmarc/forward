@@ -23,8 +23,20 @@ import logging
 logger = logging.getLogger()
 
 import sqlalchemy
+from sqlalchemy import Column, Enum, String, Float
 
 from . import SQLAlchemySession, SQLAlchemyBase
+
+
+class ExperimentResult(SQLAlchemyBase):
+    __tablename__ = "results"
+
+    tested_entity = Column(Enum("variant", "snp-set"), default="variant")
+    task_name = Column(String(25), primary_key=True)
+    entity_name = Column(String(25), primary_key=True)
+    phenotype = Column(String(30), primary_key=True)
+    significance = Column(Float())
+    effect = Column(Float())
 
 
 class Experiment(object):
@@ -64,7 +76,31 @@ class Experiment(object):
 
         # Do experiment initialization on the database objects.
         self.genotypes.experiment_init(self)
+        self.results_init()
+
+    def results_init(self):
+        """Initialize the results table."""
+        ExperimentResult.__table__.create(self.engine)
+
+    def add_result(self, entity_type, task, entity, phenotype, significance,
+                   effect):
+
+        if hasattr(phenotype, "name"):
+            phenotype = phenotype.name  # Variable object.
+
+        result = ExperimentResult(
+            tested_entity=entity_type,
+            task_name=task,
+            entity_name=entity,
+            phenotype=phenotype,
+            significance=significance,
+            effect=effect
+        )
+        self.session.add(result)
 
     def run_tasks(self):
-        for task in self.tasks:
-            task.run_task(self)
+        for i, task in enumerate(self.tasks):
+            task_id = "task{}_{}".format(i, task.__class__.__name__)
+            task.run_task(self, task_id)
+
+        self.session.commit()
