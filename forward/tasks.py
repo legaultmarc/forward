@@ -103,8 +103,14 @@ class GLMTest(Task):
             # Get the genotype vector.
             x = experiment.genotypes.get_genotypes(variant)
 
+            # Statsmodel does not automatically add an intercept term, so we
+            # need to do it manually here.
+            x = np.vstack((np.ones(x.shape[0]), x)).T
+
             # Get the covariates and build the design matrix.
             # TODO.
+            # For now, we assume a design matrix with ones as a first column,
+            # and the outcome as the second column, with covariates after.
 
             # Get the phenotypes and fill the job queue.
             for phenotype in self.outcomes:
@@ -112,9 +118,11 @@ class GLMTest(Task):
                     continue  # Only handle DiscreteVariables
 
                 y = experiment.phenotypes.get_phenotype_vector(phenotype)
-                missing = np.isnan(x) | np.isnan(y)
+                missing = np.isnan(x).any(axis=1) | np.isnan(y)
 
-                job_queue.put((variant, phenotype, x[~missing], y[~missing]))
+                job_queue.put(
+                    (variant, phenotype, x[~missing, :], y[~missing])
+                )
                 num_tests += 1
 
         job_queue.put(None)
@@ -147,7 +155,7 @@ class GLMTest(Task):
         return
 
     @staticmethod
-    def _glm(variant, phenotype, x, y, outcome_column=0):
+    def _glm(variant, phenotype, x, y, outcome_column=1):
         """Run a GLM using the y ~ x model.
         
         Returns the p-value and odds ratio.
