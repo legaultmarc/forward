@@ -122,12 +122,10 @@ class GLMTest(Task):
 
         # We can start parsing the results.
         while num_tests > 0:
-            result = results_queue.get()
+            results = results_queue.get()
 
             # Process the result.
-            variant, pheno, p, odds_ratio = result
-            experiment.add_result("variant", task_name, variant, pheno, p,
-                                  odds_ratio)
+            experiment.add_result("variant", task_name, *results)
             num_tests -= 1
 
 
@@ -161,10 +159,16 @@ class GLMTest(Task):
             res = glm.fit()
 
             p = res.pvalues[outcome_column]
-            odds_ratio = np.exp(res.params[outcome_column])
+            beta = res.params[outcome_column]
+            std_err = res.bse[outcome_column]
+
+            conf_int = res.conf_int()
+            if type(conf_int) is not np.ndarray:
+                conf_int = conf_int.values
+            ic95_min, ic95_max = conf_int[outcome_column, :]
 
         except Exception:
-            logging.exception("")
-            p = odds_ratio = None
+            logging.exception("")  # Log the exception and insert nulls in db.
+            p = beta = std_err = ic95_min = ic95_max = None
 
-        return (variant, phenotype, p, odds_ratio)
+        return (variant, phenotype, p, beta, std_err, ic95_min, ic95_max)

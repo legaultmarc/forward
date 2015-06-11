@@ -31,12 +31,18 @@ from . import SQLAlchemySession, SQLAlchemyBase
 class ExperimentResult(SQLAlchemyBase):
     __tablename__ = "results"
 
+    # Test informatio
     tested_entity = Column(Enum("variant", "snp-set"), default="variant")
     task_name = Column(String(25), primary_key=True)
     entity_name = Column(String(25), primary_key=True)
     phenotype = Column(String(30), primary_key=True)
-    significance = Column(Float())
-    effect = Column(Float())
+
+    # Statistics
+    significance = Column(Float())  # e.g. p-value
+    coefficient = Column(Float())  # e.g. beta
+    standard_error = Column(Float())
+    confidence_interval_min = Column(Float())  # min of 95% CI on coefficient
+    confidence_interval_max = Column(Float())  # max of 95% CI on coefficient
 
 
 class Experiment(object):
@@ -83,7 +89,8 @@ class Experiment(object):
         ExperimentResult.__table__.create(self.engine)
 
     def add_result(self, entity_type, task, entity, phenotype, significance,
-                   effect):
+                   coefficient, standard_error, confidence_interval_min,
+                   confidence_interval_max):
 
         if hasattr(phenotype, "name"):
             phenotype = phenotype.name  # Variable object.
@@ -93,8 +100,12 @@ class Experiment(object):
             task_name=task,
             entity_name=entity,
             phenotype=phenotype,
+
             significance=significance,
-            effect=effect
+            coefficient=coefficient,
+            standard_error=standard_error,
+            confidence_interval_min=confidence_interval_min,
+            confidence_interval_max=confidence_interval_max,
         )
         self.session.add(result)
 
