@@ -81,7 +81,7 @@ class ExcelPhenotypeDatabase(PhenotypeDatabaseInterface):
         elif missing:
             message = ("Some samples were discarded when reordering "
                        "phenotype information ({} samples discarded). This "
-                       "could be because not genotype information is "
+                       "could be because no genotype information is "
                        "available for these samples.")
             message = message.format(len(missing))
             logger.warning(message)

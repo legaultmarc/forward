@@ -14,6 +14,14 @@ import logging
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 import random  # REMOVE ME TODO
+import numpy as np
+
+
+try:
+    import statsmodels.api as sm
+    STATSMODELS_AVAILABLE = True
+except ImportError:
+    STATSMODELS_AVAILABLE = False
 
 
 __all__ = ["GLMTest", ]
@@ -55,6 +63,10 @@ class Task(object):
 class GLMTest(Task):
     """Generalized linear model genetic test."""
     def __init__(self, outcomes="all", covariates="all", variants="all"):
+        if not STATSMODELS_AVAILABLE:
+            raise ImportError("GLMTest class requires statsmodels. Install "
+                              "the package first.")
+
         super(GLMTest, self).__init__(outcomes, covariates, variants)
 
     def run_task(self, experiment, task_name):
@@ -95,8 +107,9 @@ class GLMTest(Task):
             # Get the phenotypes and fill the job queue.
             for phenotype in self.outcomes:
                 y = experiment.phenotypes.get_phenotype_vector(phenotype)
+                missing = np.isnan(x) | np.isnan(y)
 
-                job_queue.put((variant, phenotype, x, y))
+                job_queue.put((variant, phenotype, x[~missing], y[~missing]))
                 num_tests += 1
 
         job_queue.put(None)
@@ -131,10 +144,22 @@ class GLMTest(Task):
         return
 
     @staticmethod
-    def _glm(variant, phenotype, x, y):
+    def _glm(variant, phenotype, x, y, outcome_column=0):
         """Run a GLM using the y ~ x model.
         
         Returns the p-value and odds ratio.
 
         """
-        return (variant, phenotype, random.random(), random.random())
+        # TODO, we should report 95% CI.
+        try:
+            glm = sm.GLM(y, x, family=sm.families.Binomial())
+            res = glm.fit()
+
+            p = res.pvalues[outcome_column]
+            odds_ratio = np.exp(res.params[outcome_column])
+
+        except Exception:
+            logging.exception("")
+            p = odds_ratio = None
+
+        return (variant, phenotype, p, odds_ratio)
