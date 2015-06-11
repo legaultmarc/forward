@@ -13,7 +13,6 @@ import multiprocessing
 import logging
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-import random  # REMOVE ME TODO
 import numpy as np
 
 
@@ -22,6 +21,9 @@ try:
     STATSMODELS_AVAILABLE = True
 except ImportError:
     STATSMODELS_AVAILABLE = False
+
+
+from .phenotype.variables import DiscreteVariable
 
 
 __all__ = ["GLMTest", ]
@@ -106,6 +108,9 @@ class GLMTest(Task):
 
             # Get the phenotypes and fill the job queue.
             for phenotype in self.outcomes:
+                if not isinstance(phenotype, DiscreteVariable):
+                    continue  # Only handle DiscreteVariables
+
                 y = experiment.phenotypes.get_phenotype_vector(phenotype)
                 missing = np.isnan(x) | np.isnan(y)
 

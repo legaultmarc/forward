@@ -217,10 +217,6 @@ class MemoryImpute2Geno(GenotypeDatabaseInterface):
             if self.names and name not in self.names:
                 continue
 
-            # MAF
-            if maf < self.thresh_maf:
-                continue
-
             # Completion
             n_missing = np.sum(~np.isnan(dosage))
             n_non_missing = dosage.shape[0] - n_missing
@@ -229,6 +225,10 @@ class MemoryImpute2Geno(GenotypeDatabaseInterface):
                 completion = np.sum(~np.isnan(dosage)) / dosage.shape[0]
                 if completion < self.thresh_completion:
                     continue
+
+            # MAF
+            if n_non_missing / dosage.shape[0] < self.thresh_maf:
+                continue
 
             # Remove samples if needed.
             if self.samples_mask is not None:

@@ -21,6 +21,9 @@ class Variable(object):
         self.name = name
         self.phenotypes = phenotypes_db
 
+    def __repr__(self):
+        return "<{}: {}>".format(self.__class__.__name__, self.name)
+
 
 class DiscreteVariable(Variable):
     def __init__(self, name, phenotypes_db, covariate=False):
