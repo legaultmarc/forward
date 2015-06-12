@@ -15,12 +15,17 @@ package.
 import sys
 
 from forward.configuration import parse_configuration
+from forward.report import Report
 
 
 def run_from_configuration(yaml_file):
+    # Run an experiment.
     experiment = parse_configuration(yaml_file)
     experiment.run_tasks()
 
+    # Generate an analysis report.
+    report = Report(experiment)
+    report.html()
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:

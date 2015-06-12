@@ -1,0 +1,57 @@
+/* Resets */
+*, body {
+    margin: 0;
+    padding: 0;
+    font-family: "Helvetica Neue", "Helvetica", sans-serif;
+    font-size: 10pt;
+    font-weight: 200;
+}
+
+/* Structure */
+#wrapper {
+    width: 8.4in;
+    padding: 0.5in;
+    margin: 0 auto;
+    margin-bottom: 20px;
+    background-color: #fff;
+    box-shadow: 2px 2px 5px #ccc;
+}
+
+#footer {
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    padding: 0 20px;
+    background-color: #781B1F;
+    color: #fff;
+}
+
+/* Design */
+body {
+    background-color: #F3F3F3;
+}
+
+code {
+    display: inline-block;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    background-color: #eee;
+    padding: 1px 2px;
+}
+
+/* Fonts */
+h1 {
+    font-family: Georgia, serif;
+    font-size: 16pt;
+    color: #781B1F;
+    font-weight: 100;
+    margin-bottom: 5px;
+}
+
+p {
+    font-family: Calibri, Arial, sans-serif;
+    font-size: 11pt;
+    text-align: justify;
+    line-height: 15pt;
+    margin-bottom: 20px;
+}

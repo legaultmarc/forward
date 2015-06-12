@@ -31,7 +31,7 @@ from . import SQLAlchemySession, SQLAlchemyBase
 class ExperimentResult(SQLAlchemyBase):
     __tablename__ = "results"
 
-    # Test informatio
+    # Test information
     tested_entity = Column(Enum("variant", "snp-set"), default="variant")
     task_name = Column(String(25), primary_key=True)
     entity_name = Column(String(25), primary_key=True)
@@ -59,10 +59,12 @@ class Experiment(object):
                             "another experiment name.".format(name))
             raise e
 
-        db_path = os.path.join(name, "forward_database.db")
+        self.db_path = os.path.join(name, "forward_database.db")
 
         # Create a sqlalchemy engine and bind it to the session.
-        self.engine = sqlalchemy.create_engine("sqlite:///{}".format(db_path))
+        self.engine = sqlalchemy.create_engine(
+            "sqlite:///{}".format(self.db_path)
+        )
         SQLAlchemySession.configure(bind=self.engine)
         self.session = SQLAlchemySession()
 
