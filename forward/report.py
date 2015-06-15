@@ -10,6 +10,11 @@ This module is used to create reports from forward experiments.
 
 """
 
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle  # Py3
+
 import os
 import datetime
 import webbrowser
@@ -21,6 +26,7 @@ from jinja2 import Environment, PackageLoader
 
 from . import SQLAlchemySession
 from .experiment import ExperimentResult, Experiment
+from .phenotype.variables import Variable
 
 
 handlers = {}
@@ -31,6 +37,7 @@ def register_handler(binding):
         handlers[binding] = handler
         return handler
     return decorator
+
 
 class Report(object):
     """Class used to create reports.
@@ -44,11 +51,14 @@ class Report(object):
 
         if type(experiment) is Experiment:
             experiment = experiment.info
+        else:
+            # Assume this is the name of the Experiment.
+            info_pkl = os.path.join(experiment, "experiment_info.pkl")
+            with open(info_pkl, "rb") as f:
+                experiment = pickle.load(f)
 
         # SQLAlchemy
-        self.engine = sqlalchemy.create_engine(
-            "{}:///{}".format(experiment["engine"], experiment["db_path"])
-        )
+        self.engine = sqlalchemy.create_engine(experiment["engine_url"])
         SQLAlchemySession.configure(bind=self.engine)
         self.session = SQLAlchemySession()
 
@@ -99,9 +109,27 @@ class Section(object):
 class GLMReportSection(Section):
     def __init__(self, task_id, report):
         super(GLMReportSection, self).__init__(task_id, report)
+        self.template_vars = {
+            "variables": self._get_variables(),
+        }
 
-        self.template_vars = {}
+    def _get_variables(self):
+        # Get variable names for this task.
+        variables = []
+        for var_name in self.report.query(ExperimentResult.phenotype).\
+                                    filter_by(task_name=self.task_id).\
+                                    distinct():
+            # TODO: Refactor ExperimentResult so that .phenotype is a FK to
+            # Variable objects. Then we can use a join here instead of two
+            # queries. Performance impact should be minimal though...
+
+            # Get the corresponding variable.
+            variables.append(
+                self.report.query(Variable).filter_by(name=var_name[0]).one()
+            )
+
+        return variables
 
     def html(self):
         template = self.report.env.get_template("section_glm.html")
-        return template.render()
+        return template.render(**self.template_vars)

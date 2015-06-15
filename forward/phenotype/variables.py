@@ -10,6 +10,10 @@ from __future__ import division
 """
 Variables are used to choose what phenotypes are considered in a given
 experiment.
+
+Variables are backed by the ORM using joined table inheritance. There is a main
+class with basic information about the variable and subclasses with statistics
+that are specific to discrete and continuous variables.
 """
 
 from sqlalchemy import Column, Boolean, String, ForeignKey, Integer, Float, \

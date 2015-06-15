@@ -25,8 +25,21 @@ A summary of the variables considered for this analysis is shown in
   <thead>
     <tr>
       <th>Variable</th>
-      <th>n cases</th>
-      <th>n controls</th>
-      <th>n missing</th>
+      <th><em>n</em> cases</th>
+      <th><em>n</em> controls</th>
+      <th><em>n</em> missing</th>
       <th>prevalence</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for variable in variables %}
+    <tr>
+      <td>{{ variable.name }}</td>
+      <td>{{ variable.n_cases }}</td>
+      <td>{{ variable.n_controls }}</td>
+      <td>{{ variable.n_missing }}</td>
+      <td>{{ "%0.3f" | format(variable.prevalence|float) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>

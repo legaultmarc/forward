@@ -39,6 +39,33 @@ code {
     padding: 1px 2px;
 }
 
+p.caption {
+    margin: 15px 30px 3px 30px;
+}
+
+/* Table Design */
+table {
+    border-collapse: collapse;
+    border-bottom: 1px solid black;
+    width: 90%;
+    margin: 0 auto;
+}
+
+th {
+    border-top: 1px solid black;
+    border-bottom: 4px double black;
+    height: 30px;
+    font-weight: bold;
+}
+
+td {
+    height: 25px;
+}
+
+tbody tr:hover {
+    background-color: #ddd;
+}
+
 /* Fonts */
 h1 {
     font-family: Georgia, serif;
@@ -48,10 +75,23 @@ h1 {
     margin-bottom: 5px;
 }
 
+h2 {
+    font-size: 14pt;
+    margin-bottom: 5px;
+}
+
 p {
     font-family: Calibri, Arial, sans-serif;
     font-size: 11pt;
     text-align: justify;
     line-height: 15pt;
     margin-bottom: 20px;
+}
+
+a {
+    color: #781B1F;
+}
+
+strong {
+    font-weight: bold;
 }

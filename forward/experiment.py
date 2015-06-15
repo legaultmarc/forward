@@ -66,13 +66,8 @@ class Experiment(object):
                             "another experiment name.".format(name))
             raise e
 
-        self.db_path = os.path.join(name, "forward_database.db")
-
         # Create a sqlalchemy engine and bind it to the session.
-        self.engine_type = "sqlite"  # TODO implement other engines.
-        self.engine = sqlalchemy.create_engine(
-            "{}:///{}".format(self.engine_type, self.db_path)
-        )
+        self.engine = Experiment.get_engine(name, "sqlite")
         SQLAlchemySession.configure(bind=self.engine)
         self.session = SQLAlchemySession()
 
@@ -103,8 +98,7 @@ class Experiment(object):
 
         self.info = {
             "name": self.name,
-            "engine": self.engine_type,
-            "db_path": self.db_path,
+            "engine_url": self.engine.url,
             "start_time": datetime.datetime.now() 
         }
 
@@ -120,7 +114,6 @@ class Experiment(object):
         for variable in self.variables:
             variable.compute_statistics(self.phenotypes)
             self.session.add(variable)
-            print variable
 
     def add_result(self, entity_type, task, entity, phenotype, significance,
                    coefficient, standard_error, confidence_interval_min,
@@ -142,6 +135,16 @@ class Experiment(object):
             confidence_interval_max=confidence_interval_max,
         )
         self.session.add(result)
+
+    @staticmethod
+    def get_engine(experiment_name, engine_type):
+        """Get an SQLAlchemy engine for a given experiment."""
+
+        if engine_type == "sqlite":
+            db_path = os.path.join(experiment_name, "forward_database.db")
+            return sqlalchemy.create_engine("sqlite:///{}".format(db_path))
+        else:
+            raise NotImplementedError("Only sqlite is supported (for now).")
 
     def run_tasks(self):
         for i, task in enumerate(self.tasks):
