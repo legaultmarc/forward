@@ -39,6 +39,12 @@ code {
     padding: 1px 2px;
 }
 
+img {
+    width: 500px;
+    margin: 0 auto;
+    display: block;
+}
+
 p.caption {
     margin: 15px 30px 3px 30px;
 }

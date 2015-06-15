@@ -28,10 +28,12 @@ import datetime
 import logging
 logger = logging.getLogger()
 
+import numpy as np
 import sqlalchemy
 from sqlalchemy import Column, Enum, String, Float
 
-from . import SQLAlchemySession, SQLAlchemyBase
+from . import SQLAlchemySession, SQLAlchemyBase, FORWARD_INIT_TIME
+from .utils import format_time_delta
 from .phenotype.variables import Variable, DiscreteVariable, ContinuousVariable
 
 
@@ -77,6 +79,7 @@ class Experiment(object):
         self.genotypes = genotype_container
         self.variables = variables
         self.tasks = tasks
+        self.info = {}
 
         self.cpu = min(1, cpu)
         self.correction = correction
@@ -96,11 +99,13 @@ class Experiment(object):
     def experiment_info_init(self):
         """Initialize a dict containing experiment metadata."""
 
-        self.info = {
+        self.info.update({
             "name": self.name,
             "engine_url": self.engine.url,
-            "start_time": datetime.datetime.now() 
-        }
+            "start_time": FORWARD_INIT_TIME
+        })
+        # TODO using this constant will not be representative if the user is
+        # not using the scripts/cli.py
 
     def results_init(self):
         """Initialize the results table."""
@@ -114,6 +119,18 @@ class Experiment(object):
         for variable in self.variables:
             variable.compute_statistics(self.phenotypes)
             self.session.add(variable)
+
+        # We also compute a correlation matrix and serialize it.
+        var_names = [var.name for var in self.variables]
+        corr_mat = self.phenotypes.get_correlation_matrix(var_names)
+
+        mat_filename = os.path.join(self.name, "phen_correlation_matrix.npy")
+        np.save(mat_filename, corr_mat)
+
+        self.info.update({
+            "phen_correlation": mat_filename,
+            "outcomes": var_names,
+        })
 
     def add_result(self, entity_type, task, entity, phenotype, significance,
                    coefficient, standard_error, confidence_interval_min,
@@ -161,3 +178,7 @@ class Experiment(object):
         # Write the metadata to disk.
         with open(os.path.join(self.name, "experiment_info.pkl"), "wb") as f:
             pickle.dump(self.info, f)
+
+        logger.info("Completed all tasks in {}.".format(
+            format_time_delta(self.info["walltime"])
+        ))

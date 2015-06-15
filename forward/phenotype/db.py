@@ -41,6 +41,19 @@ class PhenotypeDatabaseInterface(object):
         """Get the order of the samples."""
         raise NotImplementedError()
 
+    def get_correlation_matrix(self, names):
+        """Get a correlation matrix for the specified names.
+        
+        :param names: A list of variable names.
+        :type names: list
+
+        :returns: A correlation matrix.
+        :rtype: numpy.ndarray
+
+        This is useful to exclude correlated phenotypes as controls.
+        """
+        raise NotImplementedError()
+
 
 class ExcelPhenotypeDatabase(PhenotypeDatabaseInterface):
     """Collection of phenotypes based on an Excel file.
@@ -112,3 +125,6 @@ class ExcelPhenotypeDatabase(PhenotypeDatabaseInterface):
             raise Exception("'{}' is not in the database.".format(name))
 
         return self.data.loc[:, name].values
+
+    def get_correlation_matrix(self, names):
+        return self.data[names].corr().values

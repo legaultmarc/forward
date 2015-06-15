@@ -14,8 +14,12 @@ additive coding and &beta; is a vector of paremeters.</p>
 
 <h2>Variables</h2>
 
-A summary of the variables considered for this analysis is shown in
-<a href="#table1">Table 1</a>.
+<p>A summary of the variables considered for this analysis is shown in
+<a href="#table1">Table 1</a>. We did not exclude variables based on prevalence
+in our discovery cohort, but the analysis of rare outcomes is likely to lack
+the power needed for statistical replication. This analysis included a total
+of {{ variables|length }} dichotomous outcomes.
+</p>
 
 <p class="caption">
   <a name="table1"></a><strong>Table 1.</strong> Summary of the different
@@ -43,3 +47,11 @@ A summary of the variables considered for this analysis is shown in
     {% endfor %}
   </tbody>
 </table>
+
+<p class="caption">
+  <a name="figure1"></a><strong>Figure 1.</strong> Correlation plot of the
+  different variables. When two phenotypes are highly correlated, it is best
+  to exclude from controls individuals that are affected with the other
+  phenotype.
+</p>
+<img src="{{ assets }}/{{ corrplot }}" width="500" />

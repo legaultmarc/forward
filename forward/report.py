@@ -19,9 +19,14 @@ import os
 import datetime
 import webbrowser
 import logging
+
 logger = logging.getLogger()
 
 import sqlalchemy
+import numpy as np
+import pandas as pd
+import seaborn as sbn
+import matplotlib.pyplot as plt
 from jinja2 import Environment, PackageLoader
 
 from . import SQLAlchemySession
@@ -57,13 +62,24 @@ class Report(object):
             with open(info_pkl, "rb") as f:
                 experiment = pickle.load(f)
 
+        self.experiment = experiment
+        logger.info("Generating a report for experiment {}".format(
+            experiment["name"]
+        ))
+
         # SQLAlchemy
         self.engine = sqlalchemy.create_engine(experiment["engine_url"])
         SQLAlchemySession.configure(bind=self.engine)
         self.session = SQLAlchemySession()
 
+        # Create an assets folder.
+        self.assets = "assets"
+        if not os.path.isdir(self.assets):
+            os.makedirs(self.assets)
+
         # jinja2
         self.env = Environment(loader=PackageLoader("forward", "templates"))
+        self.env.globals = {"assets": self.assets}
         self.template = self.env.get_template("default.html")
 
         self.contents = {}
@@ -91,7 +107,9 @@ class Report(object):
         fn = "test.html"
         with open(fn, "wb") as f:
             f.write(
-                self.template.render(sections=self.sections, **self.contents)
+                self.template.render(
+                    sections=self.sections, **self.contents
+                ).encode("utf-8")
             )
         webbrowser.open_new_tab("file://{}".format(os.path.abspath(fn)))
 
@@ -111,6 +129,7 @@ class GLMReportSection(Section):
         super(GLMReportSection, self).__init__(task_id, report)
         self.template_vars = {
             "variables": self._get_variables(),
+            "corrplot": self._create_variables_corrplot(),
         }
 
     def _get_variables(self):
@@ -129,6 +148,27 @@ class GLMReportSection(Section):
             )
 
         return variables
+
+    def _create_variables_corrplot(self):
+        """Create a correlation matrix showing off variable correlation."""
+
+        corr_mat_fn = self.report.experiment.get("phen_correlation")
+        if corr_mat_fn is None:
+            return None
+
+        corr_mat = np.load(corr_mat_fn)
+
+        plt.figure(figsize=(9, 8), tight_layout=True)
+        sbn.symmatplot(corr_mat, names=self.report.experiment["outcomes"],
+                       cmap="coolwarm")
+
+        path = os.path.join(self.report.assets, "images")
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        plt.savefig(os.path.join(path, "corrplot.png"))
+
+        return os.path.join("images", "corrplot.png")
 
     def html(self):
         template = self.report.env.get_template("section_glm.html")
