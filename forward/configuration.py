@@ -41,7 +41,7 @@ def parse_configuration(filename):
     # Parse the Variables section:
     variables = config.pop("Variables", None)
     if variables:
-        variables = _parse_variables(variables, database)
+        variables = _parse_variables(variables)
 
     # Parse the Genotypes section:
     genotypes = config.pop("Genotypes", None)
@@ -69,7 +69,7 @@ def _parse_database(database):
     return get_class(class_name, "database")(**database)
 
 
-def _parse_variables(variables, database):
+def _parse_variables(variables):
     variable_objects = []
     for variable in variables:
         var_type = variable.pop("type", None)
@@ -77,11 +77,10 @@ def _parse_variables(variables, database):
         is_covar = variable.pop("covariate", False)
 
         if var_type == "discrete":
-            variable_objects.append(DiscreteVariable(name, database, is_covar))
+            variable_objects.append(DiscreteVariable(name, is_covar))
 
         elif var_type == "continuous":
-            variable_objects.append(ContinuousVariable(name, database,
-                                                       is_covar))
+            variable_objects.append(ContinuousVariable(name, is_covar))
 
         else:
             raise Exception("Unknown variable type '{}'.".format(var_type))

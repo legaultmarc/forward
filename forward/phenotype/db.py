@@ -17,8 +17,6 @@ logger = logging.getLogger(__name__)
 
 import pandas as pd
 
-from .variables import Variable
-
 
 __all__ = ["ExcelPhenotypeDatabase"]
 

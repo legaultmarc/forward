@@ -12,36 +12,89 @@ Variables are used to choose what phenotypes are considered in a given
 experiment.
 """
 
+from sqlalchemy import Column, Boolean, String, ForeignKey, Integer, Float, \
+                       Enum
+from sqlalchemy.ext.hybrid import hybrid_property
+
 import numpy as np
 
+from .. import SQLAlchemyBase
 
-class Variable(object):
-    def __init__(self, name, phenotypes_db, covariate=False):
-        self.is_covariate = covariate
-        self.name = name
-        self.phenotypes = phenotypes_db
+
+class Variable(SQLAlchemyBase):
+
+    __tablename__ = "variables"
+
+    name = Column(String(30), primary_key=True)
+    is_covariate = Column(Boolean())
+    n_missing = Column(Integer())
+    variable_type = Column(Enum("discrete", "continuous"))
+
+    __mapper_args__ = {
+        "polymorphic_on": variable_type,
+    }
+
+    def compute_statistics(self, phenotypes_db):
+        """Used by subclasses to initialize extra fields after filtering."""
+        raise NotImplementedError()
 
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.name)
 
 
 class DiscreteVariable(Variable):
-    def __init__(self, name, phenotypes_db, covariate=False):
-        super(DiscreteVariable, self).__init__(name, phenotypes_db, covariate)
+    __tablename__ = "discrete_variables"
 
+    name = Column(String(30), ForeignKey("variables.name"), primary_key=True)
+    n_cases = Column(Integer())
+    n_controls = Column(Integer())
+
+    __mapper_args__ = {
+        "polymorphic_identity": "discrete"
+    }
+
+    def __init__(self, name, covariate=False):
+        super(DiscreteVariable, self).__init__(
+            name=name, is_covariate=covariate
+        )
+
+    def compute_statistics(self, phenotypes_db):
+        """Compute some n values given the filtered phenotype database."""
+
+        vect = phenotypes_db.get_phenotype_vector(self.name)
+        self.n_cases = np.sum(vect == 1)
+        self.n_controls = np.sum(vect == 0)
+        self.n_missing = np.sum(np.isnan(vect))
+
+    @hybrid_property
     def prevalence(self):
-        """Computes the prevalence of a phenotype.
-
-        This assumes that only 0, 1 and np.nan are in the vector.
-        """
-        vect = self.phenotype.get_phenotype_vector(self.name)
-        return np.sum(vect == 1) / vect.shape[0]
-
+        return self.n_cases / (self.n_controls + self.n_cases)
 
 class ContinuousVariable(Variable):
-    def __init__(self, name, phenotypes_db, covariate=False):
-        super(ContinuousVariable, self).__init__(name, phenotypes_db,
-                                                 covariate)
+    __tablename__ = "continuous_variables"
+
+    name = Column(String(30), ForeignKey("variables.name"), primary_key=True)
+    mean = Column(Float())
+    std = Column(Float())
+
+    __mapper_args__ = {
+        "polymorphic_identity": "continuous"
+    }
+
+    def __init__(self, name, covariate=False):
+        super(ContinuousVariable, self).__init__(
+            name=name, is_covariate=covariate
+        )
+
+    def compute_statistics(self, phenotypes_db):
+        """Compute statistics with the filtered phenotype database."""
+
+        vect = phenotypes_db.get_phenotype_vector(self.name)
+        mask = ~np.isnan(vect)
+        self.mean = vect[mask].mean()
+        self.std = vect[mask].std()
+
+        self.n_missing = np.sum(vect.shape[0] - np.sum(mask))
 
     def normality_check(self):
         raise NotImplementedError()

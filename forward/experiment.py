@@ -18,7 +18,13 @@ Overall goals for this module will be to provide:
 
 """
 
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle  # Py3
+
 import os
+import datetime
 import logging
 logger = logging.getLogger()
 
@@ -26,6 +32,7 @@ import sqlalchemy
 from sqlalchemy import Column, Enum, String, Float
 
 from . import SQLAlchemySession, SQLAlchemyBase
+from .phenotype.variables import Variable, DiscreteVariable, ContinuousVariable
 
 
 class ExperimentResult(SQLAlchemyBase):
@@ -62,8 +69,9 @@ class Experiment(object):
         self.db_path = os.path.join(name, "forward_database.db")
 
         # Create a sqlalchemy engine and bind it to the session.
+        self.engine_type = "sqlite"  # TODO implement other engines.
         self.engine = sqlalchemy.create_engine(
-            "sqlite:///{}".format(self.db_path)
+            "{}:///{}".format(self.engine_type, self.db_path)
         )
         SQLAlchemySession.configure(bind=self.engine)
         self.session = SQLAlchemySession()
@@ -84,11 +92,35 @@ class Experiment(object):
 
         # Do experiment initialization on the database objects.
         self.genotypes.experiment_init(self)
+        self.experiment_info_init()
         self.results_init()
+
+        # Initialize the variables (generates some statistics).
+        self.variables_init()
+
+    def experiment_info_init(self):
+        """Initialize a dict containing experiment metadata."""
+
+        self.info = {
+            "name": self.name,
+            "engine": self.engine_type,
+            "db_path": self.db_path,
+            "start_time": datetime.datetime.now() 
+        }
 
     def results_init(self):
         """Initialize the results table."""
         ExperimentResult.__table__.create(self.engine)
+
+    def variables_init(self):
+        """Initialize the variables table and computes some statistics."""
+        for obj in (Variable, DiscreteVariable, ContinuousVariable):
+            obj.__table__.create(self.engine)
+
+        for variable in self.variables:
+            variable.compute_statistics(self.phenotypes)
+            self.session.add(variable)
+            print variable
 
     def add_result(self, entity_type, task, entity, phenotype, significance,
                    coefficient, standard_error, confidence_interval_min,
@@ -116,4 +148,13 @@ class Experiment(object):
             task_id = "task{}_{}".format(i, task.__class__.__name__)
             task.run_task(self, task_id)
 
+        # Commit the database.
         self.session.commit()
+
+        # All tasks are done, set the walltime.
+        self.info["walltime"] = (datetime.datetime.now() -
+                                 self.info["start_time"])
+
+        # Write the metadata to disk.
+        with open(os.path.join(self.name, "experiment_info.pkl"), "wb") as f:
+            pickle.dump(self.info, f)

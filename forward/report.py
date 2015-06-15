@@ -43,11 +43,11 @@ class Report(object):
     def __init__(self, experiment):
 
         if type(experiment) is Experiment:
-            experiment = experiment.db_path
+            experiment = experiment.info
 
         # SQLAlchemy
         self.engine = sqlalchemy.create_engine(
-            "sqlite:///{}".format(experiment)
+            "{}:///{}".format(experiment["engine"], experiment["db_path"])
         )
         SQLAlchemySession.configure(bind=self.engine)
         self.session = SQLAlchemySession()
@@ -99,6 +99,8 @@ class Section(object):
 class GLMReportSection(Section):
     def __init__(self, task_id, report):
         super(GLMReportSection, self).__init__(task_id, report)
+
+        self.template_vars = {}
 
     def html(self):
         template = self.report.env.get_template("section_glm.html")

@@ -161,7 +161,6 @@ class GLMTest(Task):
         Returns the p-value and odds ratio.
 
         """
-        # TODO, we should report 95% CI.
         try:
             glm = sm.GLM(y, x, family=sm.families.Binomial())
             res = glm.fit()
