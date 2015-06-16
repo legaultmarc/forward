@@ -210,7 +210,7 @@ class GLMReportSection(Section):
 
         # Plot per phenotype.
         deviations = ((slope * osm + intercept) - osr) ** 2
-        for i in range(code + 1):
+        for i in range(code):
             mask = data[:, 0] == i
             # TODO Use a better threshold for coloring.
             dev_mask = (deviations > 0.02) & mask
@@ -221,8 +221,9 @@ class GLMReportSection(Section):
                        s=10, marker="o")
 
             # Plot colored dots (deviating).
+            phen = [(k, v) for k, v in phen_codes.items() if v == i][0][0]
             ax.scatter(osm[dev_mask], osr[dev_mask], color=colors[i], s=10,
-                       marker="o")
+                       marker="o", label=phen)
 
         xs = np.arange(*ax.get_xlim())
         ax.plot(xs, slope * xs + intercept, "--", color="#6D784B",
