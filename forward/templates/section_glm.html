@@ -62,3 +62,25 @@ of {{ variables|length }} dichotomous outcomes.
 variants. A QQ plot of all the analysis p-values can be found at Figure X.</p>
 
 <img src="{{ assets }}/{{ qq_plot }}" />
+
+<table>
+  <thead>
+    <tr>
+      <th>Variant</th>
+      <th>Phenotype</th>
+      <th>p-value</th>
+      <th>OR (95% CI)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for result in results %}
+    <tr>
+      <td>{{ result.variant }}</td>
+      <td>{{ result.phenotype }}</td>
+      <td>{{ result.p }}</td>
+      <td>{{ result.odds_ratio }} [{{ result.low }} - {{ result.high }}]</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+

@@ -15,6 +15,7 @@ try:
 except ImportError:
     import pickle  # Py3
 
+import collections
 import os
 import datetime
 import webbrowser
@@ -136,6 +137,7 @@ class GLMReportSection(Section):
             "corrplot": self._create_variables_corrplot(),
             "num_variants": self._number_analyzed_variants(),
             "qq_plot": self._qq_plot(),
+            "results": self._parse_results(),
         }
 
     def _get_variables(self):
@@ -239,6 +241,31 @@ class GLMReportSection(Section):
 
         return os.path.join("images", "qqplot.png")
 
+
+    def _parse_results(self):
+        """Fetch analysis results in the database and format them. """
+        query = self.report.query(ExperimentResult).\
+                            filter_by(task_name=self.task_id).\
+                            filter(ExperimentResult.significance<0.05).\
+                            order_by(ExperimentResult.significance.asc())
+
+        results = []  # List of Result named tuples.
+        result = collections.namedtuple(
+            "Result",
+            ("variant", "phenotype", "p", "low", "odds_ratio", "high")
+        )
+
+        for res in query:
+            results.append(result(
+                res.entity_name,
+                res.phenotype,
+                "{:.3e}".format(res.significance),
+                "{:.3f}".format(np.exp(res.confidence_interval_min)),
+                "{:.3f}".format(np.exp(res.coefficient)),
+                "{:.3f}".format(np.exp(res.confidence_interval_max)),
+            ))
+
+        return results
 
     def html(self):
         template = self.report.env.get_template("section_glm.html")
