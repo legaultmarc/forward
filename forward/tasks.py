@@ -105,12 +105,16 @@ class GLMTest(Task):
 
             # Statsmodel does not automatically add an intercept term, so we
             # need to do it manually here.
-            x = np.vstack((np.ones(x.shape[0]), x)).T
+            x = np.vstack((np.ones(x.shape[0]), x))
 
             # Get the covariates and build the design matrix.
-            # TODO.
-            # For now, we assume a design matrix with ones as a first column,
-            # and the outcome as the second column, with covariates after.
+            # We assume a design matrix with ones as a first column, and the
+            # outcome as the second column, with covariates after.
+            for covar in self.covariates:
+                covar = experiment.phenotypes.get_phenotype_vector(covar)
+                x = np.vstack((x, covar))
+
+            x = x.T  # Transpose to have variables as columns.
 
             # Get the phenotypes and fill the job queue.
             for phenotype in self.outcomes:
