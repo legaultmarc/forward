@@ -104,3 +104,16 @@ a {
 strong {
     font-weight: bold;
 }
+
+/* Print */
+@media print {
+
+    #wrapper {
+        box-shadow: none;
+    }
+
+    body {
+        background-color: #fff;
+    }
+
+}
