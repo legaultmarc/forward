@@ -56,12 +56,10 @@ def parse_configuration(filename):
 
     # Create the experiment object
     experiment_name = config["Experiment"].pop("name", "forward_experiment")
-    experiment_correction = config["Experiment"].pop("correction",
-                                                     "bonferroni")
     experiment_cpu = int(config["Experiment"].pop("cpu", 1))
 
     return Experiment(experiment_name, database, genotypes, variables, tasks,
-                      cpu=experiment_cpu, correction=experiment_correction)
+                      cpu=experiment_cpu)
 
 
 def _parse_database(database):

@@ -12,6 +12,10 @@ was used resulting in the following model:</p>
 link function, <strong>X</strong> is a design matrix containing genotypes using
 additive coding and &beta; is a vector of paremeters.</p>
 
+<p>Here, we used iteratively applied GLMs to {{ task_info["outcomes"]|length }}
+variables ({{ task_info["outcomes"]|join(", ") }}) and adjusted for 
+{{ task_info["covariates"]|join(", ") }}.</p>
+
 <h2>Variables</h2>
 
 <p>A summary of the variables considered for this analysis is shown in

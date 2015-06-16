@@ -35,6 +35,14 @@ Variables:
       type: continuous
       covariate: Yes
 
+    - name: GenderFemale
+      type: discrete
+      covariate: Yes
+
+    - name: Age
+      type: continuous
+      covariate: Yes
+
 # Variants can be filtered in the genotype db or on a task specific basis.
 Genotypes:
     pyclass: MemoryImpute2Geno
@@ -48,10 +56,10 @@ Genotypes:
 
 Experiment:
     name: "ADCY9_forward"
-    correction: gao
     cpu: 4
 
     tasks:
         - pyclass: GLMTest
           outcomes: all
-          covariates: [PC1, PC2, PC3]
+          covariates: all # [PC1, PC2, PC3]
+          alpha: 0.05

@@ -9,6 +9,11 @@
 This module provides actual implementations of the genetic tests.
 """
 
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle  # Py3
+import os
 import multiprocessing
 import logging
 logger = logging.getLogger()
@@ -38,18 +43,29 @@ except NameError:  # Python3
 
 class Task(object):
     """Class representing a task (genetic test)."""
-    def __init__(self, outcomes, covariates, variants):
+    def __init__(self, outcomes="all", covariates="all", variants="all",
+                 correction=None, alpha=0.05):
         self.outcomes = outcomes
         self.covariates = covariates
         self.variants = variants
+        self.correction = correction
+        self.alpha = alpha
 
-    def run_task(self, experiment, task_name):
+        # This will be automatically serialized when the task finishes.
+        self._info = {}
+
+    def run_task(self, experiment, task_name, work_dir):
+        self.work_dir = work_dir
+
+        # Select the variables and covariates to analyse.
         if self.outcomes == "all":
             self.outcomes = [i for i in experiment.variables
-                             if not i.is_covariate]
+                             if not i.is_covariate and
+                             isinstance(i, DiscreteVariable)]
         else:
             self.outcomes = [i for i in experiment.variables
-                             if i.name in self.outcomes]
+                             if i.name in self.outcomes and
+                             isinstance(i, DiscreteVariable)]
 
         if self.covariates == "all":
             self.covariates = [i for i in experiment.variables
@@ -61,19 +77,54 @@ class Task(object):
         if self.variants != "all":
             raise NotImplementedError()
 
+        # Set meta information for serialization.
+        for meta_key in ("outcomes", "covariates", "variants"):
+            value = getattr(self, meta_key)
+            # List of variables.
+            if type(value) is list:
+                self.set_meta(
+                    meta_key,
+                    [i.name for i in getattr(self, meta_key)]
+                )
+            else:
+                self.set_meta(meta_key, value)
+
+        for meta_key in ("correction", "alpha"):
+            self.set_meta(meta_key, getattr(self, meta_key))
+
+    def set_meta(self, key, value):
+        """Set meta information about this task."""
+        self._info[key] = value
+
+    def get_meta(self, key):
+        """Get meta information about this task."""
+        return self._info.get(key)
+
+    def done(self):
+        """By default, this writes the content of the info attribute to disk.
+
+        This can be used to communicate with the report module or to store
+        meta information about this task's execution.
+
+        """
+        if len(self._info) == 0:
+            return
+
+        with open(os.path.join(self.work_dir, "task_info.pkl"), "wb") as f:
+            pickle.dump(self._info, f)
+
 
 class GLMTest(Task):
     """Generalized linear model genetic test."""
-    def __init__(self, outcomes="all", covariates="all", variants="all"):
+    def __init__(self, *args, **kwargs):
         if not STATSMODELS_AVAILABLE:
             raise ImportError("GLMTest class requires statsmodels. Install "
                               "the package first.")
+        super(GLMTest, self).__init__(*args, **kwargs)
 
-        super(GLMTest, self).__init__(outcomes, covariates, variants)
-
-    def run_task(self, experiment, task_name):
+    def run_task(self, experiment, task_name, work_dir):
         """Run the GLM."""
-        super(GLMTest, self).run_task(experiment, task_name)
+        super(GLMTest, self).run_task(experiment, task_name, work_dir)
 
         # Get a database session from the experiment.
         session = experiment.session
@@ -119,6 +170,7 @@ class GLMTest(Task):
             # Get the phenotypes and fill the job queue.
             for phenotype in self.outcomes:
                 if not isinstance(phenotype, DiscreteVariable):
+                    # This should not happen.
                     continue  # Only handle DiscreteVariables
 
                 y = experiment.phenotypes.get_phenotype_vector(phenotype)

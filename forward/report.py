@@ -124,6 +124,15 @@ class Section(object):
         self.task_id = task_id
         self.report = report
 
+        # Load the task specific meta information if it exists.
+        path = os.path.join(self.report.experiment["name"], "tasks",
+                            self.task_id, "task_info.pkl")
+        if os.path.isfile(path):
+            with open(path, "rb") as f:
+                self.info = pickle.load(f)
+        else:
+            self.info = {}
+
     def html(self):
         raise NotImplementedError
 
@@ -138,6 +147,7 @@ class GLMReportSection(Section):
             "num_variants": self._number_analyzed_variants(),
             "qq_plot": self._qq_plot(),
             "results": self._parse_results(),
+            "task_info": self.info,
         }
 
     def _get_variables(self):

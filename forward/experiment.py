@@ -12,9 +12,8 @@ interface.
 
 Overall goals for this module will be to provide:
 
-    - Automated reports.
     - Good organization of experiments aiming at a better reproductibility.
-    - Aggregating and writing results files.
+    - Aggregating and writing analysis meta data, results files and databases.
 
 """
 
@@ -57,7 +56,7 @@ class ExperimentResult(SQLAlchemyBase):
 class Experiment(object):
     """Class representing an experiment."""
     def __init__(self, name, phenotype_container, genotype_container,
-                 variables, tasks, cpu=1, correction="bonferonni"):
+                 variables, tasks, cpu=1):
 
         # Create a directory for the experiment.
         try:
@@ -81,8 +80,7 @@ class Experiment(object):
         self.tasks = tasks
         self.info = {}
 
-        self.cpu = min(1, cpu)
-        self.correction = correction
+        self.cpu = max(1, cpu)
 
         # Make the genotypes and phenotypes sample order consistent.
         self.phenotypes.set_sample_order(self.genotypes.get_sample_order(),
@@ -164,9 +162,15 @@ class Experiment(object):
             raise NotImplementedError("Only sqlite is supported (for now).")
 
     def run_tasks(self):
+        # Create a directory for tasks to be able to have meta-data.
+        tasks_dir = os.path.join(self.name, "tasks")
+
         for i, task in enumerate(self.tasks):
             task_id = "task{}_{}".format(i, task.__class__.__name__)
-            task.run_task(self, task_id)
+            work_dir = os.path.join(tasks_dir, task_id)
+            os.makedirs(work_dir)
+            task.run_task(self, task_id, work_dir)
+            task.done()
 
         # Commit the database.
         self.session.commit()
