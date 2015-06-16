@@ -23,10 +23,14 @@ import logging
 logger = logging.getLogger()
 
 import sqlalchemy
+
+import scipy.stats
+import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sbn
-import matplotlib.pyplot as plt
+
 from jinja2 import Environment, PackageLoader
 
 from . import SQLAlchemySession
@@ -75,7 +79,7 @@ class Report(object):
         # Create an assets folder.
         self.assets = "assets"
         if not os.path.isdir(self.assets):
-            os.makedirs(self.assets)
+            os.makedirs(os.path.join(self.assets, "images"))
 
         # jinja2
         self.env = Environment(loader=PackageLoader("forward", "templates"))
@@ -130,6 +134,8 @@ class GLMReportSection(Section):
         self.template_vars = {
             "variables": self._get_variables(),
             "corrplot": self._create_variables_corrplot(),
+            "num_variants": self._number_analyzed_variants(),
+            "qq_plot": self._qq_plot(),
         }
 
     def _get_variables(self):
@@ -158,17 +164,80 @@ class GLMReportSection(Section):
 
         corr_mat = np.load(corr_mat_fn)
 
-        plt.figure(figsize=(9, 8), tight_layout=True)
+        fig = plt.figure(figsize=(9, 8), tight_layout=True)
         sbn.symmatplot(corr_mat, names=self.report.experiment["outcomes"],
                        cmap="coolwarm")
 
         path = os.path.join(self.report.assets, "images")
-        if not os.path.isdir(path):
-            os.makedirs(path)
 
         plt.savefig(os.path.join(path, "corrplot.png"))
+        plt.close()
 
         return os.path.join("images", "corrplot.png")
+
+    def _number_analyzed_variants(self):
+        """Find the number of analyzed variants in the database."""
+        return self.report.query(ExperimentResult.entity_name).\
+                           filter_by(task_name=self.task_id).\
+                           distinct().count()
+
+    def _qq_plot(self):
+        """A colored QQ plot showing the results per phenotype."""
+        code = 0
+        phen_codes = {}
+        data = []
+
+        query = self.report.query(ExperimentResult.phenotype,
+                                  ExperimentResult.significance).\
+                            filter_by(task_name=self.task_id)
+
+        for phen, p in query:
+            if phen not in phen_codes:
+                phen_codes[phen] = code
+                code += 1
+            data.append((phen_codes[phen], p))
+
+        data = np.array(data)
+
+        fig, ax = plt.subplots(1, 1)
+
+        quantiles, fit = scipy.stats.probplot(data[:, 1], dist="norm")
+        osm, osr = quantiles
+        slope, intercept, r = fit
+
+        colors = ["#F44336", "#9C27B0", "#03A9F4", "#009688", "#4CAF50",
+                  "#CDDC39", "#FFEB3B", "#FF9800", "#FF5722"]
+
+        # Plot per phenotype.
+        deviations = ((slope * osm + intercept) - osr) ** 2
+        for i in range(code + 1):
+            mask = data[:, 0] == i
+            # TODO Use a better threshold for coloring.
+            dev_mask = (deviations > 0.02) & mask
+            non_dev_mask = (deviations <= 0.02) & mask
+
+            # Plot black for non-deviating.
+            ax.scatter(osm[non_dev_mask], osr[non_dev_mask], color="black",
+                       s=10, marker="o")
+
+            # Plot colored dots (deviating).
+            ax.scatter(osm[dev_mask], osr[dev_mask], color=colors[i], s=10,
+                       marker="o")
+
+        xs = np.arange(*ax.get_xlim())
+        ax.plot(xs, slope * xs + intercept, "--", color="#6D784B",
+                label="$R^2 = {:.4f}$".format(r))
+        ax.legend(loc="lower right")
+
+        ax.set_xlabel("Quantile")
+        ax.set_ylabel("Ordered Values")
+
+        path = os.path.join(self.report.assets, "images", "qqplot.png")
+        plt.savefig(path)
+        plt.close()
+
+        return os.path.join("images", "qqplot.png")
+
 
     def html(self):
         template = self.report.env.get_template("section_glm.html")
