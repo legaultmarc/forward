@@ -20,10 +20,13 @@
 #footer {
     width: 100%;
     height: 30px;
-    line-height: 30px;
-    padding: 0 20px;
     background-color: #781B1F;
     color: #fff;
+}
+
+#footer p {
+    line-height: 30px;
+    margin: 0 20px;
 }
 
 /* Design */
