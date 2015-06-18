@@ -218,16 +218,16 @@ class MemoryImpute2Geno(GenotypeDatabaseInterface):
                 continue
 
             # Completion
-            n_missing = np.sum(~np.isnan(dosage))
+            n_missing = np.sum(np.isnan(dosage))
             n_non_missing = dosage.shape[0] - n_missing
 
             if self.thresh_completion != 0:
-                completion = np.sum(~np.isnan(dosage)) / dosage.shape[0]
+                completion = n_non_missing / dosage.shape[0]
                 if completion < self.thresh_completion:
                     continue
 
             # MAF
-            if n_non_missing / dosage.shape[0] < self.thresh_maf:
+            if np.nansum(dosage) / n_non_missing < self.thresh_maf:
                 continue
 
             # Remove samples if needed.

@@ -18,6 +18,11 @@ logger = logging.getLogger(__name__)
 import pandas as pd
 
 
+# TODO refactor the ExcelPhenotypeDatabase to use a parent that is something
+# like PandasBackedPhenotypeDatabase. This will allow us to easily extend to
+# pandas compatible data types.
+
+
 __all__ = ["ExcelPhenotypeDatabase"]
 
 
@@ -37,7 +42,7 @@ class PhenotypeDatabaseInterface(object):
         """Set the order of the samples."""
         raise NotImplementedError()
 
-    def get_sample_order(self):
+    def get_sample_order(self, allow_subset=False):
         """Get the order of the samples."""
         raise NotImplementedError()
 
@@ -111,7 +116,6 @@ class ExcelPhenotypeDatabase(PhenotypeDatabaseInterface):
         return self.data.columns
 
     def set_sample_order(self, sequence, allow_subset=False):
-
         ExcelPhenotypeDatabase.validate_sample_sequences(
             self.get_sample_order(warn=False),
             sequence,

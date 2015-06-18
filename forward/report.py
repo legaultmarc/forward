@@ -176,9 +176,15 @@ class GLMReportSection(Section):
 
         corr_mat = np.load(corr_mat_fn)
 
-        fig = plt.figure(figsize=(9, 8), tight_layout=True)
-        sbn.symmatplot(corr_mat, names=self.report.experiment["outcomes"],
-                       cmap="coolwarm")
+        fig = plt.figure(figsize=(10, 9), tight_layout=True)
+
+        names = self.report.experiment["outcomes"]
+
+        # Only show the names on the matrix if not too many.
+        diag_names = len(names) <= 15
+
+        sbn.symmatplot(corr_mat, names=names, cmap="coolwarm",
+                       diag_names=diag_names, annot=diag_names)
 
         path = os.path.join(self.report.assets, "images")
 
@@ -225,8 +231,9 @@ class GLMReportSection(Section):
         for i in range(code):
             mask = data[:, 0] == i
             # TODO Use a better threshold for coloring.
-            dev_mask = (deviations > 0.02) & mask
-            non_dev_mask = (deviations <= 0.02) & mask
+            color_threshold = 0.025
+            dev_mask = (deviations > color_threshold) & mask
+            non_dev_mask = (deviations <= color_threshold) & mask
 
             # Plot black for non-deviating.
             ax.scatter(osm[non_dev_mask], osr[non_dev_mask], color="black",
@@ -234,8 +241,9 @@ class GLMReportSection(Section):
 
             # Plot colored dots (deviating).
             phen = [(k, v) for k, v in phen_codes.items() if v == i][0][0]
-            ax.scatter(osm[dev_mask], osr[dev_mask], color=colors[i], s=10,
-                       marker="o", label=phen)
+            ax.scatter(osm[dev_mask], osr[dev_mask],
+                       color=colors[i % len(colors)], s=10, marker="o",
+                       label=phen)
 
         xs = np.arange(*ax.get_xlim())
         ax.plot(xs, slope * xs + intercept, "--", color="#6D784B",
