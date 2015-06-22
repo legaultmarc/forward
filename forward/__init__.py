@@ -13,3 +13,10 @@ SQLAlchemyBase = declarative_base()
 SQLAlchemySession = sqlalchemy.orm.sessionmaker()
 
 FORWARD_INIT_TIME = datetime.datetime.now()
+
+
+def test(verbosity=1):
+    import unittest
+    from .tests import test_suite
+
+    unittest.TextTestRunner(verbosity=verbosity).run(test_suite)

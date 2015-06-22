@@ -62,7 +62,7 @@ class PhenotypeDatabaseInterface(object):
         missing = old_seq - new_seq
         extra = new_seq - old_seq
 
-        if not allow_subset and missing:
+        if (not allow_subset) and missing:
             message = ("Can't set the sequence because some entries are "
                        "missing resulting in ambiguous order.")
             raise ValueError(message)
