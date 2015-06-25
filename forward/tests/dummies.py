@@ -5,20 +5,29 @@
 # http://creativecommons.org/licenses/by-nc/4.0/ or send a letter to Creative
 # Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
+from __future__ import division
 
 import random
 
 import numpy as np
 
 from ..phenotype.db import PhenotypeDatabaseInterface
+from ..genotype import GenotypeDatabaseInterface
+
 
 class DummyPhenDB(PhenotypeDatabaseInterface):
+    """Implementation of the PhenotypeDatabaseInterface.
 
+    This 'dummy' implementation is used for testing, but it is also a good
+    example for people who want to write their own phenotype database parser.
+
+    This specific class should be used to test components of the forward tool
+    that need to interact with a phenotype database object.
+
+    """
     def __init__(self):
         # Create some samples.
-        self.samples = []
-        for i in range(100):
-            self.samples.append("sample{}".format(i + 1))
+        self.samples = ["sample{}".format(i + 1) for i in range(100)]
         random.shuffle(self.samples)
 
         # Generate some data.
@@ -74,3 +83,97 @@ class DummyPhenDB(PhenotypeDatabaseInterface):
             v = np.vstack((v, self.get_phenotype_vector(name)))
 
         return np.corrcoef(v)
+
+
+class DummyGenotypeDatabase(GenotypeDatabaseInterface):
+    """Implementation of the GenotypeDatabaseInterface.
+
+    This 'dummy' implementation is used for testing, but it is also a good
+    example for people who want to write their own genotype file parser.
+
+    This specific class should be used to test components of the forward tool
+    that need to interact with a genotype database object.
+
+    """
+    def __init__(self):
+        n_samples = 100
+        self.samples = [
+            "sample{}".format(i + 1) for i in range(n_samples)
+        ]
+
+        # Initialize filters.
+        self.exclude_names = []
+        self.maf_filter = 0
+        self.completion_filter = 0
+
+        # Create genotypes for 5 fictional markers.
+        self.mafs = [0.05, 0.10, 0.15, 0.20, 0.25]
+        self.genotypes = {}
+        for snp in range(5):
+            maf = self.mafs[snp]
+            snp = "snp{}".format(snp + 1)
+
+            # Select the samples that will have the reference homo. genotype
+            mutation_prob = maf ** 2 + 2 * maf * (1 - maf)
+            self.genotypes[snp] = np.random.binomial(
+                1, mutation_prob, n_samples
+            ).astype(float)
+
+            # Draw the heterozygotes and homo minors
+            # Use the probability of being homo minor given that the sample
+            # carries the mutation.
+            p = maf ** 2
+            p /= p + (2 * maf * (1 - maf))
+            mutants = self.genotypes[snp] == 1
+            n_mutants = np.sum(mutants)
+
+            self.genotypes[snp][mutants] += np.random.binomial(
+                1, p, n_mutants
+            )
+
+            # Add some no calls.
+            missings = np.random.binomial(1, 0.02, 100).astype(bool)
+            self.genotypes[snp][missings] = np.nan
+
+    def experiment_init(self, experiment):
+        # Filtering
+        excludes = set()
+        for snp in self.genotypes.keys():
+            # maf filtering
+            maf = np.nansum(self.genotypes[snp])
+            maf /= (2 * self.genotypes[snp].shape[0])
+            if maf < self.maf_filter:
+                excludes.add(snp)
+                continue
+
+            # completion filtering
+            completion = (np.sum(~np.isnan(self.genotypes[snp])) /
+                          self.genotypes[snp].shape[0])
+            if completion < self.completion_filter:
+                excludes.add(snp)
+                continue
+
+        # name based filtering
+        for snp in (set(self.exclude_names) | excludes):
+            if snp in self.genotypes:
+                del self.genotypes[snp]
+
+    def get_genotypes(self, variant_name):
+        try:
+            return self.genotypes[variant_name]
+        except KeyError:
+            raise ValueError("Can't find variant '{}'.".format(variant_name))
+
+    def filter_name(self, variant_list):
+        if type(variant_list) in (tuple, list):
+            self.exclude_names = variant_list
+
+        else:
+            with open(variant_list, "r") as f:
+                self.exclude_names = set(f.read().splitlines())
+
+    def filter_maf(self, maf):
+        self.maf_filter = maf
+
+    def filter_completion(self, rate):
+        self.completion_filter = rate

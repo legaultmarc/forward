@@ -125,7 +125,8 @@ class GenotypeDatabaseInterface(object):
         """
         raise NotImplementedError()
 
-    # Experiment initalization including fillin up the database.
+    # Experiment initalization including filling up the database and filtering
+    # variants.
     def experiment_init(self, experiment):
         """Experiment specific initialization.
 
@@ -139,7 +140,11 @@ class GenotypeDatabaseInterface(object):
         Variant.__table__.create(experiment.engine)
 
     # Filtering methods.
-    def extract_variants(self, variant_list):
+    def filter_name(self, variant_list):
+        """Filtering by variant id.
+
+        The argument can be either a path to a file or a list of names.
+        """
         raise NotImplementedError()
 
     def filter_maf(self, maf):
@@ -302,11 +307,17 @@ class MemoryImpute2Geno(GenotypeDatabaseInterface):
         if self._frozen:
             raise FrozenDatabaseError()
 
-        logger.info("Keeping only variants with IDs in file: '{}'".format(
-            names_list
-        ))
-        with open(names_list, "r") as f:
-            self.names = set([i.rstrip() for i in f.readlines()])
+        # A list of IDs.
+        if type(names_list) in (list, tuple):
+            self.names = names_list
+
+        # A file of IDs.
+        else:
+            logger.info("Keeping only variants with IDs in file: '{}'".format(
+                names_list
+            ))
+            with open(names_list, "r") as f:
+                self.names = set(f.read().splitlines())
 
     def exclude_samples(self, samples_list):
         if self._frozen:

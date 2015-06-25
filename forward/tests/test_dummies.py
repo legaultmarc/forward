@@ -10,6 +10,8 @@ Test for the dummy classes. These classes imitate the forward API for testing
 purposes.
 """
 
+from __future__ import division
+
 import unittest
 import random
 import logging
@@ -91,3 +93,44 @@ class TestDummyPhenDB(unittest.TestCase):
 
         mat = self.db.get_correlation_matrix(self.db.get_phenotypes())
         self.assertEquals(mat.shape, (5, 5))
+
+class TestDummyGenotypeDB(unittest.TestCase):
+    """Test the dummy genotype database."""
+
+    def setUp(self):
+        self.variants = ["snp{}".format(i + 1) for i in range(5)]
+
+        self.db = dummies.DummyGenotypeDatabase()
+
+    def test_get_genotypes(self):
+        self.db.experiment_init(None)
+        for var in self.variants:
+            geno = self.db.get_genotypes(var)
+            self.assertEquals(geno.shape[0], 100)
+
+        self.assertRaises(ValueError, self.db.get_genotypes, "test")
+
+    def test_filters(self):
+        self.db.experiment_init(None)
+        # Compute statistics before.
+        should_be_removed = set()
+        for var in self.variants:
+            geno = self.db.get_genotypes(var)
+
+            maf = np.nansum(geno)
+            maf /= 2 * geno.shape[0]
+            if maf < 0.12:
+                should_be_removed.add(var)
+
+            completion = np.sum(~np.isnan(geno)) / geno.shape[0]
+            if completion < 0.98:
+                should_be_removed.add(var)
+
+        self.db.filter_maf(0.12)
+        self.db.filter_completion(0.98)
+        self.db.experiment_init(None)  # Redo this for filtering.
+
+        self.assertEquals(
+            set(self.db.genotypes.keys()),
+            (set(self.variants) - should_be_removed)
+        )
