@@ -21,6 +21,7 @@ import numpy as np
 
 from . import dummies
 
+
 class TestDummyPhenDB(unittest.TestCase):
     """Test the DummyPhenDB class."""
 
@@ -93,6 +94,7 @@ class TestDummyPhenDB(unittest.TestCase):
 
         mat = self.db.get_correlation_matrix(self.db.get_phenotypes())
         self.assertEquals(mat.shape, (5, 5))
+
 
 class TestDummyGenotypeDB(unittest.TestCase):
     """Test the dummy genotype database."""
