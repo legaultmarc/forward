@@ -38,3 +38,20 @@ The important concept and modules are as follows:
               or the YAML configuration files) should all converge into
               `Experiment` objects.
 
+# Installation
+
+Eventually, this will go on `pypi`. In the meantime, I have created a Makefile
+that should take care of everything. The recommended method to install the
+package (for now) is to clone it and make it.
+
+```sh
+git clone git@github.com:legaultmarc/forward.git
+cd forward
+make
+```
+
+and testing is achieved using:
+
+```sh
+make test
+```

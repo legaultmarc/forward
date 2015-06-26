@@ -1,4 +1,5 @@
 include README.markdown
 include LICENSE.txt
+include forward/templates/default.html
 recursive-include forward/templates *
 recursive-include forward/tests/data *

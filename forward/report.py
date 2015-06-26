@@ -15,6 +15,8 @@ try:
 except ImportError:
     import pickle  # Py3
 
+import shutil
+from pkg_resources import resource_filename
 import collections
 import os
 import datetime
@@ -60,31 +62,34 @@ class Report(object):
     def __init__(self, experiment):
 
         if type(experiment) is Experiment:
-            experiment = experiment.info
+            self.experiment = experiment.info
         else:
             # Assume this is the name of the Experiment.
             info_pkl = os.path.join(experiment, "experiment_info.pkl")
             with open(info_pkl, "rb") as f:
-                experiment = pickle.load(f)
+                self.experiment = pickle.load(f)
 
-        self.experiment = experiment
         logger.info("Generating a report for experiment {}".format(
-            experiment["name"]
+            self.experiment["name"]
         ))
 
         # SQLAlchemy
-        self.engine = sqlalchemy.create_engine(experiment["engine_url"])
+        self.engine = sqlalchemy.create_engine(self.experiment["engine_url"])
         SQLAlchemySession.configure(bind=self.engine)
         self.session = SQLAlchemySession()
 
-        # Create an assets folder.
-        self.assets = "assets"
-        if not os.path.isdir(self.assets):
-            os.makedirs(os.path.join(self.assets, "images"))
+        # Create a report folder.
+        self.report_path = os.path.join(self.experiment["name"], "report")
+
+        # Create an assets folder (and the parents).
+        self.assets = os.path.join(self.report_path, "assets")
+        deepest = os.path.join(self.assets, "images")
+        if not os.path.isdir(deepest):
+            os.makedirs(deepest)
 
         # jinja2
         self.env = Environment(loader=PackageLoader("forward", "templates"))
-        self.env.globals = {"assets": self.assets}
+        self.env.globals = {"assets": "assets"}  # Relative url
         self.template = self.env.get_template("default.html")
 
         self.contents = {}
@@ -109,13 +114,25 @@ class Report(object):
         # Add datetime.
         self.contents["now"] = datetime.datetime.now()
 
-        fn = "test.html"
+        fn = os.path.join(self.report_path, "report.html")
         with open(fn, "wb") as f:
             f.write(
                 self.template.render(
                     sections=self.sections, **self.contents
                 ).encode("utf-8")
             )
+
+        # We need to copy the template dependencie (e.g. css files).
+        try:
+            os.makedirs(os.path.join(self.report_path, "css"))
+        except OSError:
+            pass  # The directory probably already exists.
+
+        shutil.copyfile(
+            resource_filename(__name__, "templates/css/default.css"),
+            os.path.join(self.report_path, "css", "default.css")
+        )
+
         webbrowser.open_new_tab("file://{}".format(os.path.abspath(fn)))
 
 

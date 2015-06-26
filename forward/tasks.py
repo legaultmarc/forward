@@ -119,7 +119,7 @@ class GLMTest(Task):
     def __init__(self, *args, **kwargs):
         if not STATSMODELS_AVAILABLE:
             raise ImportError("GLMTest class requires statsmodels. Install "
-                              "the package first.")
+                              "the package first (and patsy).")
         super(GLMTest, self).__init__(*args, **kwargs)
 
     def run_task(self, experiment, task_name, work_dir):
