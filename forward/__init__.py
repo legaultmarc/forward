@@ -15,6 +15,12 @@ SQLAlchemySession = sqlalchemy.orm.sessionmaker()
 FORWARD_INIT_TIME = datetime.datetime.now()
 
 
+try:
+    from .version import forward_version as __version__
+except ImportError:
+    __version__ = None
+
+
 def test(verbosity=1):
     import unittest
     from .tests import test_suite
