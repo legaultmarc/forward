@@ -16,7 +16,6 @@ except NameError:
 This module provides utilities to handle genotype data.
 """
 
-import collections
 import logging
 logger = logging.getLogger(__name__)
 
@@ -215,7 +214,6 @@ class MemoryImpute2Geno(GenotypeDatabaseInterface):
         for dosage, info in self.impute2file:
 
             name = info["name"]
-            maf = info["maf"]
 
             # Go through the filters.
             # Name

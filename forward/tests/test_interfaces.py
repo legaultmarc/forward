@@ -6,8 +6,7 @@
 # Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 """
-Test for the dummy classes. These classes imitate the forward API for testing
-purposes.
+Test for the implementation of the various interfaces defined by forward.
 """
 
 from __future__ import division
@@ -24,8 +23,28 @@ from . import dummies
 from ..phenotype.db import ExcelPhenotypeDatabase
 
 
+# Interfaces, generic tests.
 class TestPhenDBInterface(object):
-    """Test the DummyPhenDB class."""
+    """Test an implementation of PhenotypeDatabaseInterface.
+
+    This can be used to test compliance to the interface expected by forward
+    when working with phenotypic information.
+
+    To test a custom class, use the following pattern: ::
+
+        import unittest
+        from forward.tests.test_interfaces import TestPhenDBInterface
+
+        class TestMyClass(TestPhenDBInterface, unittest.TestCase):
+            def setUp(self):
+                self.db = MyClass()
+                self._variables = ["var1", "var2", ...]
+
+    The two mandatory parameters are `db`, an instance of the class
+    implementing the interface and `_variables` a list containing the expected
+    phenotypes represented in the instance.
+
+    """
 
     def test_get_phenotypes(self):
         """Check if all the column names are returned."""
@@ -101,41 +120,43 @@ class TestPhenDBInterface(object):
         self.assertEquals(mat.shape, (len(cols), len(cols)))
 
 
-class TestExcelPhenotypeDatabase(TestPhenDBInterface, unittest.TestCase):
-    def setUp(self):
-        self.db = ExcelPhenotypeDatabase(
-            resource_filename(__name__, "data/test_excel_db.xlsx"),
-            "sample", missing_values="-9"
-        )
-        self._variables = ["qte1", "discrete1", "qte2", "discrete2", "covar"]
+class TestGenoDBInterface(object):
+    """Test an implementation of GenotypeDatabaseInterface.
 
+    This can be used to test compliance to the interface expected by forward
+    when working with genotypic information.
 
-class TestDummyPhenotypeDatabase(TestPhenDBInterface, unittest.TestCase):
-    def setUp(self):
-        self.db = dummies.DummyPhenDB()
-        self._variables = ["var1", "var2", "var3", "var4", "var5"]
+    To test a custom class, use the following pattern: ::
 
+        import unittest
+        from forward.tests.test_interfaces import TestGenoDBInterface
 
-class TestDummyGenotypeDB(unittest.TestCase):
-    """Test the dummy genotype database."""
+        class TestMyClass(TestGenoDBInterface, unittest.TestCase):
+            def setUp(self):
+                self.db = MyClass()
+                self._variants = ["var1", "var2", ...]
 
-    def setUp(self):
-        self.variants = ["snp{}".format(i + 1) for i in range(5)]
-        self.db = dummies.DummyGenotypeDatabase()
+    The two mandatory parameters are `db`, an instance of the class
+    implementing the interface and `_variants` a list containing the expected
+    genetic variants represented in the instance.
+
+    """
 
     def test_get_genotypes(self):
+        # TODO, replace with a dummy experiment.
         self.db.experiment_init(None)
-        for var in self.variants:
+        for var in self._variants:
             geno = self.db.get_genotypes(var)
             self.assertEquals(geno.shape[0], 100)
 
-        self.assertRaises(ValueError, self.db.get_genotypes, "test")
+        # Hopefully, people will not use _testz as a variant name.
+        self.assertRaises(ValueError, self.db.get_genotypes, "_testz")
 
     def test_filters(self):
         self.db.experiment_init(None)
         # Compute statistics before.
         should_be_removed = set()
-        for var in self.variants:
+        for var in self._variants:
             geno = self.db.get_genotypes(var)
 
             maf = np.nansum(geno)
@@ -153,5 +174,30 @@ class TestDummyGenotypeDB(unittest.TestCase):
 
         self.assertEquals(
             set(self.db.genotypes.keys()),
-            (set(self.variants) - should_be_removed)
+            (set(self._variants) - should_be_removed)
         )
+
+
+# Implementations
+class TestExcelPhenotypeDatabase(TestPhenDBInterface, unittest.TestCase):
+    """Tests for ExcelPhenotypeDatabase."""
+    def setUp(self):
+        self.db = ExcelPhenotypeDatabase(
+            resource_filename(__name__, "data/test_excel_db.xlsx"),
+            "sample", missing_values="-9"
+        )
+        self._variables = ["qte1", "discrete1", "qte2", "discrete2", "covar"]
+
+
+class TestDummyPhenotypeDatabase(TestPhenDBInterface, unittest.TestCase):
+    """Tests for DummyPhenDB."""
+    def setUp(self):
+        self.db = dummies.DummyPhenDB()
+        self._variables = ["var1", "var2", "var3", "var4", "var5"]
+
+
+class TestDummyGenotypeDatabase(TestGenoDBInterface, unittest.TestCase):
+    """Tests for DummyGenotypeDatabase."""
+    def setUp(self):
+        self.db = dummies.DummyGenotypeDatabase()
+        self._variants = ["snp{}".format(i + 1) for i in range(5)]
