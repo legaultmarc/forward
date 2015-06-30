@@ -60,9 +60,9 @@ def setup_package():
         test_suite="forward.tests.test_suite",
         keywords="bioinformatics genomics phewas epidemiology cohort",
         install_requires=["numpy >= 1.8.1", "pandas >= 0.15",
-                          "gepyto >= 0.9.2", "SQLAlchemy >= 1.0.6",
-                          "PyYAML >= 3.11", "scipy >= 0.15.1",
-                          "matplotlib >= 1.4.3", "Jinja2 >= 2.7.3",
+                          "gepyto >= 0.9.2", "SQLAlchemy >= 0.9.8",
+                          "PyYAML >= 3.11", "scipy >= 0.14.0",
+                          "matplotlib >= 1.4.2", "Jinja2 >= 2.7.3",
                           "xlrd >= 0.9.3", "seaborn >= 0.5.1"],
     )
 

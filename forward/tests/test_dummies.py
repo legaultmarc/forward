@@ -21,34 +21,38 @@ logging.basicConfig()
 import numpy as np
 
 from . import dummies
+from ..phenotype.db import ExcelPhenotypeDatabase
 
 
-class TestDummyPhenDB(unittest.TestCase):
+class TestPhenDBInterface(object):
     """Test the DummyPhenDB class."""
-
-    def setUp(self):
-        self.db = dummies.DummyPhenDB()
-        self.variables = ["var1", "var2", "var3", "var4", "var5"]
 
     def test_get_phenotypes(self):
         """Check if all the column names are returned."""
         self.assertEquals(
             set(self.db.get_phenotypes()),
-            set(self.variables)
+            set(self._variables)
         )
 
     def test_get_phenotype_vector(self):
         """Check the type and length of the generated variables."""
-        for var in self.variables:
+        n_samples = len(self.db.get_sample_order())
+        for var in self.db.get_phenotypes():
             vec = self.db.get_phenotype_vector(var)
-            self.assertEquals(vec.shape[0], 100)
+            self.assertEquals(vec.shape[0], n_samples)
             self.assertTrue(type(vec) is np.ndarray)
 
     def test_set_sample_order(self):
-        """Try changing the sample order (permutation)."""
+        """Try changing the sample order (permutation).
+
+        This also acts as a test for db.get_sample_order(). There is no direct
+        way of testing this method without making assumptions about the
+        underlying structure.
+
+        """
         # Save the initial data.
         temp = {}
-        for var in self.variables:
+        for var in self.db.get_phenotypes():
             temp[var] = self.db.get_phenotype_vector(var)
 
         samples = self.db.get_sample_order()
@@ -60,7 +64,7 @@ class TestDummyPhenDB(unittest.TestCase):
         self.assertEquals(samples_perm, self.db.get_sample_order())
 
         # Check that the data was also reordered.
-        for var in self.variables:
+        for var in self._variables:
             np.testing.assert_equal(
                 temp[var][permutation], self.db.get_phenotype_vector(var)
             )
@@ -71,7 +75,8 @@ class TestDummyPhenDB(unittest.TestCase):
         """
         samples = self.db.get_sample_order()
         random.shuffle(samples)
-        samples = samples[:50]  # Exclude 50 individuals.
+        # Exclude half of the individuals.
+        samples = samples[:(len(samples) // 2)]
 
         # Some samples are missing.
         self.assertRaises(ValueError, self.db.set_sample_order, samples)
@@ -83,18 +88,32 @@ class TestDummyPhenDB(unittest.TestCase):
         samples = samples[:50]
         self.db.set_sample_order(samples, allow_subset=True)
 
-    def test_get_sample_order(self):
-        """Test the getter for sample order."""
-        self.assertEquals(self.db.samples, self.db.get_sample_order())
-
     def test_get_correlation_matrix(self):
         """Test the shape for the correlation matrix."""
         # Test different subsets of phenotypes.
-        mat = self.db.get_correlation_matrix(["var1", "var2"])
-        self.assertEquals(mat.shape, (2, 2))
+        # Select 3 columns.
+        cols = self.db.get_phenotypes()
+        random.shuffle(cols)
+        mat = self.db.get_correlation_matrix(cols[:3])
+        self.assertEquals(mat.shape, (3, 3))
 
         mat = self.db.get_correlation_matrix(self.db.get_phenotypes())
-        self.assertEquals(mat.shape, (5, 5))
+        self.assertEquals(mat.shape, (len(cols), len(cols)))
+
+
+class TestExcelPhenotypeDatabase(TestPhenDBInterface, unittest.TestCase):
+    def setUp(self):
+        self.db = ExcelPhenotypeDatabase(
+            resource_filename(__name__, "data/test_excel_db.xlsx"),
+            "sample", missing_values="-9"
+        )
+        self._variables = ["qte1", "discrete1", "qte2", "discrete2", "covar"]
+
+
+class TestDummyPhenotypeDatabase(TestPhenDBInterface, unittest.TestCase):
+    def setUp(self):
+        self.db = dummies.DummyPhenDB()
+        self._variables = ["var1", "var2", "var3", "var4", "var5"]
 
 
 class TestDummyGenotypeDB(unittest.TestCase):
@@ -102,7 +121,6 @@ class TestDummyGenotypeDB(unittest.TestCase):
 
     def setUp(self):
         self.variants = ["snp{}".format(i + 1) for i in range(5)]
-
         self.db = dummies.DummyGenotypeDatabase()
 
     def test_get_genotypes(self):

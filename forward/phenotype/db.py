@@ -107,13 +107,13 @@ class ExcelPhenotypeDatabase(PhenotypeDatabaseInterface):
         self.data = pd.read_excel(filename, na_values=missing_values)
 
         # Set the sample column as the index.
-        self.data = self.data.set_index(self.data[sample_column].astype(str))
+        self.data = self.data.set_index(sample_column)
 
         # User will be warned if the required sample order was not defined.
         self._order_is_set = False
 
     def get_phenotypes(self):
-        return self.data.columns
+        return list(self.data.columns)
 
     def set_sample_order(self, sequence, allow_subset=False):
         ExcelPhenotypeDatabase.validate_sample_sequences(
@@ -129,7 +129,7 @@ class ExcelPhenotypeDatabase(PhenotypeDatabaseInterface):
         if not self._order_is_set and warn:
             logger.warning("No sample order was given for the phenotype "
                            "database.")
-        return self.data.index.values
+        return list(self.data.index.values)
 
     def get_phenotype_vector(self, name, warn=True):
         if not self._order_is_set and warn:
