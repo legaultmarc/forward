@@ -107,7 +107,8 @@ class ExcelPhenotypeDatabase(PhenotypeDatabaseInterface):
         self.data = pd.read_excel(filename, na_values=missing_values)
 
         # Set the sample column as the index.
-        self.data = self.data.set_index(sample_column)
+        self.data[sample_column] = self.data[sample_column].astype(str)
+        self.data = self.data.set_index(sample_column, verify_integrity=True)
 
         # User will be warned if the required sample order was not defined.
         self._order_is_set = False

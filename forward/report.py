@@ -22,7 +22,6 @@ import os
 import datetime
 import webbrowser
 import logging
-
 logger = logging.getLogger()
 
 import sqlalchemy

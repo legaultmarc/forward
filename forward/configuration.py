@@ -11,7 +11,7 @@ This module provides utilities to parse the yaml configuration file into
 """
 
 import logging
-logging.basicConfig()
+logger = logging.getLogger(__name__)
 
 from .phenotype.variables import DiscreteVariable, ContinuousVariable
 from .experiment import Experiment
@@ -23,7 +23,6 @@ from .tasks import *
 try:
     import yaml
 except ImportError as e:
-    logger = logging.getLogger(__name__)
     logger.critical("Install the yaml package: "
                     "https://pypi.python.org/pypi/PyYAML")
     raise e

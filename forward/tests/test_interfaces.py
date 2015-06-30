@@ -15,7 +15,6 @@ from pkg_resources import resource_filename
 import unittest
 import random
 import logging
-logging.basicConfig()
 
 import numpy as np
 
@@ -60,6 +59,17 @@ class TestPhenDBInterface(object):
             vec = self.db.get_phenotype_vector(var)
             self.assertEquals(vec.shape[0], n_samples)
             self.assertTrue(type(vec) is np.ndarray)
+
+    def test_get_sample_order(self):
+        samples = self.db.get_sample_order()
+        # Check type.
+        self.assertTrue(type(samples) is list)
+
+        # We can't test if we have no samples.
+        self.assertTrue(len(samples) > 3)
+
+        # Check that we're using strings.
+        self.assertTrue(type(samples[0]) in (str, unicode))
 
     def test_set_sample_order(self):
         """Try changing the sample order (permutation).

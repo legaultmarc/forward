@@ -5,6 +5,7 @@
 # http://creativecommons.org/licenses/by-nc/4.0/ or send a letter to Creative
 # Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
+import logging
 import datetime
 from sqlalchemy.ext.declarative import declarative_base
 import sqlalchemy.orm
@@ -14,6 +15,7 @@ SQLAlchemySession = sqlalchemy.orm.sessionmaker()
 
 FORWARD_INIT_TIME = datetime.datetime.now()
 
+logging.basicConfig()
 
 try:
     from .version import forward_version as __version__
