@@ -108,7 +108,7 @@ class Task(object):
         meta information about this task's execution.
 
         """
-        if len(self._info) == 0:
+        if not self._info:
             return
 
         with open(os.path.join(self.work_dir, "task_info.pkl"), "wb") as f:
@@ -194,8 +194,8 @@ class GLMTest(Task):
             num_tests -= 1
 
 
-    @staticmethod
-    def _glm_process(lock, job_queue, results_queue):
+    @classmethod
+    def _glm_process(cls, lock, job_queue, results_queue):
         while True:
             with lock:
                 data = job_queue.get()
@@ -204,7 +204,7 @@ class GLMTest(Task):
                     job_queue.put(data)  # Put the sentinel back.
                     break
 
-            results = GLMTest._glm(*data)
+            results = cls._glm(*data)
 
             with lock:
                 results_queue.put(results)

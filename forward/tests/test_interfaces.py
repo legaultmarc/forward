@@ -44,6 +44,8 @@ class TestPhenDBInterface(object):
     phenotypes represented in the instance.
 
     """
+    def setUp(self):
+        pass
 
     def test_get_phenotypes(self):
         """Check if all the column names are returned."""
@@ -152,9 +154,16 @@ class TestGenoDBInterface(object):
 
     """
 
+    def setUp(self):
+        """Provide an experiment object."""
+        self.experiment = dummies.DummyExperiment(genotype_container=self)
+
+    def tearDown(self):
+        self.experiment.clean()
+
     def test_get_genotypes(self):
-        # TODO, replace with a dummy experiment.
-        self.db.experiment_init(None)
+        self.db.experiment_init(self.experiment)
+
         for var in self._variants:
             geno = self.db.get_genotypes(var)
             self.assertEquals(geno.shape[0], 100)
@@ -163,7 +172,6 @@ class TestGenoDBInterface(object):
         self.assertRaises(ValueError, self.db.get_genotypes, "_testz")
 
     def test_filters(self):
-        self.db.experiment_init(None)
         # Compute statistics before.
         should_be_removed = set()
         for var in self._variants:
@@ -180,7 +188,10 @@ class TestGenoDBInterface(object):
 
         self.db.filter_maf(0.12)
         self.db.filter_completion(0.98)
-        self.db.experiment_init(None)  # Redo this for filtering.
+        # Apply the filtering and fill the DB.
+        self.db.experiment_init(self.experiment)
+
+        # TODO: Test the contents of the database.
 
         self.assertEquals(
             set(self.db.genotypes.keys()),
@@ -192,6 +203,7 @@ class TestGenoDBInterface(object):
 class TestExcelPhenotypeDatabase(TestPhenDBInterface, unittest.TestCase):
     """Tests for ExcelPhenotypeDatabase."""
     def setUp(self):
+        super(TestExcelPhenotypeDatabase, self).setUp()
         self.db = ExcelPhenotypeDatabase(
             resource_filename(__name__, "data/test_excel_db.xlsx"),
             "sample", missing_values="-9"
@@ -202,12 +214,14 @@ class TestExcelPhenotypeDatabase(TestPhenDBInterface, unittest.TestCase):
 class TestDummyPhenotypeDatabase(TestPhenDBInterface, unittest.TestCase):
     """Tests for DummyPhenDB."""
     def setUp(self):
-        self.db = dummies.DummyPhenDB()
+        super(TestDummyPhenotypeDatabase, self).setUp()
+        self.db = dummies.DummyPhenDatabase()
         self._variables = ["var1", "var2", "var3", "var4", "var5"]
 
 
 class TestDummyGenotypeDatabase(TestGenoDBInterface, unittest.TestCase):
     """Tests for DummyGenotypeDatabase."""
     def setUp(self):
+        super(TestDummyGenotypeDatabase, self).setUp()
         self.db = dummies.DummyGenotypeDatabase()
         self._variants = ["snp{}".format(i + 1) for i in range(5)]

@@ -196,11 +196,16 @@ class GLMReportSection(Section):
 
         names = self.report.experiment["outcomes"]
 
-        # Only show the names on the matrix if not too many.
-        diag_names = len(names) <= 15
+        # Only color half of the matrix.
+        mask = np.zeros_like(corr_mat)
+        mask[np.triu_indices_from(mask)] = True
 
-        sbn.symmatplot(corr_mat, names=names, cmap="coolwarm",
-                       diag_names=diag_names, annot=diag_names)
+        # Show the values if less than 15 variables.
+        show_vals = corr_mat.shape[0] <= 15
+
+        sbn.heatmap(corr_mat, mask=mask, square=True, cmap="coolwarm",
+                    xticklabels=names, yticklabels=names, linewidths=0.5,
+                    annot=True, fmt=".2f")
 
         path = os.path.join(self.report.assets, "images")
 

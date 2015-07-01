@@ -16,10 +16,6 @@ logger = logging.getLogger(__name__)
 from .phenotype.variables import DiscreteVariable, ContinuousVariable
 from .experiment import Experiment
 
-from .phenotype.db import *
-from .genotype import *
-from .tasks import *
-
 try:
     import yaml
 except ImportError as e:
@@ -99,11 +95,37 @@ def _parse_tasks(tasks):
 
 
 def get_class(name, class_type=None):
-    if not name:
-        raise AttributeError("You need to provide a 'pyclass' field.")
+    # If it's already in scope, just return it.
     if name in globals():
-        # TODO We will certainly use some kind of dynamic imports so that the
-        # use can easily add classes.
         return globals()[name]
-    else:
-        raise AttributeError("Could not find class '{}'.".format(name))
+
+    # Try importing it from the forward package.
+    package = None
+    if class_type == "tasks":
+        package = "tasks"
+    elif class_type == "genotypes":
+        package = "genotype"
+    elif class_type == "database":
+        package = "phenotype.db"
+
+    try:
+        pkg = __import__(package, globals(), locals(), [name], 1)
+        if hasattr(pkg, name):
+            return getattr(pkg, name)
+    except ImportError:
+        pass
+
+    # Try importing from user class.
+    path, class_name = name.rsplit(".", 1)
+    try:
+
+        print "BANANA", path, class_name
+        pkg = __import__(path, globals(), locals(), [class_name], 0)
+        print "User in path", path, class_name
+
+        if hasattr(pkg, class_name):
+            return getattr(pkg, class_name)
+    except ImportError:
+        pass
+
+    raise AttributeError("Could not find class '{}'.".format(name))

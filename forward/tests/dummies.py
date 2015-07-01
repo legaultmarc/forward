@@ -8,14 +8,18 @@
 from __future__ import division
 
 import random
+import os
+import shutil
 
 import numpy as np
 
 from ..phenotype.db import PhenotypeDatabaseInterface
-from ..genotype import GenotypeDatabaseInterface
+from ..genotype import GenotypeDatabaseInterface, Variant
+from ..experiment import Experiment
+from .. import SQLAlchemySession
 
 
-class DummyPhenDB(PhenotypeDatabaseInterface):
+class DummyPhenDatabase(PhenotypeDatabaseInterface):
     """Implementation of the PhenotypeDatabaseInterface.
 
     This 'dummy' implementation is used for testing, but it is also a good
@@ -136,6 +140,10 @@ class DummyGenotypeDatabase(GenotypeDatabaseInterface):
             self.genotypes[snp][missings] = np.nan
 
     def experiment_init(self, experiment):
+
+        # Initialize the database.
+        super(DummyGenotypeDatabase, self).experiment_init(experiment)
+
         # Filtering
         excludes = set()
         for snp in self.genotypes.keys():
@@ -158,6 +166,22 @@ class DummyGenotypeDatabase(GenotypeDatabaseInterface):
             if snp in self.genotypes:
                 del self.genotypes[snp]
 
+        chroms = [str(i + 1) for i in range(23)] + ["X", "Y"]
+        variants = []
+        for snp in self.genotypes:
+            var = Variant(
+                name=snp,
+                chrom=random.choice(chroms),
+                pos=random.randint(100, 9999999),
+                mac=np.nansum(self.genotypes[snp]),
+                n_missing=np.sum(np.isnan(self.genotypes[snp])),
+                n_non_missing=np.sum(~np.isnan(self.genotypes[snp]))
+            )
+            variants.append(var)
+
+        experiment.session.add_all(variants)
+        experiment.session.commit()
+
     def get_genotypes(self, variant_name):
         try:
             return self.genotypes[variant_name]
@@ -177,3 +201,28 @@ class DummyGenotypeDatabase(GenotypeDatabaseInterface):
 
     def filter_completion(self, rate):
         self.completion_filter = rate
+
+
+class DummyExperiment(Experiment):
+    """Dummy experiment to use for testing."""
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+        self.name = ".fwd_test_experiment"
+
+        # Create a directory for the experiment.
+        try:
+            os.makedirs(self.name)
+        except OSError as e:
+            self.clean()
+
+        # Create a sqlalchemy engine and bind it to the session.
+        self.engine = self.get_engine(self.name, "sqlite")
+        SQLAlchemySession.configure(bind=self.engine)
+        self.session = SQLAlchemySession()
+
+        self.results_init()
+
+    def clean(self):
+        shutil.rmtree(self.name)

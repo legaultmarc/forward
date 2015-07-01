@@ -6,6 +6,7 @@
 # Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 import unittest
+import logging
 
-
+logging.disable(logging.CRITICAL)
 test_suite = unittest.defaultTestLoader.discover(__name__)
