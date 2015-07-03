@@ -54,6 +54,7 @@ class Task(object):
 
         # This will be automatically serialized when the task finishes.
         self._info = {}
+        self.task_meta_path = None
 
     def run_task(self, experiment, task_name, work_dir):
         self.work_dir = work_dir
@@ -111,7 +112,8 @@ class Task(object):
         if not self._info:
             return
 
-        with open(os.path.join(self.work_dir, "task_info.pkl"), "wb") as f:
+        self.task_meta_path = os.path.join(self.work_dir, "task_info.pkl")
+        with open(self.task_meta_path, "wb") as f:
             pickle.dump(self._info, f)
 
 

@@ -37,6 +37,13 @@ from .phenotype.variables import Variable, DiscreteVariable, ContinuousVariable
 
 
 class ExperimentResult(SQLAlchemyBase):
+    """SQLAlchemy class to handle experimental results.
+
+    TODO. This could potentially be refactored so that tested_entity is a
+    foreign key to the forward.genotype.Variant class. This would require
+    using concrete table inheritance.
+
+    """
     __tablename__ = "results"
 
     # Test information
@@ -162,6 +169,18 @@ class Experiment(object):
             raise NotImplementedError("Only sqlite is supported (for now).")
 
     def run_tasks(self):
+        """Run the tasks registered for this experiment.
+
+        This method takes care of the following:
+
+        - Create a task-specific work directory.
+        - Call the task's `done()` method to insure clean up code is executed.
+        - Commit the database (after all tasks are executed).
+        - Set the walltime for the experiment.
+        - Write the experiment metadata to disk in the experiment folder when
+          everything is over.
+
+        """
         # Create a directory for tasks to be able to have meta-data.
         tasks_dir = os.path.join(self.name, "tasks")
 

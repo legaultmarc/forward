@@ -204,7 +204,12 @@ class DummyGenotypeDatabase(GenotypeDatabaseInterface):
 
 
 class DummyExperiment(Experiment):
-    """Dummy experiment to use for testing."""
+    """Dummy experiment to use for testing.
+    
+    FIXME
+    I am not sure this is actually super useful...
+
+    """
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
