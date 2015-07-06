@@ -55,6 +55,9 @@ class DummyPhenDatabase(PhenotypeDatabaseInterface):
         return self.data.keys()
 
     def get_phenotype_vector(self, name):
+        if hasattr(name, "name"):
+            name = name.name  # Potentially a variable object.
+
         if name not in self.get_phenotypes():
             raise ValueError("{} not in database.".format(name))
 
@@ -106,7 +109,7 @@ class DummyGenotypeDatabase(GenotypeDatabaseInterface):
         ]
 
         # Initialize filters.
-        self.exclude_names = []
+        self.include_names = []
         self.maf_filter = 0
         self.completion_filter = 0
 
@@ -162,8 +165,11 @@ class DummyGenotypeDatabase(GenotypeDatabaseInterface):
                 continue
 
         # name based filtering
-        for snp in (set(self.exclude_names) | excludes):
-            if snp in self.genotypes:
+        if self.include_names:
+            excludes |= set(self.genotypes.keys()) - set(self.include_names)
+
+        for snp in excludes:
+            if snp in self.genotypes:  # pragma: no cover
                 del self.genotypes[snp]
 
         chroms = [str(i + 1) for i in range(23)] + ["X", "Y"]
@@ -190,11 +196,11 @@ class DummyGenotypeDatabase(GenotypeDatabaseInterface):
 
     def filter_name(self, variant_list):
         if type(variant_list) in (tuple, list):
-            self.exclude_names = variant_list
+            self.include_names = variant_list
 
         else:
             with open(variant_list, "r") as f:
-                self.exclude_names = set(f.read().splitlines())
+                self.include_names = set(f.read().splitlines())
 
     def filter_maf(self, maf):
         self.maf_filter = maf
@@ -206,8 +212,8 @@ class DummyGenotypeDatabase(GenotypeDatabaseInterface):
 class DummyExperiment(Experiment):
     """Dummy experiment to use for testing.
     
-    FIXME
-    I am not sure this is actually super useful...
+    This is used when testing the Genotype database interface to make sure
+    that the database gets filled.
 
     """
     def __init__(self, **kwargs):
@@ -219,7 +225,7 @@ class DummyExperiment(Experiment):
         # Create a directory for the experiment.
         try:
             os.makedirs(self.name)
-        except OSError as e:
+        except OSError as e:  # pragma: no cover
             self.clean()
 
         # Create a sqlalchemy engine and bind it to the session.

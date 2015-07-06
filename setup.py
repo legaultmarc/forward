@@ -63,7 +63,8 @@ def setup_package():
                           "gepyto >= 0.9.2", "SQLAlchemy >= 0.9.8",
                           "PyYAML >= 3.11", "scipy >= 0.14.0",
                           "matplotlib >= 1.4.2", "Jinja2 >= 2.7.3",
-                          "xlrd >= 0.9.3", "seaborn >= 0.5.1"],
+                          "xlrd >= 0.9.3", "seaborn >= 0.5.1",
+                          "six >= 1.9.0"],
     )
 
     return

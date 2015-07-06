@@ -6,11 +6,6 @@
 # Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 from __future__ import division
-try:
-    # Python2
-    range = xrange
-except NameError:
-    pass
 
 """
 This module provides utilities to handle genotype data.
@@ -24,7 +19,7 @@ import numpy as np
 import pandas as pd
 from sqlalchemy import Column, String, Integer, Float
 from sqlalchemy.ext.hybrid import hybrid_property
-
+from six.moves import range
 
 from . import SQLAlchemyBase
 
@@ -32,9 +27,6 @@ __all__ = ["MemoryImpute2Geno"]
 
 
 class FrozenDatabaseError(Exception):
-    def __init__(self):
-        pass
-
     def __str__(self):
         return ("Once initialized, genotype databases are immutable. Further "
                 "filtering needs to be done at the Task level.")
@@ -105,7 +97,9 @@ class GenotypeDatabaseInterface(object):
                 if hasattr(Variant, field):
                     args.append(getattr(Variant, field))
                 else:
-                    raise TypeError("No column {} for Variants.".format(field))
+                    raise ValueError(
+                        "No column {} for Variants.".format(field)
+                    )
 
             return session.query(*args)
 
@@ -136,7 +130,7 @@ class GenotypeDatabaseInterface(object):
 
         """
         # Create the tables corresponding to the SQLAlchemyBase subclasses.
-        Variant.__table__.create(experiment.engine)
+        Variant.__table__.create(experiment.engine, checkfirst=True)
 
     # Filtering methods.
     def filter_name(self, variant_list):
@@ -151,13 +145,6 @@ class GenotypeDatabaseInterface(object):
 
     def filter_completion(self, rate):
         raise NotImplementedError()
-
-    # Context manager interface.
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        pass
 
 
 class MemoryImpute2Geno(GenotypeDatabaseInterface):
@@ -282,7 +269,10 @@ class MemoryImpute2Geno(GenotypeDatabaseInterface):
             vect = self._mat.loc[variant_name, :].values
             return vect
         except KeyError:
-            return None
+            msg = "Variant {} not found in genotype database.".format(
+                variant_name
+            )
+            raise ValueError(msg)
 
     def filter_completion(self, rate):
         if self._frozen:

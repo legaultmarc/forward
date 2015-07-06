@@ -1,0 +1,10 @@
+[run]
+branch = True
+include = forward*
+omit = forward/__init__.py
+
+[report]
+exclude_lines =
+    def __repr__
+    pragma: no cover
+    raise NotImplementedError

@@ -17,11 +17,6 @@ Overall goals for this module will be to provide:
 
 """
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle  # Py3
-
 import os
 import datetime
 import logging
@@ -30,6 +25,7 @@ logger = logging.getLogger()
 import numpy as np
 import sqlalchemy
 from sqlalchemy import Column, Enum, String, Float
+from six.moves import cPickle as pickle
 
 from . import SQLAlchemySession, SQLAlchemyBase, FORWARD_INIT_TIME
 from .utils import format_time_delta

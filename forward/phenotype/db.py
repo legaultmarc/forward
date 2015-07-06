@@ -36,6 +36,17 @@ class PhenotypeDatabaseInterface(object):
         raise NotImplementedError()
 
     def get_phenotype_vector(self, name):
+        """Returns a numpy array representing the selected outcome for all
+        samples.
+
+        :param name: The name of the phenotype to extract.
+        :type name: str, unicode or
+                    :py:class:`forward.phenotype.variables.Variable`
+
+        :returns: A vector representing the outcome.
+        :rtype: :py:class:`numpy.ndarray`
+
+        """
         raise NotImplementedError()
 
     def set_sample_order(self, sequence, allow_subset=False):
@@ -143,7 +154,7 @@ class ExcelPhenotypeDatabase(PhenotypeDatabaseInterface):
             name = name.name
 
         if name not in self.data.columns:
-            raise Exception("'{}' is not in the database.".format(name))
+            raise ValueError("'{}' is not in the database.".format(name))
 
         return self.data.loc[:, name].values
 

@@ -15,11 +15,15 @@ from pkg_resources import resource_filename
 import unittest
 import random
 import logging
+import tempfile
+import string
 
 import numpy as np
 
 from . import dummies
 from ..phenotype.db import ExcelPhenotypeDatabase
+from ..phenotype.variables import Variable
+from ..genotype import Variant, FrozenDatabaseError, MemoryImpute2Geno
 
 
 # Interfaces, generic tests.
@@ -61,6 +65,21 @@ class TestPhenDBInterface(object):
             vec = self.db.get_phenotype_vector(var)
             self.assertEquals(vec.shape[0], n_samples)
             self.assertTrue(type(vec) is np.ndarray)
+
+    def test_get_phen_vector_na(self):
+        """Check what happens when we ask for a nonexisting vector."""
+        # you give love a
+        bad_name = "".join(
+            [random.choice(string.ascii_lowercase) for _ in range(100)]
+        )
+        self.assertRaises(ValueError, self.db.get_phenotype_vector, bad_name)
+
+    def test_get_phen_vector_variable(self):
+        """Test accession using a variable object."""
+        var = Variable(name=random.choice(self.db.get_phenotypes()))
+        vec = self.db.get_phenotype_vector(var)
+        self.assertTrue(type(vec) is np.ndarray)
+        self.assertTrue(vec.shape[0], len(self.db.get_sample_order()))
 
     def test_get_sample_order(self):
         samples = self.db.get_sample_order()
@@ -105,12 +124,21 @@ class TestPhenDBInterface(object):
 
         """
         samples = self.db.get_sample_order()
-        random.shuffle(samples)
+        new_samples = samples[:]
+        random.shuffle(new_samples)
         # Exclude half of the individuals.
-        samples = samples[:(len(samples) // 2)]
+        new_samples = new_samples[:(len(new_samples) // 2)]
 
         # Some samples are missing.
-        self.assertRaises(ValueError, self.db.set_sample_order, samples)
+        self.assertRaises(ValueError, self.db.set_sample_order, new_samples)
+
+    def test_set_sample_order_extra(self):
+        """Check if an exception is raised when extra values are in there."""
+        samples = self.db.get_sample_order()
+        new_samples = samples[:]
+        random.shuffle(new_samples)
+        new_samples.append("extra1")
+        self.assertRaises(ValueError, self.db.set_sample_order, new_samples)
 
     def test_set_sample_order_subset_allowed(self):
         """Test sample subset."""
@@ -161,42 +189,174 @@ class TestGenoDBInterface(object):
     def tearDown(self):
         self.experiment.clean()
 
+    def test_frozen_db_error(self):
+        exception = FrozenDatabaseError()
+        message = ("Once initialized, genotype databases are immutable. "
+                   "Further filtering needs to be done at the Task level.")
+        self.assertEquals(str(exception), message)
+
     def test_get_genotypes(self):
         self.db.experiment_init(self.experiment)
+        n_samples = len(self.db.get_sample_order())
 
         for var in self._variants:
             geno = self.db.get_genotypes(var)
-            self.assertEquals(geno.shape[0], 100)
+            self.assertEquals(geno.shape[0], n_samples)
 
         # Hopefully, people will not use _testz as a variant name.
         self.assertRaises(ValueError, self.db.get_genotypes, "_testz")
 
-    def test_filters(self):
-        # Compute statistics before.
+    def test_variant_obj(self):
+        """Test the behaviour of the Variant object."""
+        self.db.experiment_init(self.experiment)
+        query = self.experiment.session.query
+        for var in query(Variant):
+            geno = self.db.get_genotypes(var.name)
+            self.assertTrue(hasattr(var, "chrom"))
+            self.assertTrue(hasattr(var, "pos"))
+
+            self.assertEquals(var.mac, np.nansum(geno))
+            self.assertEquals(var.n_missing, np.sum(np.isnan(geno)))
+            self.assertEquals(var.n_non_missing, np.sum(~np.isnan(geno)))
+
+            # Hybrids
+            self.assertEquals(
+                var.maf,
+                np.nansum(geno) / np.sum(~np.isnan(geno))
+            )
+            self.assertEquals(
+                var.completion_rate,
+                np.sum(~np.isnan(geno)) / geno.shape[0]
+            )
+
+    def test_load_samples(self):
+        """Test loading samples from file."""
+        samples = np.array(["sample1", "sample2", "sample3"], dtype=str)
+        with tempfile.NamedTemporaryFile(mode="w") as f:
+            for sample in samples:
+                f.write(sample + "\n")
+            f.seek(0)
+            self.db.load_samples(f.name)
+
+        self.assertTrue(np.all(self.db.samples == samples))
+
+    def test_query_variants(self):
+        """Test querying variants from the genotype db object."""
+        self.db.experiment_init(self.experiment)
+        session = self.experiment.session
+        for variant in self.db.query_variants(session):
+            self.assertTrue(variant.name in self._variants)
+
+    def test_query_variants_field(self):
+        """Test querying variants from the genotype db using single field."""
+        self.db.experiment_init(self.experiment)
+        session = self.experiment.session
+        for name in self.db.query_variants(session, "name"):
+            self.assertTrue(name[0] in self._variants)
+
+    def test_query_variants_fields(self):
+        """Test querying variants from the genotype db using multiple field."""
+        self.db.experiment_init(self.experiment)
+        session = self.experiment.session
+        for name, mac in self.db.query_variants(session, ["name", "mac"]):
+            self.assertTrue(name in self._variants)
+            geno = self.db.get_genotypes(name)
+            self.assertEquals(mac, np.nansum(geno))
+
+    def test_query_variants_bad_field(self):
+        """Test querying variants using a bad (nonexistant) field."""
+        self.db.experiment_init(self.experiment)
+        session = self.experiment.session
+        self.assertRaises(ValueError, self.db.query_variants, session, "test")
+
+    def test_query_variants_bad_field_in_list(self):
+        """Test querying variants using a bad (nonexistant) field among 
+        existing fields.
+
+        """
+        self.db.experiment_init(self.experiment)
+        session = self.experiment.session
+        self.assertRaises(ValueError, self.db.query_variants, session, ["name",
+                          "test"])
+
+    def test_filter_maf(self):
         should_be_removed = set()
         for var in self._variants:
             geno = self.db.get_genotypes(var)
 
-            maf = np.nansum(geno)
-            maf /= 2 * geno.shape[0]
+            maf = np.nansum(geno) / (2 * geno.shape[0])
             if maf < 0.12:
                 should_be_removed.add(var)
+
+        self.db.filter_maf(0.12)
+
+        # Apply the filtering and fill the DB.
+        self.db.experiment_init(self.experiment)
+
+        expected = set(self._variants) - should_be_removed
+        self.compare_variant_db(expected)
+
+    def test_filter_completion(self):
+        should_be_removed = set()
+        for var in self._variants:
+            geno = self.db.get_genotypes(var)
 
             completion = np.sum(~np.isnan(geno)) / geno.shape[0]
             if completion < 0.98:
                 should_be_removed.add(var)
 
-        self.db.filter_maf(0.12)
         self.db.filter_completion(0.98)
-        # Apply the filtering and fill the DB.
         self.db.experiment_init(self.experiment)
 
-        # TODO: Test the contents of the database.
+        expected = set(self._variants) - should_be_removed
+        self.compare_variant_db(expected)
 
-        self.assertEquals(
-            set(self.db.genotypes.keys()),
-            (set(self._variants) - should_be_removed)
-        )
+    def test_filter_name_list(self):
+        should_be_removed = set(["snp1", "snp3"])
+        self.db.filter_name(["snp2", "snp4", "snp5"])
+        self.db.experiment_init(self.experiment)
+
+        expected = set(self._variants) - should_be_removed
+        self.compare_variant_db(expected)
+
+    def test_filter_name_file(self):
+        should_be_removed = set(["snp1", "snp3", "snp5"])
+
+        with tempfile.NamedTemporaryFile(mode="w") as f:
+            f.write("snp2\nsnp4\n")
+            f.seek(0)
+            self.db.filter_name(f.name)
+
+        self.db.experiment_init(self.experiment)
+
+        expected = set(self._variants) - should_be_removed
+        self.compare_variant_db(expected)
+
+    def test_mixed_filters(self):
+        should_be_removed = set()
+        for var in self._variants:
+            geno = self.db.get_genotypes(var)
+
+            completion = np.sum(~np.isnan(geno)) / geno.shape[0]
+            maf = np.nansum(geno) / (2 * geno.shape[0])
+
+            if maf < 0.13 or completion < 0.98 or var == "snp5":
+                should_be_removed.add(var)
+
+        self.db.filter_maf(0.13)
+        self.db.filter_completion(0.98)
+        self.db.filter_name(list(set(self._variants) - set(["snp5"])))
+
+        self.db.experiment_init(self.experiment)
+
+        expected = set(self._variants) - should_be_removed
+        self.compare_variant_db(expected)
+
+
+    def compare_variant_db(self, expected):
+        query = self.experiment.session.query
+        db_names = set([i[0] for i in query(Variant.name).all()])
+        self.assertEquals(db_names, expected)
 
 
 # Implementations
