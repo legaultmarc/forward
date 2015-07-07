@@ -19,7 +19,6 @@ import numpy as np
 import pandas as pd
 from sqlalchemy import Column, String, Integer, Float
 from sqlalchemy.ext.hybrid import hybrid_property
-from six.moves import range
 
 from . import SQLAlchemyBase
 
@@ -179,9 +178,9 @@ class MemoryImpute2Geno(GenotypeDatabaseInterface):
             message = "Unrecognized argument or method call: '{}'.".format(
                 kwargs
             )
-            raise TypeError(message)
+            raise ValueError(message)
 
-    def experiment_init(self, experiment):
+    def experiment_init(self, experiment, batch_insert_n=100000):
         """Experiment specific initialization.
 
         This takes care of initializing the database and filtering variants.
@@ -239,7 +238,7 @@ class MemoryImpute2Geno(GenotypeDatabaseInterface):
 
             # We use sqlalchemy core to insert faster.
             # When we have more than 100,000 variants, we bulk insert them.
-            if len(db_buffer) >= 100000:
+            if len(db_buffer) >= batch_insert_n:
                 con.execute(Variant.__table__.insert(), db_buffer)
                 num_inserts += len(db_buffer)
                 db_buffer = []
@@ -328,12 +327,10 @@ class MemoryImpute2Geno(GenotypeDatabaseInterface):
 
         # Find the index of the samples to mask.
         for i in samples_list:
-            try:
-                idx = np.where(self.samples == i)[0]
-            except ValueError as e:
-                logger.critical("Can't remove samples that are not in the "
-                                "genotype database ('{}')".format(i))
-                raise e
+            idx = np.where(self.samples == i)[0]
+            if len(idx) == 0:
+                raise ValueError("Can't remove samples that are not in the "
+                                 "genotype database ('{}')".format(i))
 
             if idx.shape[0] > 1:
                 raise ValueError("Samples are not unique ('{}').".format(i))
