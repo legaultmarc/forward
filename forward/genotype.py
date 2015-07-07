@@ -217,7 +217,7 @@ class MemoryImpute2Geno(GenotypeDatabaseInterface):
                     continue
 
             # MAF
-            if np.nansum(dosage) / n_non_missing < self.thresh_maf:
+            if info["maf"] < self.thresh_maf:
                 continue
 
             # Remove samples if needed.
@@ -265,6 +265,18 @@ class MemoryImpute2Geno(GenotypeDatabaseInterface):
         self._frozen = True
 
     def get_genotypes(self, variant_name):
+        # We want to be able to get genotypes event before experiment
+        # initialization, mainly for testing. To support this, we will look for
+        # the variant in the impute2 file and reset the file.
+        if not hasattr(self, "_mat"):  # Check if it was init.
+            logger.warning("This should only be logged during testing. If you "
+                           "see this during normal execution, please report "
+                           "it on Github.")
+            # Try to find the variant in the impute2file.
+            self._mat, info = self.impute2file.as_matrix()
+            self._mat = pd.DataFrame(self._mat.T)
+            self._mat.index = info["name"]
+
         try:
             vect = self._mat.loc[variant_name, :].values
             return vect

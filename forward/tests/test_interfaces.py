@@ -56,7 +56,7 @@ class TestPhenDBInterface(object):
         self.assertEquals(
             set(self.db.get_phenotypes()),
             set(self._variables)
-        )
+       )
 
     def test_get_phenotype_vector(self):
         """Check the type and length of the generated variables."""
@@ -281,14 +281,19 @@ class TestGenoDBInterface(object):
 
     def test_filter_maf(self):
         should_be_removed = set()
+        info = []
         for var in self._variants:
             geno = self.db.get_genotypes(var)
-
             maf = np.nansum(geno) / (2 * geno.shape[0])
-            if maf < 0.12:
+            info.append((var, maf))
+
+        info = sorted(info, key=lambda x: x[1])
+        maf_thresh = info[len(info) // 2][1] - 0.01
+        for var, maf in info:
+            if maf < maf_thresh:
                 should_be_removed.add(var)
 
-        self.db.filter_maf(0.12)
+        self.db.filter_maf(maf_thresh)
 
         # Apply the filtering and fill the DB.
         self.db.experiment_init(self.experiment)
@@ -312,40 +317,65 @@ class TestGenoDBInterface(object):
         self.compare_variant_db(expected)
 
     def test_filter_name_list(self):
-        should_be_removed = set(["snp1", "snp3"])
-        self.db.filter_name(["snp2", "snp4", "snp5"])
-        self.db.experiment_init(self.experiment)
+        # Randomly choose 2 to exclude.
+        should_be_removed = set(
+            [random.choice(self._variants) for _ in range(2)]
+        )
 
         expected = set(self._variants) - should_be_removed
+        self.db.filter_name(list(expected))
+        self.db.experiment_init(self.experiment)
+
         self.compare_variant_db(expected)
 
     def test_filter_name_file(self):
-        should_be_removed = set(["snp1", "snp3", "snp5"])
+        # Randomly choose 3 to exclude.
+        should_be_removed = set(
+            [random.choice(self._variants) for _ in range(3)]
+        )
+        expected = set(self._variants) - should_be_removed
 
         with tempfile.NamedTemporaryFile(mode="w") as f:
-            f.write("snp2\nsnp4\n")
+            for snp in expected:
+                f.write("{}\n".format(snp))
             f.seek(0)
             self.db.filter_name(f.name)
 
         self.db.experiment_init(self.experiment)
 
-        expected = set(self._variants) - should_be_removed
         self.compare_variant_db(expected)
 
     def test_mixed_filters(self):
-        should_be_removed = set()
+        maf_thresh = 0
+        completion_thresh = 0
+        names = []
+
         for var in self._variants:
             geno = self.db.get_genotypes(var)
 
-            completion = np.sum(~np.isnan(geno)) / geno.shape[0]
-            maf = np.nansum(geno) / (2 * geno.shape[0])
+            completion_thresh += np.sum(~np.isnan(geno)) / geno.shape[0]
+            maf_thresh += np.nansum(geno) / (2 * geno.shape[0])
+            if random.random() < 0.2:
+                names.append(var)  # Exclude with p = 0.2
 
-            if maf < 0.13 or completion < 0.98 or var == "snp5":
+        maf_thresh /= len(self._variants)
+        maf_thresh += 0.1  # Relax the threshold
+        completion_thresh /= len(self._variants)
+        completion_thresh += 0.001  # Relax the threshold
+
+        should_be_removed = set()
+        for var in self._variants:
+            maf = np.nansum(geno) / (2 * geno.shape[0])
+            completion = np.sum(~np.isnan(geno)) / geno.shape[0]
+
+            if (maf < maf_thresh or
+                completion < completion_thresh or
+                var in names):
                 should_be_removed.add(var)
 
-        self.db.filter_maf(0.13)
-        self.db.filter_completion(0.98)
-        self.db.filter_name(list(set(self._variants) - set(["snp5"])))
+        self.db.filter_maf(maf_thresh)
+        self.db.filter_completion(completion_thresh)
+        self.db.filter_name(list(set(self._variants) - set(names)))
 
         self.db.experiment_init(self.experiment)
 
@@ -385,3 +415,22 @@ class TestDummyGenotypeDatabase(TestGenoDBInterface, unittest.TestCase):
         super(TestDummyGenotypeDatabase, self).setUp()
         self.db = dummies.DummyGenotypeDatabase()
         self._variants = ["snp{}".format(i + 1) for i in range(5)]
+
+
+class TestMemoryImpute2Geno(TestGenoDBInterface, unittest.TestCase):
+    """Tests for MemoryImpute2Geno."""
+    def setUp(self):
+        super(TestMemoryImpute2Geno, self).setUp()
+        with tempfile.NamedTemporaryFile("w") as f:
+            # Write sample companion file.
+            samples = ["sample1", "sample2", "sample3"]
+            for sample in samples:
+                f.write(sample + "\n")
+            f.seek(0)
+
+            self.db = MemoryImpute2Geno(
+                resource_filename(__name__, "data/test_impute2_db.impute2"),
+                samples=f.name,
+            )
+
+        self._variants = ["rs12345", "rs23456", "rs23457", "rs92134"]
