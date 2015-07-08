@@ -33,7 +33,7 @@ from .phenotype.variables import DiscreteVariable
 __all__ = ["GLMTest", ]
 
 
-class Task(object):
+class AbstractTask(object):
     """Class representing a task (genetic test)."""
     def __init__(self, outcomes="all", covariates="all", variants="all",
                  correction=None, alpha=0.05):
@@ -106,7 +106,7 @@ class Task(object):
             pickle.dump(self._info, f)
 
 
-class GLMTest(Task):
+class GLMTest(AbstractTask):
     """Generalized linear model genetic test."""
     def __init__(self, *args, **kwargs):
         if not STATSMODELS_AVAILABLE:  # pragma: no cover

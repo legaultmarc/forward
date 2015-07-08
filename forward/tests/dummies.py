@@ -13,14 +13,14 @@ import shutil
 
 import numpy as np
 
-from ..phenotype.db import PhenotypeDatabaseInterface
-from ..genotype import GenotypeDatabaseInterface, Variant
+from ..phenotype.db import AbstractPhenotypeDatabase
+from ..genotype import AbstractGenotypeDatabase, Variant
 from ..experiment import Experiment
 from .. import SQLAlchemySession
 
 
-class DummyPhenDatabase(PhenotypeDatabaseInterface):
-    """Implementation of the PhenotypeDatabaseInterface.
+class DummyPhenDatabase(AbstractPhenotypeDatabase):
+    """Implementation of the AbstractPhenotypeDatabase.
 
     This 'dummy' implementation is used for testing, but it is also a good
     example for people who want to write their own phenotype database parser.
@@ -93,8 +93,8 @@ class DummyPhenDatabase(PhenotypeDatabaseInterface):
         return np.corrcoef(v)
 
 
-class DummyGenotypeDatabase(GenotypeDatabaseInterface):
-    """Implementation of the GenotypeDatabaseInterface.
+class DummyGenotypeDatabase(AbstractGenotypeDatabase):
+    """Implementation of the AbstractGenotypeDatabase.
 
     This 'dummy' implementation is used for testing, but it is also a good
     example for people who want to write their own genotype file parser.
@@ -212,7 +212,7 @@ class DummyGenotypeDatabase(GenotypeDatabaseInterface):
 class DummyExperiment(Experiment):
     """Dummy experiment to use for testing.
     
-    This is used when testing the Genotype database interface to make sure
+    This is used when testing the Genotype database implementation to make sure
     that the database gets filled.
 
     """

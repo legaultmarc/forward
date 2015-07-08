@@ -6,28 +6,28 @@
 # Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 """
-Test for the implementation of the various interfaces defined by forward.
+Test for the implementation of the various abstract classes defined by forward.
 """
 
 from __future__ import division
 
-from pkg_resources import resource_filename
-import unittest
 import random
 import tempfile
 import string
+import shutil
 
 import numpy as np
 
 from . import dummies
-from ..phenotype.db import ExcelPhenotypeDatabase
-from ..phenotype.variables import Variable
-from ..genotype import Variant, FrozenDatabaseError, MemoryImpute2Geno
+from ..phenotype.variables import (Variable, ContinuousVariable,
+                                   DiscreteVariable)
+from ..genotype import Variant, FrozenDatabaseError
+from ..tasks import AbstractTask
+from ..experiment import Experiment
 
 
-# Interfaces, generic tests.
-class TestPhenDBInterface(object):
-    """Test an implementation of PhenotypeDatabaseInterface.
+class TestAbstractPhenDB(object):
+    """Test an implementation of AbstractPhenotypeDatabase.
 
     This can be used to test compliance to the interface expected by forward
     when working with phenotypic information.
@@ -35,9 +35,9 @@ class TestPhenDBInterface(object):
     To test a custom class, use the following pattern: ::
 
         import unittest
-        from forward.tests.test_interfaces import TestPhenDBInterface
+        from forward.tests.abstract_tests import TestAbstractPhenDB
 
-        class TestMyClass(TestPhenDBInterface, unittest.TestCase):
+        class TestMyClass(TestAbstractPhenDB, unittest.TestCase):
             def setUp(self):
                 self.db = MyClass()
                 self._variables = ["var1", "var2", ...]
@@ -159,8 +159,8 @@ class TestPhenDBInterface(object):
         self.assertEquals(mat.shape, (len(cols), len(cols)))
 
 
-class TestGenoDBInterface(object):
-    """Test an implementation of GenotypeDatabaseInterface.
+class TestAbstractGenoDB(object):
+    """Test an implementation of AbstractGenotypeDatabase.
 
     This can be used to test compliance to the interface expected by forward
     when working with genotypic information.
@@ -168,9 +168,9 @@ class TestGenoDBInterface(object):
     To test a custom class, use the following pattern: ::
 
         import unittest
-        from forward.tests.test_interfaces import TestGenoDBInterface
+        from forward.tests.abstract_tests import TestAbstractGenoDB
 
-        class TestMyClass(TestGenoDBInterface, unittest.TestCase):
+        class TestMyClass(TestAbstractGenoDB, unittest.TestCase):
             def setUp(self):
                 self.db = MyClass()
                 self._variants = ["var1", "var2", ...]
@@ -403,178 +403,62 @@ class TestGenoDBInterface(object):
         self.assertEquals(db_names, expected)
 
 
-# Implementations
-class TestExcelPhenotypeDatabase(TestPhenDBInterface, unittest.TestCase):
-    """Tests for ExcelPhenotypeDatabase."""
+class TestAbstractTask(object):
+    """Test an implementation of AbstractTask.
+
+    This can be used to test compliance to the interface expected by forward
+    when defining new tasks.
+
+    To test a custom class, use the following pattern: ::
+
+        import unittest
+        from forward.tests.abstract_tests import TestAbstractTask
+
+        class TestMyClass(TestAbstractTask, unittest.TestCase):
+            def setUp(self):
+                self.task = MyClass()  # That subclasses AbstractTask
+
+    You need to provide an instance of the task object you want to test.
+
+    """
     def setUp(self):
-        super(TestExcelPhenotypeDatabase, self).setUp()
-        self.db = ExcelPhenotypeDatabase(
-            resource_filename(__name__, "data/test_excel_db.xlsx"),
-            "sample", missing_values="-9"
+        variables = [
+            ContinuousVariable("var1"),
+            ContinuousVariable("var2"),
+            DiscreteVariable("var3"),
+            DiscreteVariable("var4"),
+            ContinuousVariable("var5", True),  # Covariate.
+            DiscreteVariable("var6", True),  # Covariate.
+        ]
+
+        self.experiment = Experiment(
+            name=".fwd_test_tasks",
+            phenotype_container=dummies.DummyPhenDatabase(),
+            genotype_container=dummies.DummyGenotypeDatabase(),
+            variables=variables,
+            tasks=[self.task],
+            cpu=1
         )
-        self._variables = ["qte1", "discrete1", "qte2", "discrete2", "covar"]
 
+    def tearDown(self):
+        shutil.rmtree(".fwd_test_tasks")
 
-class TestDummyPhenotypeDatabase(TestPhenDBInterface, unittest.TestCase):
-    """Tests for DummyPhenDB."""
-    def setUp(self):
-        super(TestDummyPhenotypeDatabase, self).setUp()
-        self.db = dummies.DummyPhenDatabase()
-        self._variables = ["var1", "var2", "var3", "var4", "var5", "var6"]
+    def test_constructor_outcomes(self):
+        t2 = AbstractTask(outcomes=["var3"])
+        self.experiment.tasks.append(t2)
+        self.experiment.run_tasks()
 
+        self.assertTrue(len(t2.outcomes) == 1)
+        self.assertTrue(t2.outcomes[0].name == "var3")
 
-class TestDummyGenotypeDatabase(TestGenoDBInterface, unittest.TestCase):
-    """Tests for DummyGenotypeDatabase."""
-    def setUp(self):
-        super(TestDummyGenotypeDatabase, self).setUp()
-        self.db = dummies.DummyGenotypeDatabase()
-        self._variants = ["snp{}".format(i + 1) for i in range(5)]
+    def test_constructor_covariates(self):
+        t2 = AbstractTask(covariates=["var5"])
+        self.experiment.tasks.append(t2)
+        self.experiment.run_tasks()
 
+        self.assertTrue(len(t2.covariates) == 1)
+        self.assertTrue(t2.covariates[0].name == "var5")
 
-class TestMemoryImpute2Geno(TestGenoDBInterface, unittest.TestCase):
-    """Tests for MemoryImpute2Geno."""
-    def setUp(self):
-        super(TestMemoryImpute2Geno, self).setUp()
-        with tempfile.NamedTemporaryFile("w") as f:
-            # Write sample companion file.
-            samples = ["sample1", "sample2", "sample3"]
-            for sample in samples:
-                f.write(sample + "\n")
-            f.seek(0)
-
-            self.db = MemoryImpute2Geno(
-                resource_filename(__name__, "data/test_impute2_db.impute2"),
-                samples=f.name,
-            )
-
-        self._variants = ["rs12345", "rs23456", "rs23457", "rs92134"]
-
-    def test_frozens(self):
-        """Test the FrozenDatabaseError.
-
-        This specific implementation of the GenoDBInterface `freezes` the
-        database after initialization with an experiment object. This is
-        made to be sure that additional filtering is not attempted after
-        the database is already populated. It is not a requirement of the
-        interface (for now), but it makes for some safer code, especially
-        during developpement.
-
-        """
-        self.db.experiment_init(self.experiment)
-        self.assertRaises(FrozenDatabaseError, self.db.filter_completion, 0)
-        self.assertRaises(FrozenDatabaseError, self.db.filter_maf, 0)
-        self.assertRaises(FrozenDatabaseError, self.db.filter_name, 0)
-        self.assertRaises(FrozenDatabaseError, self.db.exclude_samples, [])
-
-    def test_init_method_call(self):
-        """Test method calls specified during initialization.
-
-        This is a mechanism used by the configuration parser. This module, when
-        creating the instance for the genotype db, will pass around any
-        additional field specified in the yaml configuration file. The db then
-        interprets this as a method call and executes it.
-
-        """
-        with tempfile.NamedTemporaryFile("w") as f:
-            # Write sample companion file.
-            samples = ["sample1", "sample2", "sample3"]
-            for sample in samples:
-                f.write(sample + "\n")
-            f.seek(0)
-
-            self.db = MemoryImpute2Geno(
-                resource_filename(__name__, "data/test_impute2_db.impute2"),
-                samples=f.name,
-                filter_maf=0.05
-            )
-
-    def test_init_bad_method_call(self):
-        """Test a nonexisting method call specified during initialization."""
-        with tempfile.NamedTemporaryFile("w") as f:
-            # Write sample companion file.
-            samples = ["sample1", "sample2", "sample3"]
-            for sample in samples:
-                f.write(sample + "\n")
-            f.seek(0)
-
-            self.assertRaises(
-                ValueError,
-                MemoryImpute2Geno,
-                resource_filename(__name__, "data/test_impute2_db.impute2"),
-                samples=f.name,
-                test=0.05
-            )
-
-    def test_probability_filter(self):
-        """Test impute2 probability filter."""
-        self.db = self.get_probability_filtered_db()
-        self.test_filter_completion()
-
-    def test_probability_filter_strict(self):
-        self.db = self.get_probability_filtered_db()
-        self.test_filter_completion_strict()
-
-    def test_probability_filter_mixed(self):
-        self.db = self.get_probability_filtered_db()
-        self.test_mixed_filters()
-
-    def test_exclude_samples(self):
-        samples_initial = self.db.get_sample_order()
-
-        chosen = random.choice(samples_initial)
-        self.db.exclude_samples([chosen])
-        self.db.experiment_init(self.experiment)
-
-        self.assertTrue(chosen in samples_initial)
-        self.assertFalse(chosen in self.db.get_sample_order())
-
-        # Get genotypes to see if size matches.
-        geno = self.db.get_genotypes(self._variants[0])
-        self.assertTrue(geno.shape[0] == (len(samples_initial) - 1))
-
-    def test_exclude_bad_sample(self):
-        self.assertRaises(ValueError, self.db.exclude_samples, ["testzzzz"])
-
-    def test_exclude_sample_multiple(self):
-        with tempfile.NamedTemporaryFile("w") as f:
-            # Write sample companion file.
-            samples = ["sample1", "sample1", "sample3"]
-            for sample in samples:
-                f.write(sample + "\n")
-            f.seek(0)
-
-            self.db = MemoryImpute2Geno(
-                resource_filename(__name__, "data/test_impute2_db.impute2"),
-                samples=f.name,
-            )
-        self.assertRaises(ValueError, self.db.exclude_samples, ["sample1"])
-
-    def test_bulk_inserts(self):
-        self.db.experiment_init(self.experiment, batch_insert_n=2)
-
-        session = self.experiment.session
-        db_vars = self.db.query_variants(session).all()
-        db_vars = [i.name for i in db_vars]
-
-        for variant in self._variants:
-            self.assertTrue(variant in db_vars)
-
-    def get_probability_filtered_db(self, p=0.89):
-        """Utility function to get a memory impute2 db with a probability
-        filter.
-
-        """
-        with tempfile.NamedTemporaryFile("w") as f:
-            # Write sample companion file.
-            samples = ["sample1", "sample2", "sample3"]
-            for sample in samples:
-                f.write(sample + "\n")
-            f.seek(0)
-
-            db = MemoryImpute2Geno(
-                resource_filename(__name__, "data/test_impute2_db.impute2"),
-                samples=f.name,
-                filter_probability=p
-            )
-
-        return db
+    def test_meta(self):
+        self.task.set_meta("test", "test")
+        self.assertEquals(self.task.get_meta("test"), "test")

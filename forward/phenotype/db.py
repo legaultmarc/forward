@@ -26,7 +26,7 @@ import pandas as pd
 __all__ = ["ExcelPhenotypeDatabase"]
 
 
-class PhenotypeDatabaseInterface(object):
+class AbstractPhenotypeDatabase(object):
     """Abstract class representing a collection of phenotypes."""
 
     def __init__(self):
@@ -105,7 +105,7 @@ class PhenotypeDatabaseInterface(object):
         raise NotImplementedError()
 
 
-class ExcelPhenotypeDatabase(PhenotypeDatabaseInterface):
+class ExcelPhenotypeDatabase(AbstractPhenotypeDatabase):
     """Collection of phenotypes based on an Excel file.
 
     Only the first sheet is considered.

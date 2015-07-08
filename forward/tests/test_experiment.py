@@ -19,7 +19,7 @@ from ..experiment import Experiment, ExperimentResult
 from ..phenotype.variables import (DiscreteVariable, ContinuousVariable,
                                    Variable)
 from ..genotype import Variant
-from ..tasks import Task
+from ..tasks import AbstractTask
 from .dummies import DummyPhenDatabase, DummyGenotypeDatabase
 
 from six.moves import cPickle as pickle
@@ -131,7 +131,7 @@ class TestExperiment(unittest.TestCase):
 
     def test_run_tasks(self):
         """Test the execution of tasks."""
-        task = Task()
+        task = AbstractTask()
         task.set_meta("executed", "")
         self.experiment.tasks.append(task)
 

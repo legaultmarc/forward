@@ -52,14 +52,8 @@ class Variant(SQLAlchemyBase):
         return self.n_non_missing / (self.n_non_missing + self.n_missing)
 
 
-class GenotypeDatabaseInterface(object):
-    """Abstract class representing the genotypes for the study.
-
-    Genotype databases should support the iterator interface. We will not
-    assume that a matrix is available in memory. They will be built if needed
-    by the Tasks.
-
-    """
+class AbstractGenotypeDatabase(object):
+    """Abstract class representing the genotypes for the study."""
     def __init__(self):
         raise NotImplementedError()
 
@@ -146,7 +140,7 @@ class GenotypeDatabaseInterface(object):
         raise NotImplementedError()
 
 
-class MemoryImpute2Geno(GenotypeDatabaseInterface):
+class MemoryImpute2Geno(AbstractGenotypeDatabase):
     def __init__(self, filename, samples, filter_probability=0, **kwargs):
         self.filename = filename
         self.load_samples(samples)
