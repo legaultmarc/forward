@@ -221,7 +221,7 @@ class TestGenoDBInterface(object):
             # Hybrids
             self.assertEquals(
                 var.maf,
-                np.nansum(geno) / np.sum(~np.isnan(geno))
+                np.nansum(geno) / (2 * np.sum(~np.isnan(geno)))
             )
             self.assertEquals(
                 var.completion_rate,
@@ -420,7 +420,7 @@ class TestDummyPhenotypeDatabase(TestPhenDBInterface, unittest.TestCase):
     def setUp(self):
         super(TestDummyPhenotypeDatabase, self).setUp()
         self.db = dummies.DummyPhenDatabase()
-        self._variables = ["var1", "var2", "var3", "var4", "var5"]
+        self._variables = ["var1", "var2", "var3", "var4", "var5", "var6"]
 
 
 class TestDummyGenotypeDatabase(TestGenoDBInterface, unittest.TestCase):

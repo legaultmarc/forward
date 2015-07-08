@@ -41,10 +41,10 @@ class Variant(SQLAlchemyBase):
     n_missing = Column(Integer)
     n_non_missing = Column(Integer)
 
-    # The maf = mac / n_non_missing
+    # The maf = mac / (2 * n_non_missing)
     @hybrid_property
     def maf(self):
-        return self.mac / self.n_non_missing
+        return self.mac / (2 * self.n_non_missing)
 
     # The completion rate = n_non_missing / (n_non_missing + n_missing)
     @hybrid_property

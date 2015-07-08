@@ -80,7 +80,7 @@ class Experiment(object):
         self.phenotypes = phenotype_container
         self.genotypes = genotype_container
         self.variables = variables
-        self.tasks = tasks
+        self.tasks = list(tasks)
         self.info = {}
 
         self.cpu = max(1, cpu)

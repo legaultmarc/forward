@@ -9,23 +9,21 @@
 This module provides actual implementations of the genetic tests.
 """
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle  # Py3
 import os
 import multiprocessing
 import logging
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
+from six.moves import cPickle as pickle
+from six.moves import range
 import numpy as np
 
 
-try:
+try:  # pragma: no cover
     import statsmodels.api as sm
     STATSMODELS_AVAILABLE = True
-except ImportError:
+except ImportError:  # pragma: no cover
     STATSMODELS_AVAILABLE = False
 
 
@@ -33,13 +31,6 @@ from .phenotype.variables import DiscreteVariable
 
 
 __all__ = ["GLMTest", ]
-
-
-try:
-    _range = range
-    range = xrange
-except NameError:  # Python3
-    pass
 
 
 class Task(object):

@@ -66,7 +66,7 @@ class TestExperiment(unittest.TestCase):
         expected_variants = ["snp{}".format(i + 1) for i in range(5)]
         for i, var in enumerate(self.query(Variant).all()):
             self.assertTrue(var.name in expected_variants)
-            self.assertTrue(var.mac / var.n_non_missing == var.maf)
+            self.assertTrue(var.mac / (2 * var.n_non_missing) == var.maf)
             self.assertTrue(var.maf <= 0.5)
 
         self.assertEquals(i + 1, len(expected_variants))

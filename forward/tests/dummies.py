@@ -42,6 +42,7 @@ class DummyPhenDatabase(PhenotypeDatabaseInterface):
             "var3": np.random.binomial(1, 0.1, 100),  # discrete
             "var4": np.random.binomial(1, 0.3, 100),  # discrete
             "var5": np.random.gamma(2, 2, 100),  # continous
+            "var6": np.random.binomial(1, 0.8, 100),  # discrete
         }
 
         # Insert some missings.
@@ -130,7 +131,7 @@ class DummyGenotypeDatabase(GenotypeDatabaseInterface):
             # Use the probability of being homo minor given that the sample
             # carries the mutation.
             p = maf ** 2
-            p /= p + (2 * maf * (1 - maf))
+            p /= p + 2 * maf * (1 - maf)
             mutants = self.genotypes[snp] == 1
             n_mutants = np.sum(mutants)
 
