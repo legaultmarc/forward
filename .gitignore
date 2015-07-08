@@ -1,4 +1,9 @@
+forward/version.py
+.coverage
 *.swp
 *.pyc
-forward/version.py
+*.egg-info
+*.egg/
+htmlcov/
 dist/
+build/
