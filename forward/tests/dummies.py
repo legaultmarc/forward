@@ -29,25 +29,25 @@ class DummyPhenDatabase(PhenotypeDatabaseInterface):
     that need to interact with a phenotype database object.
 
     """
-    def __init__(self):
+    def __init__(self, n=100):
         # Create some samples.
-        self.samples = ["sample{}".format(i + 1) for i in range(100)]
+        self.samples = ["sample{}".format(i + 1) for i in range(n)]
         random.shuffle(self.samples)
 
         # Generate some data.
         np.random.seed(3)
         self.data = {
-            "var1": 2 * np.random.rand(100),  # continous
-            "var2": np.random.chisquare(2, 100),  # continous
-            "var3": np.random.binomial(1, 0.1, 100),  # discrete
-            "var4": np.random.binomial(1, 0.3, 100),  # discrete
-            "var5": np.random.gamma(2, 2, 100),  # continous
-            "var6": np.random.binomial(1, 0.8, 100),  # discrete
+            "var1": 2 * np.random.rand(n),  # continous
+            "var2": np.random.chisquare(2, n),  # continous
+            "var3": np.random.binomial(1, 0.1, n),  # discrete
+            "var4": np.random.binomial(1, 0.3, n),  # discrete
+            "var5": np.random.gamma(2, 2, n),  # continous
+            "var6": np.random.binomial(1, 0.8, n),  # discrete
         }
 
         # Insert some missings.
         for k in self.data.keys():
-            mask = np.random.binomial(1, 0.01, 100).astype(bool)
+            mask = np.random.binomial(1, 0.01, n).astype(bool)
             # Can't put NaN in int vector.
             self.data[k] = self.data[k].astype(float)
             self.data[k][mask] = np.nan
@@ -103,10 +103,9 @@ class DummyGenotypeDatabase(GenotypeDatabaseInterface):
     that need to interact with a genotype database object.
 
     """
-    def __init__(self):
-        n_samples = 100
+    def __init__(self, n=100):
         self.samples = [
-            "sample{}".format(i + 1) for i in range(n_samples)
+            "sample{}".format(i + 1) for i in range(n)
         ]
 
         # Initialize filters.
@@ -124,7 +123,7 @@ class DummyGenotypeDatabase(GenotypeDatabaseInterface):
             # Select the samples that will have the reference homo. genotype
             mutation_prob = maf ** 2 + 2 * maf * (1 - maf)
             self.genotypes[snp] = np.random.binomial(
-                1, mutation_prob, n_samples
+                1, mutation_prob, n
             ).astype(float)
 
             # Draw the heterozygotes and homo minors
@@ -140,7 +139,7 @@ class DummyGenotypeDatabase(GenotypeDatabaseInterface):
             )
 
             # Add some no calls.
-            missings = np.random.binomial(1, 0.02, 100).astype(bool)
+            missings = np.random.binomial(1, 0.02, n).astype(bool)
             self.genotypes[snp][missings] = np.nan
 
     def experiment_init(self, experiment):

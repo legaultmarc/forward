@@ -53,12 +53,10 @@ class Task(object):
         # Select the variables and covariates to analyse.
         if self.outcomes == "all":
             self.outcomes = [i for i in experiment.variables
-                             if not i.is_covariate and
-                             isinstance(i, DiscreteVariable)]
+                             if not i.is_covariate]
         else:
             self.outcomes = [i for i in experiment.variables
-                             if i.name in self.outcomes and
-                             isinstance(i, DiscreteVariable)]
+                             if i.name in self.outcomes]
 
         if self.covariates == "all":
             self.covariates = [i for i in experiment.variables
@@ -99,10 +97,10 @@ class Task(object):
         This can be used to communicate with the report module or to store
         meta information about this task's execution.
 
-        """
-        if not self._info:
-            return
+        The pattern for storing task associated information is to use the
+        `set_meta` and `get_meta` methods.
 
+        """
         self.task_meta_path = os.path.join(self.work_dir, "task_info.pkl")
         with open(self.task_meta_path, "wb") as f:
             pickle.dump(self._info, f)
@@ -111,7 +109,7 @@ class Task(object):
 class GLMTest(Task):
     """Generalized linear model genetic test."""
     def __init__(self, *args, **kwargs):
-        if not STATSMODELS_AVAILABLE:
+        if not STATSMODELS_AVAILABLE:  # pragma: no cover
             raise ImportError("GLMTest class requires statsmodels. Install "
                               "the package first (and patsy).")
         super(GLMTest, self).__init__(*args, **kwargs)
@@ -119,6 +117,10 @@ class GLMTest(Task):
     def run_task(self, experiment, task_name, work_dir):
         """Run the GLM."""
         super(GLMTest, self).run_task(experiment, task_name, work_dir)
+
+        # Filter outcomes to remove non discrete variables.
+        self.outcomes = [i for i in self.outcomes if
+                         isinstance(i, DiscreteVariable)]
 
         # Get a database session from the experiment.
         session = experiment.session
@@ -163,10 +165,6 @@ class GLMTest(Task):
 
             # Get the phenotypes and fill the job queue.
             for phenotype in self.outcomes:
-                if not isinstance(phenotype, DiscreteVariable):
-                    # This should not happen.
-                    continue  # Only handle DiscreteVariables
-
                 y = experiment.phenotypes.get_phenotype_vector(phenotype)
                 missing = np.isnan(x).any(axis=1) | np.isnan(y)
 
