@@ -42,7 +42,7 @@ code {
     padding: 1px 2px;
 }
 
-img {
+img.figure {
     width: 500px;
     margin: 0 auto;
     display: block;
@@ -73,6 +73,10 @@ td {
 
 tbody tr:hover {
     background-color: #ddd;
+}
+
+.bk-plot-wrapper table tr:hover {
+    background-color: #fff;
 }
 
 /* Fonts */

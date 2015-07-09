@@ -10,11 +10,9 @@ This module is used to create reports from forward experiments.
 
 """
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle  # Py3
+from __future__ import division
 
+import bisect
 import shutil
 from pkg_resources import resource_filename
 import collections
@@ -33,7 +31,10 @@ import numpy as np
 import pandas as pd
 import seaborn as sbn
 
+from six.moves import cPickle as pickle
 from jinja2 import Environment, PackageLoader
+from bokeh.plotting import figure
+from bokeh.embed import components
 
 from . import SQLAlchemySession
 from .experiment import ExperimentResult, Experiment
@@ -212,7 +213,37 @@ class GLMReportSection(Section):
         plt.savefig(os.path.join(path, "corrplot.png"))
         plt.close()
 
-        return os.path.join("images", "corrplot.png")
+        title = "Corrleation matrix heatmap for the analyzed variables."
+        p = figure(title=title, x_range=names, y_range=names[::-1],
+                   plot_width=500, plot_height=500,
+                   tools="resize,hover,save,reset", title_text_font_size="8pt")
+        values = np.sort(corr_mat.flatten())
+        colors = [
+            "#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce",
+            "#ddb7b1", "#cc7878", "#933b41", "#550b1d"
+        ]
+        xs = []
+        ys = []
+        mapped_colors = []
+
+        for x in range(len(names)):
+            for y in range(len(names) - x):
+                xs.append(x + 1)
+                ys.append(y + 1)
+                val = corr_mat[x, corr_mat.shape[0] - y - 1]
+                color = (bisect.bisect_left(values, val) /
+                         values.shape[0] *
+                         len(colors))
+                mapped_colors.append(colors[int(round(color))])
+
+        p.rect(xs, ys, 0.95, 0.95, color=mapped_colors)
+
+        p.grid.grid_line_color = None
+        p.xaxis.major_label_orientation = np.pi / 3
+        for axis in p.axis:
+            axis.major_label_text_font_size = "7pt"
+
+        return components(p)
 
     def _number_analyzed_variants(self):
         """Find the number of analyzed variants in the database."""
