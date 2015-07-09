@@ -26,6 +26,7 @@ import sqlalchemy
 
 import scipy.stats
 import matplotlib
+import matplotlib.cm
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -33,8 +34,10 @@ import seaborn as sbn
 
 from six.moves import cPickle as pickle
 from jinja2 import Environment, PackageLoader
-from bokeh.plotting import figure
+
+from bokeh.plotting import figure, ColumnDataSource
 from bokeh.embed import components
+from bokeh.models import HoverTool
 
 from . import SQLAlchemySession
 from .experiment import ExperimentResult, Experiment
@@ -193,55 +196,56 @@ class GLMReportSection(Section):
 
         corr_mat = np.load(corr_mat_fn)
 
-        fig = plt.figure(figsize=(10, 9), tight_layout=True)
-
         names = self.report.experiment["outcomes"]
-
-        # Only color half of the matrix.
-        mask = np.zeros_like(corr_mat)
-        mask[np.triu_indices_from(mask)] = True
-
-        # Show the values if less than 15 variables.
-        show_vals = corr_mat.shape[0] <= 15
-
-        sbn.heatmap(corr_mat, mask=mask, square=True, cmap="coolwarm",
-                    xticklabels=names, yticklabels=names, linewidths=0.5,
-                    annot=True, fmt=".2f")
-
-        path = os.path.join(self.report.assets, "images")
-
-        plt.savefig(os.path.join(path, "corrplot.png"))
-        plt.close()
 
         title = "Corrleation matrix heatmap for the analyzed variables."
         p = figure(title=title, x_range=names, y_range=names[::-1],
                    plot_width=500, plot_height=500,
                    tools="resize,hover,save,reset", title_text_font_size="8pt")
-        values = np.sort(corr_mat.flatten())
-        colors = [
-            "#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce",
-            "#ddb7b1", "#cc7878", "#933b41", "#550b1d"
-        ]
+
+        corrs = np.sort(corr_mat.flatten())
+        colors = matplotlib.cm.coolwarm(np.linspace(0, 1, 100))
+        colors = [tu for tu in (255 * colors[:, :3])]
+        for i in range(len(colors)):
+            html = "#{}{}{}".format(
+                *[hex(int(j)).ljust(4, "0")[2:] for j in colors[i]]
+            )
+            colors[i] = html
+
         xs = []
         ys = []
+        values = []
         mapped_colors = []
 
         for x in range(len(names)):
             for y in range(len(names) - x):
-                xs.append(x + 1)
-                ys.append(y + 1)
+                xs.append(names[x])
+                ys.append(names[corr_mat.shape[0] - y - 1])
                 val = corr_mat[x, corr_mat.shape[0] - y - 1]
-                color = (bisect.bisect_left(values, val) /
-                         values.shape[0] *
-                         len(colors))
-                mapped_colors.append(colors[int(round(color))])
+                values.append("{:.3f}".format(val))
 
-        p.rect(xs, ys, 0.95, 0.95, color=mapped_colors)
+                color = int(
+                    round(0.5 * (len(colors) - 1) * val +
+                          (len(colors) - 1) / 2)
+                )
+                mapped_colors.append(colors[color])
+
+        source = ColumnDataSource(
+            data=dict(x=xs, y=ys, color=mapped_colors, value=values)
+        )
+
+        p.rect("x", "y", 0.95, 0.95, color="color", source=source)
 
         p.grid.grid_line_color = None
         p.xaxis.major_label_orientation = np.pi / 3
         for axis in p.axis:
             axis.major_label_text_font_size = "7pt"
+
+        hover = p.select(dict(type=HoverTool))
+        hover.tooltips = collections.OrderedDict([
+            ("Variables", "@x - @y"),
+            ("Correlation", "@value"),
+        ])
 
         return components(p)
 

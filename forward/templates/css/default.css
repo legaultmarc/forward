@@ -52,6 +52,11 @@ p.caption {
     margin: 15px 30px 3px 30px;
 }
 
+.centered-bokeh-plot {
+    width: 600px;
+    margin: 0 auto;
+}
+
 /* Table Design */
 table {
     border-collapse: collapse;
@@ -77,6 +82,10 @@ tbody tr:hover {
 
 .bk-plot-wrapper table tr:hover {
     background-color: #fff;
+}
+
+.bk-plot-wrapper table {
+    border-bottom: none;
 }
 
 /* Fonts */
