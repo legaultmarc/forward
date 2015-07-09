@@ -235,9 +235,9 @@ class TestAbstractGenoDB(object):
             for sample in samples:
                 f.write(sample + "\n")
             f.seek(0)
-            self.db.load_samples(f.name)
+            loaded_samples = self.db.load_samples(f.name)
 
-        self.assertTrue(np.all(self.db.samples == samples))
+        self.assertTrue(np.all(loaded_samples == samples))
 
     def test_query_variants(self):
         """Test querying variants from the genotype db object."""

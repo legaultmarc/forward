@@ -22,7 +22,14 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from . import SQLAlchemyBase
 
-__all__ = ["MemoryImpute2Geno"]
+try:  # pragma: no cover
+    import pyplink
+    HAS_PYPLINK = True
+except ImportError:
+    HAS_PYPLINK = False
+
+
+__all__ = ["MemoryImpute2Geno", "PlinkGenotypeDatabase"]
 
 
 class FrozenDatabaseError(Exception):
@@ -54,8 +61,22 @@ class Variant(SQLAlchemyBase):
 
 class AbstractGenotypeDatabase(object):
     """Abstract class representing the genotypes for the study."""
-    def __init__(self):
-        raise NotImplementedError()
+    def __init__(self, **kwargs):
+        # Read arguments as method calls.
+        called_methods = []
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                getattr(self, key)(value)
+                called_methods.append(key)
+
+        for method in called_methods:
+            del kwargs[method]
+
+        if kwargs:
+            message = "Unrecognized argument or method call: '{}'.".format(
+                kwargs
+            )
+            raise ValueError(message)
 
     # Sample management interface.
     def get_sample_order(self):
@@ -64,14 +85,6 @@ class AbstractGenotypeDatabase(object):
 
         """
         return self.samples
-
-    def load_samples(self, filename):
-        """Read a list of samples from a single column file."""
-        logger.info("Loading samples from {}".format(filename))
-        with open(filename, "r") as f:
-            samples = [i.rstrip() for i in f]
-
-        self.samples = np.array(samples, dtype=str)
 
     # Interrogate the variant database.
     def query_variants(self, session, fields=None):
@@ -139,11 +152,21 @@ class AbstractGenotypeDatabase(object):
     def filter_completion(self, rate):
         raise NotImplementedError()
 
+    # Static utilities.
+    @staticmethod
+    def load_samples(filename):
+        """Read a list of samples from a single column file."""
+        logger.info("Loading samples from {}".format(filename))
+        with open(filename, "r") as f:
+            samples = [i.rstrip() for i in f]
+
+        return np.array(samples, dtype=str)
+
 
 class MemoryImpute2Geno(AbstractGenotypeDatabase):
     def __init__(self, filename, samples, filter_probability=0, **kwargs):
         self.filename = filename
-        self.load_samples(samples)
+        self.samples = self.load_samples(samples)
 
         self.impute2file = Impute2File(filename, "dosage",
                                        prob_threshold=filter_probability)
@@ -158,21 +181,7 @@ class MemoryImpute2Geno(AbstractGenotypeDatabase):
         # the user to apply the filtering methods again.
         self._frozen = False
 
-        # Extra arguments could be method calls.
-        called_methods = []
-        for key, value in kwargs.items():
-            if hasattr(self, key):
-                getattr(self, key)(value)
-                called_methods.append(key)
-
-        for method in called_methods:
-            del kwargs[method]
-
-        if kwargs:
-            message = "Unrecognized argument or method call: '{}'.".format(
-                kwargs
-            )
-            raise ValueError(message)
+        super(MemoryImpute2Geno, self).__init__(**kwargs)
 
     def experiment_init(self, experiment, batch_insert_n=100000):
         """Experiment specific initialization.
@@ -335,3 +344,92 @@ class MemoryImpute2Geno(AbstractGenotypeDatabase):
 
         # Also remove from the list of samples.
         self.samples = self.samples[self.samples_mask]
+
+
+class PlinkGenotypeDatabase(AbstractGenotypeDatabase):
+    """Class representing genotypes from binary plink files."""
+    def __init__(self, prefix, **kwargs):
+        if not HAS_PYPLINK:
+            raise Exception("Install pyplink to use the '{}' class.".format(
+                self.__class__.__name__,
+            ))
+
+        self.ped = pyplink.PyPlink(prefix)
+        self.fam = self.ped.get_fam()
+        self.bim = self.ped.get_bim()
+
+        # Filters.
+        self.min_maf = 0
+        self.min_completion = 0
+        self.good_names = []
+        self._frozen = False
+
+        super(PlinkGenotypeDatabase, self).__init__(**kwargs)
+
+    def get_sample_order(self):
+        return list(self.fam["iid"].values)
+
+    def get_genotypes(self, variant_name):
+        return self.ped.get_geno_marker(variant_name)
+
+    def experiment_init(self, experiment):
+        # Create the table.
+        super(PlinkGenotypeDatabase, self).experiment_init(experiment)
+
+        # Filter and fill the database.
+        con = experiment.engine.connect()
+        db_variants = []
+        for name, geno in self.ped:
+            info = self.bim.loc[name, :]
+
+            # Name filtering.
+            if self.good_names:
+                if name not in self.good_names:
+                    continue
+
+            # maf filtering.
+            mac = np.nansum(geno)
+            maf = mac / (2 * geno.shape[0])
+            if maf < self.min_maf:
+                continue
+
+            # completion filtering.
+            n_missing = np.sum(np.isnan(geno))
+            n_non_missing = np.sum(~np.isnan(geno))
+
+            completion = n_non_missing / geno.shape[0]
+            if completion < self.min_completion:
+                continue
+
+            # Everything passed, we can add to the db.
+            db_variants.append(
+                dict(name=name, chrom=info.chrom, pos=info.pos, mac=mac,
+                     n_missing=n_missing, n_non_missing=n_non_missing)
+            )
+
+        con.execute(Variant.__table__.insert(), db_variants)
+        logger.info("Built the variant database ({} entries).".format(
+            len(db_variants)
+        ))
+        self._frozen = True
+
+    # Filtering methods.
+    def filter_name(self, variant_list):
+        if self._frozen:
+            raise FrozenDatabaseError()
+
+        if type(variant_list) in (tuple, list):
+            self.good_names = variant_list
+        else:
+            with open(variant_list, "r") as f:
+                self.good_names = f.read().split()
+
+    def filter_maf(self, maf):
+        if self._frozen:
+            raise FrozenDatabaseError()
+        self.min_maf = maf
+
+    def filter_completion(self, rate):
+        if self._frozen:
+            raise FrozenDatabaseError()
+        self.min_rate = rate

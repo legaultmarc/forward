@@ -13,10 +13,12 @@ from __future__ import division
 
 import unittest
 import shutil
+import random
 
 from ..tasks import GLMTest, STATSMODELS_AVAILABLE, AbstractTask
 from ..experiment import Experiment, ExperimentResult
 from ..phenotype.variables import ContinuousVariable, DiscreteVariable
+from ..genotype import Variant
 from .dummies import DummyPhenDatabase, DummyGenotypeDatabase
 from .abstract_tests import TestAbstractTask
 
@@ -78,6 +80,18 @@ class TestGLMTask(TestAbstractTask, unittest.TestCase):
             elif isinstance(var, ContinuousVariable):
                 self.assertTrue(var.name not in results_variables)
 
+    def test_results(self):
+        # Generate an outcome that is associated with one of the variants.
+        query = self.experiment.session.query
+        variants = [i[0] for i in query(Variant.name).all()]
+
+        causal = random.choice(variants)
+        geno = self.experiment.genotypes.get_genotypes(causal)
+
+        # Simulate outcomes.
+        # TODO Use plink to simulate the genotypes for the causal variant.
+        # Test if the simulated OR and the GLM exp(beta) are similar.
+        # Also test wrt to R.
 
 @unittest.skipIf(not STATSMODELS_AVAILABLE, "statsmodels needs to be installed"
                                             " to test the GLM task.")

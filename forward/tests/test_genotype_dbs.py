@@ -13,8 +13,12 @@ from pkg_resources import resource_filename
 import unittest
 import tempfile
 import random
+import os
 
-from ..genotype import FrozenDatabaseError, MemoryImpute2Geno
+import numpy as np
+
+from ..genotype import (FrozenDatabaseError, MemoryImpute2Geno,
+                        PlinkGenotypeDatabase)
 from .abstract_tests import TestAbstractGenoDB
 from . import dummies
 
@@ -44,6 +48,10 @@ class TestMemoryImpute2Geno(TestAbstractGenoDB, unittest.TestCase):
             )
 
         self._variants = ["rs12345", "rs23456", "rs23457", "rs92134"]
+
+    def test_get_samples(self):
+        expected = np.array(["sample1", "sample2", "sample3"])
+        self.assertTrue(np.all(self.db.samples == expected))
 
     def test_frozens(self):
         """Test the FrozenDatabaseError.
@@ -174,3 +182,17 @@ class TestMemoryImpute2Geno(TestAbstractGenoDB, unittest.TestCase):
             )
 
         return db
+
+class TestPlinkGenoDB(TestAbstractGenoDB, unittest.TestCase):
+    """Tests for PlinkGenotypeDatabase."""
+    def setUp(self):
+        super(TestPlinkGenoDB, self).setUp()
+        filename = resource_filename(__name__, "data/simulated/sim.bim")
+        base = os.path.abspath(filename)[:-4]
+
+        self.db = PlinkGenotypeDatabase(base)
+
+        self._variants = []
+        with open(filename, "r") as f:
+            for line in f:
+                self._variants.append(line.rstrip().split()[1])
