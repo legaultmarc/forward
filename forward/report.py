@@ -241,11 +241,13 @@ class GLMReportSection(Section):
         for axis in p.axis:
             axis.major_label_text_font_size = "7pt"
 
-        hover = p.select(dict(type=HoverTool))
-        hover.tooltips = collections.OrderedDict([
-            ("Variables", "@x - @y"),
-            ("Correlation", "@value"),
-        ])
+        hover = p.select({"type": HoverTool})
+        hover.tooltips = """
+            <div class="tooltip">
+              <p><strong>Variables:</strong> @x - @y</p>
+              <p><strong>Correlation:</strong> @value</p>
+            </div>
+        """
 
         return components(p)
 

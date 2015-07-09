@@ -57,6 +57,25 @@ p.caption {
     margin: 0 auto;
 }
 
+/* Bokeh tooltips */
+.bk-tooltip-custom {
+    background-color: #eee !important;
+    border: 1px solid #ddd;
+    box-shadow: 2px 2px 10px #444;
+}
+
+.tooltip p {
+    font-family: Time, Cambria, serif;
+    font-size: 9pt;
+    margin: 0;
+    padding: 0;
+    color: #781B1F;
+}
+
+.tooltip p strong {
+    font-size: 8pt;
+}
+
 /* Table Design */
 table {
     border-collapse: collapse;
