@@ -11,14 +11,19 @@ Test for the different Task classes.
 
 from __future__ import division
 
+from pkg_resources import resource_filename
 import unittest
 import shutil
 import random
+import os
+
+import pandas as pd
+import numpy as np
 
 from ..tasks import GLMTest, STATSMODELS_AVAILABLE, AbstractTask
 from ..experiment import Experiment, ExperimentResult
 from ..phenotype.variables import ContinuousVariable, DiscreteVariable
-from ..genotype import Variant
+from ..genotype import Variant, PlinkGenotypeDatabase
 from .dummies import DummyPhenDatabase, DummyGenotypeDatabase
 from .abstract_tests import TestAbstractTask
 
@@ -33,6 +38,7 @@ class TestTask(TestAbstractTask, unittest.TestCase):
                                             " to test the GLM task.")
 class TestGLMTask(TestAbstractTask, unittest.TestCase):
     def setUp(self, cpu=1):
+        self.cpu = cpu
         self.variables = [
             ContinuousVariable("var1"),
             ContinuousVariable("var2"),
@@ -49,7 +55,7 @@ class TestGLMTask(TestAbstractTask, unittest.TestCase):
             genotype_container=DummyGenotypeDatabase(),
             variables=self.variables,
             tasks=[self.task],
-            cpu=cpu
+            cpu=self.cpu
         )
 
     def tearDown(self):
@@ -81,17 +87,60 @@ class TestGLMTask(TestAbstractTask, unittest.TestCase):
                 self.assertTrue(var.name not in results_variables)
 
     def test_results(self):
-        # Generate an outcome that is associated with one of the variants.
+        self.tearDown()  # We need another custom experiment.
+
+        # Covariates are not included in this test.
+        self.variables = [
+            ContinuousVariable("var1"),
+            ContinuousVariable("var2"),
+            DiscreteVariable("var3"),
+            DiscreteVariable("var4"),
+            DiscreteVariable("var_assoc")
+        ]
+
+        # Use the (plink) simulated SNPs.
+        filename = os.path.abspath(
+            resource_filename(__name__, "data/simulated/sim.fam")
+        )
+        base = filename[:-4]
+        geno = PlinkGenotypeDatabase(base)
+
+        # Add the associated phenotype.
+        samples = geno.get_sample_order()
+        pheno = DummyPhenDatabase(n=len(samples))
+        pheno.samples = samples
+
+        pheno.data["var_assoc"] = geno.fam["status"].values - 1
+
+        self.experiment = Experiment(
+            name=".fwd_test_tasks",
+            phenotype_container=pheno,
+            genotype_container=geno,
+            variables=self.variables,
+            tasks=[self.task],
+            cpu=self.cpu
+        )
+        self.experiment.run_tasks()
+
+        # Compare the results to plink.
         query = self.experiment.session.query
-        variants = [i[0] for i in query(Variant.name).all()]
 
-        causal = random.choice(variants)
-        geno = self.experiment.genotypes.get_genotypes(causal)
+        plink_results = pd.read_csv(
+            resource_filename(__name__, "data/simulated/plink.assoc.logistic"),
+            header=0,
+            delim_whitespace=True,
+        )
+        for i, row in plink_results.iterrows():
+            result = query(ExperimentResult).\
+                     filter(ExperimentResult.entity_name == row["SNP"]).\
+                     filter(ExperimentResult.phenotype == "var_assoc").one()
 
-        # Simulate outcomes.
-        # TODO Use plink to simulate the genotypes for the causal variant.
-        # Test if the simulated OR and the GLM exp(beta) are similar.
-        # Also test wrt to R.
+            # Plink gives only three decimals.
+            self.assertAlmostEqual(row["P"], result.significance, 3)
+
+
+        # for result in query(ExperimentResult):
+
 
 @unittest.skipIf(not STATSMODELS_AVAILABLE, "statsmodels needs to be installed"
                                             " to test the GLM task.")
