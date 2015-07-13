@@ -69,7 +69,10 @@ of {{ variables|length }} dichotomous outcomes.
 <p>After filtering, this analysis was done on {{ num_variants }} genetic
 variants. A QQ plot of all the analysis p-values can be found at Figure X.</p>
 
-<img class="figure" src="{{ assets }}/{{ qq_plot }}" />
+<div class="centered-bokeh-plot">
+{{ qq_plot[1] }}
+</div>
+{{ qq_plot[0] }}
 
 <table>
   <thead>

@@ -259,63 +259,49 @@ class GLMReportSection(Section):
 
     def _qq_plot(self):
         """A colored QQ plot showing the results per phenotype."""
-        code = 0
-        phen_codes = {}
-        data = []
-
         query = self.report.query(ExperimentResult.phenotype,
                                   ExperimentResult.significance).\
                             filter_by(task_name=self.task_id)
 
-        for phen, p in query:
-            if phen not in phen_codes:
-                phen_codes[phen] = code
-                code += 1
-            data.append((phen_codes[phen], p))
+        results = sorted(query.all(), key=lambda x: x[1])
+        p_values = np.array([i[1] for i in results])
+        p_values = -1 * np.log10(p_values)
+        n = len(p_values)
 
-        data = np.array(data)
+        expected = -1 * np.log10(np.arange(1, n + 1))
 
-        fig, ax = plt.subplots(1, 1)
+        # Computing the 95% CI
+        c975 = np.zeros(n)
+        c025 = np.zeros(n)
 
-        quantiles, fit = scipy.stats.probplot(data[:, 1], dist="norm")
-        osm, osr = quantiles
-        slope, intercept, r = fit
+        for i in range(1, n + 1):
+            c975[i - 1] = scipy.stats.beta.ppf(0.975, i, n - i + 1)
+            c025[i - 1] = scipy.stats.beta.ppf(0.025, i, n - i + 1)
 
-        colors = ["#F44336", "#9C27B0", "#03A9F4", "#009688", "#4CAF50",
-                  "#CDDC39", "#FFEB3B", "#FF9800", "#FF5722"]
+        c975 = -1 * np.log10(c975)
+        c025 = -1 * np.log10(c025)
 
-        # Plot per phenotype.
-        deviations = ((slope * osm + intercept) - osr) ** 2
-        for i in range(code):
-            mask = data[:, 0] == i
-            # TODO Use a better threshold for coloring.
-            color_threshold = 0.025
-            dev_mask = (deviations > color_threshold) & mask
-            non_dev_mask = (deviations <= color_threshold) & mask
+        # Plotting
+        title = "QQ Plot of the association results"
+        p = figure(title=title, plot_width=650, plot_height=480,
+                   tools="save,reset", title_text_font_size="8pt")
 
-            # Plot black for non-deviating.
-            ax.scatter(osm[non_dev_mask], osr[non_dev_mask], color="black",
-                       s=10, marker="o")
+        p.patches(
+            [np.hstack((expected, expected[::-1]))],
+            [np.hstack((c025, c975[::-1]))],
+            color="#dddddd",
+            fill_alpha=0.9
+        )
 
-            # Plot colored dots (deviating).
-            phen = [(k, v) for k, v in phen_codes.items() if v == i][0][0]
-            ax.scatter(osm[dev_mask], osr[dev_mask],
-                       color=colors[i % len(colors)], s=10, marker="o",
-                       label=phen)
+        p.circle(expected, p_values, size=1)
 
-        xs = np.arange(*ax.get_xlim())
-        ax.plot(xs, slope * xs + intercept, "--", color="#6D784B",
-                label="$R^2 = {:.4f}$".format(r))
-        ax.legend(loc="lower right")
+        p.grid.grid_line_color = None
+        p.xaxis.axis_label = "-log(expected)"
+        p.yaxis.axis_label = "-log(observed)"
+        for axis in p.axis:
+            axis.axis_label_text_font_size = "7pt"
 
-        ax.set_xlabel("Quantile")
-        ax.set_ylabel("Ordered Values")
-
-        path = os.path.join(self.report.assets, "images", "qqplot.png")
-        plt.savefig(path)
-        plt.close()
-
-        return os.path.join("images", "qqplot.png")
+        return components(p)
 
 
     def _parse_results(self):
