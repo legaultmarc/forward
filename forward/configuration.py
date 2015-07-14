@@ -66,17 +66,15 @@ def _parse_variables(variables):
     variable_objects = []
     for variable in variables:
         var_type = variable.pop("type", None)
-        name = variable.pop("name", None)
-        is_covar = variable.pop("covariate", False)
 
         if var_type == "discrete":
-            variable_objects.append(DiscreteVariable(name, is_covar))
-
+            cls = DiscreteVariable
         elif var_type == "continuous":
-            variable_objects.append(ContinuousVariable(name, is_covar))
-
+            cls = ContinuousVariable
         else:
             raise Exception("Unknown variable type '{}'.".format(var_type))
+
+        variable_objects.append(cls(**variable))
 
     return variable_objects
 

@@ -64,8 +64,8 @@ class DiscreteVariable(Variable):
 
     def compute_statistics(self, phenotypes_db):
         """Compute some n values given the filtered phenotype database."""
-
         vect = phenotypes_db.get_phenotype_vector(self.name)
+
         self.n_cases = int(np.sum(vect == 1))
         self.n_controls = int(np.sum(vect == 0))
         self.n_missing = int(np.sum(np.isnan(vect)))
@@ -80,15 +80,16 @@ class ContinuousVariable(Variable):
     name = Column(String(30), ForeignKey("variables.name"), primary_key=True)
     mean = Column(Float())
     std = Column(Float())
+    transformation = Column(Enum("inverse-normal-transform", "log"))
+    exclude_outliers = Column(Float())
 
     __mapper_args__ = {
         "polymorphic_identity": "continuous"
     }
 
-    def __init__(self, name, covariate=False):
-        super(ContinuousVariable, self).__init__(
-            name=name, is_covariate=covariate
-        )
+    def __init__(self, **kwargs):
+        kwargs["is_covariate"] = kwargs.pop("covariate", False)
+        super(ContinuousVariable, self).__init__(**kwargs)
 
     def compute_statistics(self, phenotypes_db):
         """Compute statistics with the filtered phenotype database."""
@@ -99,6 +100,3 @@ class ContinuousVariable(Variable):
         self.std = vect[mask].std()
 
         self.n_missing = np.sum(vect.shape[0] - np.sum(mask))
-
-    def normality_check(self):
-        raise NotImplementedError()

@@ -7,7 +7,6 @@ Database:
 
 Variables:
     - name: Infarctus
-      icd10: I21
       type: discrete
 
     - name: Valve
@@ -21,7 +20,8 @@ Variables:
 
     - name: BMI
       type: continuous
-      normality_check: Yes
+      exclude_outliers: 3  # Samples that are |z| > 3sigma will be exluded.
+      transformation: log
 
     - name: PC1
       type: continuous
@@ -59,7 +59,11 @@ Experiment:
     cpu: 4
 
     tasks:
-        - pyclass: GLMTest
+        - pyclass: LogisticTest
           outcomes: all
           covariates: all # [PC1, PC2, PC3]
           alpha: 0.05
+
+        - pyclass: LinearRegressionTest
+          outcomes: all
+          covariates: all

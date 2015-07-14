@@ -27,10 +27,10 @@ except ImportError:  # pragma: no cover
     STATSMODELS_AVAILABLE = False
 
 
-from .phenotype.variables import DiscreteVariable
+from .phenotype.variables import DiscreteVariable, ContinuousVariable
 
 
-__all__ = ["GLMTest", ]
+__all__ = ["LogisticTest", ]
 
 
 class AbstractTask(object):
@@ -106,17 +106,17 @@ class AbstractTask(object):
             pickle.dump(self._info, f)
 
 
-class GLMTest(AbstractTask):
-    """Generalized linear model genetic test."""
+class LogisticTest(AbstractTask):
+    """Logistic regression genetic test."""
     def __init__(self, *args, **kwargs):
         if not STATSMODELS_AVAILABLE:  # pragma: no cover
-            raise ImportError("GLMTest class requires statsmodels. Install "
-                              "the package first (and patsy).")
-        super(GLMTest, self).__init__(*args, **kwargs)
+            raise ImportError("LogisticTest class requires statsmodels. "
+                              "Install the package first (and patsy).")
+        super(LogisticTest, self).__init__(*args, **kwargs)
 
     def run_task(self, experiment, task_name, work_dir):
-        """Run the GLM."""
-        super(GLMTest, self).run_task(experiment, task_name, work_dir)
+        """Run the logistic regression."""
+        super(LogisticTest, self).run_task(experiment, task_name, work_dir)
 
         # Filter outcomes to remove non discrete variables.
         self.outcomes = [i for i in self.outcomes if
@@ -125,7 +125,7 @@ class GLMTest(AbstractTask):
         # Get a database session from the experiment.
         session = experiment.session
 
-        logger.info("Running a GLM analysis.")
+        logger.info("Running a logistic regression analysis.")
 
         # Get the list of variants to analyze.
         # No extra filtering for now (TODO).
@@ -139,7 +139,7 @@ class GLMTest(AbstractTask):
         pool = []
         for cpu in range(experiment.cpu):
             p = multiprocessing.Process(
-                target=GLMTest._glm_process,
+                target=LogisticTest._logistic_process,
                 args=(lock, job_queue, results_queue)
             )
             p.start()
@@ -186,7 +186,7 @@ class GLMTest(AbstractTask):
 
 
     @classmethod
-    def _glm_process(cls, lock, job_queue, results_queue):
+    def _logistic_process(cls, lock, job_queue, results_queue):
         while True:
             with lock:
                 data = job_queue.get()
@@ -195,16 +195,16 @@ class GLMTest(AbstractTask):
                     job_queue.put(data)  # Put the sentinel back.
                     break
 
-            results = cls._glm(*data)
+            results = cls._logistic(*data)
 
             with lock:
                 results_queue.put(results)
 
         return
 
-    @staticmethod
-    def _glm(variant, phenotype, x, y, outcome_column=1):
-        """Run a GLM using the y ~ x model.
+    @classmethod
+    def _logistic(cls, variant, phenotype, x, y, outcome_column=1):
+        """Run a logistic test using the y ~ x model.
         
         Returns the p-value and odds ratio.
 
@@ -227,3 +227,63 @@ class GLMTest(AbstractTask):
             p = beta = std_err = ic95_min = ic95_max = None
 
         return (variant, phenotype, p, beta, std_err, ic95_min, ic95_max)
+
+
+class LinearRegressionTest(AbstractTask):
+    """Linear regression genetic association test."""
+    def __init__(self, *args, **kwargs):
+        if not STATSMODELS_AVAILABLE:  # pragma: no cover
+            raise ImportError("LogisticTest class requires statsmodels. "
+                              "Install the package first (and patsy).")
+        super(LinearRegressionTest, self).__init__(*args, **kwargs)
+
+    def run_task(self, experiment, task_name, work_dir):
+        """Run the linear regression."""
+        super(LinearRegressionTest, self).run_task(
+            experiment, task_name, work_dir
+        )
+
+        # Filter outcomes to remove non continuous variables.
+        self.outcomes = [i for i in self.outcomes if
+                         isinstance(i, ContinuousVariable)]
+
+        session = experiment.session
+        logger.info("Running a linear regression analysis.")
+
+        variants = experiment.genotypes.query_variants(session, "name").all()
+        variants = [i[0] for i in variants]
+
+        for variant in variants:
+            x = experiment.genotypes.get_genotypes(variant)
+            # Statsmodel does not automatically add an intercept term, so we
+            # need to do it manually here.
+            x = np.vstack((np.ones(x.shape[0]), x))
+
+            for covar in self.covariates:
+                covar = experiment.phenotypes.get_phenotype_vector(covar)
+                x = np.vstack((x, covar))
+
+            x = x.T
+
+            for phenotype in self.outcomes:
+                y = experiment.phenotypes.get_phenotype_vector(phenotype)
+                missing = np.isnan(x).any(axis=1) | np.isnan(y)
+
+                # (variant, phenotype, x[~missing, :], y[~missing])
+                model = sm.OLS(y[~missing], x[~missing])
+                res = model.fit()
+
+                p = res.pvalues[1]
+                beta = res.params[1]
+                std_err = res.bse[1]
+
+                conf_int = res.conf_int()
+                if type(conf_int) is not np.ndarray:
+                    conf_int = conf_int.values
+                ic95_min, ic95_max = conf_int[1, :]
+
+                results = [
+                    variant, phenotype, p, beta, std_err, ic95_min, ic95_max
+                ]
+
+                experiment.add_result("variant", task_name, *results)

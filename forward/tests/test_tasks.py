@@ -20,7 +20,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from ..tasks import GLMTest, STATSMODELS_AVAILABLE, AbstractTask
+from ..tasks import LogisticTest, STATSMODELS_AVAILABLE, AbstractTask
 from ..experiment import Experiment, ExperimentResult
 from ..phenotype.variables import ContinuousVariable, DiscreteVariable
 from ..genotype import Variant, PlinkGenotypeDatabase
@@ -35,8 +35,8 @@ class TestTask(TestAbstractTask, unittest.TestCase):
 
 
 @unittest.skipIf(not STATSMODELS_AVAILABLE, "statsmodels needs to be installed"
-                                            " to test the GLM task.")
-class TestGLMTask(TestAbstractTask, unittest.TestCase):
+                                            " to test the logistic task.")
+class TestLogisticTask(TestAbstractTask, unittest.TestCase):
     def setUp(self, cpu=1):
         self.cpu = cpu
         self.variables = [
@@ -47,7 +47,7 @@ class TestGLMTask(TestAbstractTask, unittest.TestCase):
             ContinuousVariable("var5", True),  # Covariate.
             DiscreteVariable("var6", True),  # Covariate.
         ]
-        self.task = GLMTest()
+        self.task = LogisticTest()
 
         self.experiment = Experiment(
             name=".fwd_test_tasks",
@@ -143,7 +143,7 @@ class TestGLMTask(TestAbstractTask, unittest.TestCase):
 
 
 @unittest.skipIf(not STATSMODELS_AVAILABLE, "statsmodels needs to be installed"
-                                            " to test the GLM task.")
-class TestGLMTaskMultiprocessing(TestGLMTask):
+                                            " to test the logistic task.")
+class TestLogisticTaskMultiprocessing(TestLogisticTask):
     def setUp(self):
-        super(TestGLMTaskMultiprocessing, self).setUp(3)
+        super(TestLogisticTaskMultiprocessing, self).setUp(3)

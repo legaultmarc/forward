@@ -51,6 +51,13 @@ def register_handler(binding):
     return decorator
 
 
+class NoHandlerException(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return self.msg
+
+
 class Report(object):
     """Class used to create reports.
 
@@ -104,7 +111,13 @@ class Report(object):
         for task in self.query(ExperimentResult.task_name).distinct():
             task = task[0]
             task_type = task.split("_")[1]
-            self.sections.append(handlers[task_type](task, self))
+            try:
+                section = handlers[task_type](task, self)
+            except KeyError:
+                raise NoHandlerException("Could not find a report handler "
+                                         "for the '{}'.".format(task_type))
+
+            self.sections.append(section)
 
     def query(self, *args, **kwargs):
         return self.session.query(*args, **kwargs)
@@ -154,10 +167,10 @@ class Section(object):
         raise NotImplementedError
 
 
-@register_handler("GLMTest")
-class GLMReportSection(Section):
+@register_handler("LogisticTest")
+class LogisticReportSection(Section):
     def __init__(self, task_id, report):
-        super(GLMReportSection, self).__init__(task_id, report)
+        super(LogisticReportSection, self).__init__(task_id, report)
         self.template_vars = {
             "variables": self._get_variables(),
             "corrplot": self._create_variables_corrplot(),
@@ -325,5 +338,15 @@ class GLMReportSection(Section):
         return results
 
     def html(self):
-        template = self.report.env.get_template("section_glm.html")
+        template = self.report.env.get_template("section_logistic.html")
         return template.render(**self.template_vars)
+
+@register_handler("LinearRegressionTest")
+class LinearReportSection(Section):
+    def __init__(self, task_id, report):
+            super(LinearReportSection, self).__init__(task_id, report)
+            self.template_vars = {}
+
+    def html(self):
+            template = self.report.env.get_template("section_linear.html")
+            return template.render(**self.template_vars)
