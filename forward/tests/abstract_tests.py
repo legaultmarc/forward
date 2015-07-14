@@ -16,6 +16,7 @@ import tempfile
 import string
 import shutil
 
+import six
 import numpy as np
 
 from . import dummies
@@ -52,7 +53,7 @@ class TestAbstractPhenDB(object):
 
     def test_get_phenotypes(self):
         """Check if all the column names are returned."""
-        self.assertEquals(
+        self.assertEqual(
             set(self.db.get_phenotypes()),
             set(self._variables)
         )
@@ -62,7 +63,7 @@ class TestAbstractPhenDB(object):
         n_samples = len(self.db.get_sample_order())
         for var in self.db.get_phenotypes():
             vec = self.db.get_phenotype_vector(var)
-            self.assertEquals(vec.shape[0], n_samples)
+            self.assertEqual(vec.shape[0], n_samples)
             self.assertTrue(type(vec) is np.ndarray)
 
     def test_get_phen_vector_na(self):
@@ -89,7 +90,7 @@ class TestAbstractPhenDB(object):
         self.assertTrue(len(samples) > 3)
 
         # Check that we're using strings.
-        self.assertTrue(type(samples[0]) in (str, unicode))
+        self.assertTrue(isinstance(samples[0], six.string_types))
 
     def test_set_sample_order(self):
         """Try changing the sample order (permutation).
@@ -110,7 +111,7 @@ class TestAbstractPhenDB(object):
 
         # Check sample labels.
         self.db.set_sample_order(samples_perm)
-        self.assertEquals(samples_perm, self.db.get_sample_order())
+        self.assertEqual(samples_perm, self.db.get_sample_order())
 
         # Check that the data was also reordered.
         for var in self._variables:
@@ -153,10 +154,10 @@ class TestAbstractPhenDB(object):
         cols = self.db.get_phenotypes()
         random.shuffle(cols)
         mat = self.db.get_correlation_matrix(cols[:3])
-        self.assertEquals(mat.shape, (3, 3))
+        self.assertEqual(mat.shape, (3, 3))
 
         mat = self.db.get_correlation_matrix(self.db.get_phenotypes())
-        self.assertEquals(mat.shape, (len(cols), len(cols)))
+        self.assertEqual(mat.shape, (len(cols), len(cols)))
 
 
 class TestAbstractGenoDB(object):
@@ -192,7 +193,7 @@ class TestAbstractGenoDB(object):
         exception = FrozenDatabaseError()
         message = ("Once initialized, genotype databases are immutable. "
                    "Further filtering needs to be done at the Task level.")
-        self.assertEquals(str(exception), message)
+        self.assertEqual(str(exception), message)
 
     def test_get_genotypes(self):
         self.db.experiment_init(self.experiment)
@@ -200,7 +201,7 @@ class TestAbstractGenoDB(object):
 
         for var in self._variants:
             geno = self.db.get_genotypes(var)
-            self.assertEquals(geno.shape[0], n_samples)
+            self.assertEqual(geno.shape[0], n_samples)
 
         # Hopefully, people will not use _testz as a variant name.
         self.assertRaises(ValueError, self.db.get_genotypes, "_testz")
@@ -214,16 +215,16 @@ class TestAbstractGenoDB(object):
             self.assertTrue(hasattr(var, "chrom"))
             self.assertTrue(hasattr(var, "pos"))
 
-            self.assertEquals(var.mac, np.nansum(geno))
-            self.assertEquals(var.n_missing, np.sum(np.isnan(geno)))
-            self.assertEquals(var.n_non_missing, np.sum(~np.isnan(geno)))
+            self.assertEqual(var.mac, np.nansum(geno))
+            self.assertEqual(var.n_missing, np.sum(np.isnan(geno)))
+            self.assertEqual(var.n_non_missing, np.sum(~np.isnan(geno)))
 
             # Hybrids
-            self.assertEquals(
+            self.assertEqual(
                 var.maf,
                 np.nansum(geno) / (2 * np.sum(~np.isnan(geno)))
             )
-            self.assertEquals(
+            self.assertEqual(
                 var.completion_rate,
                 np.sum(~np.isnan(geno)) / geno.shape[0]
             )
@@ -260,7 +261,7 @@ class TestAbstractGenoDB(object):
         for name, mac in self.db.query_variants(session, ["name", "mac"]):
             self.assertTrue(name in self._variants)
             geno = self.db.get_genotypes(name)
-            self.assertEquals(mac, np.nansum(geno))
+            self.assertEqual(mac, np.nansum(geno))
 
     def test_query_variants_bad_field(self):
         """Test querying variants using a bad (nonexistant) field."""
@@ -400,7 +401,7 @@ class TestAbstractGenoDB(object):
     def compare_variant_db(self, expected):
         query = self.experiment.session.query
         db_names = set([i[0] for i in query(Variant.name).all()])
-        self.assertEquals(db_names, expected)
+        self.assertEqual(db_names, expected)
 
 
 class TestAbstractTask(object):
@@ -461,4 +462,4 @@ class TestAbstractTask(object):
 
     def test_meta(self):
         self.task.set_meta("test", "test")
-        self.assertEquals(self.task.get_meta("test"), "test")
+        self.assertEqual(self.task.get_meta("test"), "test")

@@ -66,9 +66,9 @@ class DiscreteVariable(Variable):
         """Compute some n values given the filtered phenotype database."""
 
         vect = phenotypes_db.get_phenotype_vector(self.name)
-        self.n_cases = np.sum(vect == 1)
-        self.n_controls = np.sum(vect == 0)
-        self.n_missing = np.sum(np.isnan(vect))
+        self.n_cases = int(np.sum(vect == 1))
+        self.n_controls = int(np.sum(vect == 0))
+        self.n_missing = int(np.sum(np.isnan(vect)))
 
     @hybrid_property
     def prevalence(self):

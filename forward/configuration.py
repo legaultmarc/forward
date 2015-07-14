@@ -118,11 +118,7 @@ def get_class(name, class_type=None):
     # Try importing from user class.
     path, class_name = name.rsplit(".", 1)
     try:
-
-        print "BANANA", path, class_name
         pkg = __import__(path, globals(), locals(), [class_name], 0)
-        print "User in path", path, class_name
-
         if hasattr(pkg, class_name):
             return getattr(pkg, class_name)
     except ImportError:

@@ -12,7 +12,6 @@ This module is used to create reports from forward experiments.
 
 from __future__ import division
 
-import bisect
 import shutil
 from pkg_resources import resource_filename
 import collections
@@ -27,10 +26,7 @@ import sqlalchemy
 import scipy.stats
 import matplotlib
 import matplotlib.cm
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import seaborn as sbn
 
 from six.moves import cPickle as pickle
 from jinja2 import Environment, PackageLoader
@@ -45,6 +41,7 @@ from .phenotype.variables import Variable
 
 
 handlers = {}
+
 
 def register_handler(binding):
     def decorator(handler):
@@ -203,7 +200,6 @@ class GLMReportSection(Section):
                    plot_width=500, plot_height=500,
                    tools="resize,hover,save,reset", title_text_font_size="8pt")
 
-        corrs = np.sort(corr_mat.flatten())
         colors = matplotlib.cm.coolwarm(np.linspace(0, 1, 100))
         colors = [tu for tu in (255 * colors[:, :3])]
         for i in range(len(colors)):
@@ -303,12 +299,11 @@ class GLMReportSection(Section):
 
         return components(p)
 
-
     def _parse_results(self):
         """Fetch analysis results in the database and format them. """
         query = self.report.query(ExperimentResult).\
                             filter_by(task_name=self.task_id).\
-                            filter(ExperimentResult.significance<0.05).\
+                            filter(ExperimentResult.significance < 0.05).\
                             order_by(ExperimentResult.significance.asc())
 
         results = []  # List of Result named tuples.

@@ -49,6 +49,10 @@ class TestMemoryImpute2Geno(TestAbstractGenoDB, unittest.TestCase):
 
         self._variants = ["rs12345", "rs23456", "rs23457", "rs92134"]
 
+    def tearDown(self):
+        super(TestMemoryImpute2Geno, self).tearDown()
+        self.db.close()
+
     def test_get_samples(self):
         expected = np.array(["sample1", "sample2", "sample3"])
         self.assertTrue(np.all(self.db.samples == expected))
@@ -113,14 +117,17 @@ class TestMemoryImpute2Geno(TestAbstractGenoDB, unittest.TestCase):
         """Test impute2 probability filter."""
         self.db = self.get_probability_filtered_db()
         self.test_filter_completion()
+        self.db.close()
 
     def test_probability_filter_strict(self):
         self.db = self.get_probability_filtered_db()
         self.test_filter_completion_strict()
+        self.db.close()
 
     def test_probability_filter_mixed(self):
         self.db = self.get_probability_filtered_db()
         self.test_mixed_filters()
+        self.db.close()
 
     def test_exclude_samples(self):
         samples_initial = self.db.get_sample_order()

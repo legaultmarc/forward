@@ -69,7 +69,7 @@ class TestExperiment(unittest.TestCase):
             self.assertTrue(var.mac / (2 * var.n_non_missing) == var.maf)
             self.assertTrue(var.maf <= 0.5)
 
-        self.assertEquals(i + 1, len(expected_variants))
+        self.assertEqual(i + 1, len(expected_variants))
 
     def test_query_results(self):
         """Add and then query back some results."""
@@ -92,15 +92,15 @@ class TestExperiment(unittest.TestCase):
         self.commit()
 
         result = self.query(ExperimentResult).one()
-        self.assertEquals(result.tested_entity, "variant")
-        self.assertEquals(result.task_name, "test1")
-        self.assertEquals(result.entity_name, "snp1")
-        self.assertEquals(result.phenotype, "var1")
-        self.assertEquals(result.significance, 1e-7)
-        self.assertEquals(result.coefficient, 3)
-        self.assertEquals(result.standard_error, 0.1)
-        self.assertEquals(result.confidence_interval_min, 2.9)
-        self.assertEquals(result.confidence_interval_max, 3.1)
+        self.assertEqual(result.tested_entity, "variant")
+        self.assertEqual(result.task_name, "test1")
+        self.assertEqual(result.entity_name, "snp1")
+        self.assertEqual(result.phenotype, "var1")
+        self.assertEqual(result.significance, 1e-7)
+        self.assertEqual(result.coefficient, 3)
+        self.assertEqual(result.standard_error, 0.1)
+        self.assertEqual(result.confidence_interval_min, 2.9)
+        self.assertEqual(result.confidence_interval_max, 3.1)
 
     def test_add_result_variable(self):
         """Add results using using a variable object."""
@@ -110,12 +110,12 @@ class TestExperiment(unittest.TestCase):
         self.commit()
 
         result = self.query(ExperimentResult.phenotype).one()[0]
-        self.assertEquals(var.name, result)
+        self.assertEqual(var.name, result)
 
     def test_experiment_info_init(self):
         info = self.experiment.info
-        self.assertEquals(info["name"], ".fwd_test_experiment")
-        self.assertEquals(
+        self.assertEqual(info["name"], ".fwd_test_experiment")
+        self.assertEqual(
             info["engine_url"],
             Experiment.get_engine(info["name"], "sqlite").url
         )
@@ -163,4 +163,4 @@ class TestExperiment(unittest.TestCase):
             if type(var) is DiscreteVariable:
                 y = self.experiment.phenotypes.get_phenotype_vector(var.name)
                 prevalence = np.sum(y == 1) / np.sum(~np.isnan(y))
-                self.assertEquals(var.prevalence, prevalence)
+                self.assertEqual(var.prevalence, prevalence)

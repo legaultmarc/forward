@@ -96,7 +96,7 @@ class AbstractGenotypeDatabase(object):
         """
         if fields:
             args = []
-            if not hasattr(fields, "__iter__"):
+            if not type(fields) in (tuple, list):
                 fields = [fields]
 
             for field in fields:
@@ -234,9 +234,10 @@ class MemoryImpute2Geno(AbstractGenotypeDatabase):
 
             # Add the variant information to the database.
             db_buffer.append(
-                dict(name=name, chrom=info["chrom"], pos=info["pos"],
-                     mac=info["minor_allele_count"], n_missing=n_missing,
-                     n_non_missing=n_non_missing)
+                dict(name=name, chrom=info["chrom"], pos=int(info["pos"]),
+                     mac=float(info["minor_allele_count"]),
+                     n_missing=int(n_missing),
+                     n_non_missing=int(n_non_missing))
             )
 
             # We use sqlalchemy core to insert faster.
@@ -345,6 +346,9 @@ class MemoryImpute2Geno(AbstractGenotypeDatabase):
         # Also remove from the list of samples.
         self.samples = self.samples[self.samples_mask]
 
+    def close(self):
+        self.impute2file.close()
+
 
 class PlinkGenotypeDatabase(AbstractGenotypeDatabase):
     """Class representing genotypes from binary plink files."""
@@ -403,8 +407,9 @@ class PlinkGenotypeDatabase(AbstractGenotypeDatabase):
 
             # Everything passed, we can add to the db.
             db_variants.append(
-                dict(name=name, chrom=info.chrom, pos=info.pos, mac=mac,
-                     n_missing=n_missing, n_non_missing=n_non_missing)
+                dict(name=name, chrom=info.chrom, pos=int(info.pos),
+                     mac=float(mac), n_missing=int(n_missing),
+                     n_non_missing=int(n_non_missing))
             )
 
         con.execute(Variant.__table__.insert(), db_variants)

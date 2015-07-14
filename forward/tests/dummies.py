@@ -53,7 +53,7 @@ class DummyPhenDatabase(AbstractPhenotypeDatabase):
             self.data[k][mask] = np.nan
 
     def get_phenotypes(self):
-        return self.data.keys()
+        return list(self.data.keys())
 
     def get_phenotype_vector(self, name):
         if hasattr(name, "name"):
@@ -179,9 +179,9 @@ class DummyGenotypeDatabase(AbstractGenotypeDatabase):
                 name=snp,
                 chrom=random.choice(chroms),
                 pos=random.randint(100, 9999999),
-                mac=np.nansum(self.genotypes[snp]),
-                n_missing=np.sum(np.isnan(self.genotypes[snp])),
-                n_non_missing=np.sum(~np.isnan(self.genotypes[snp]))
+                mac=float(np.nansum(self.genotypes[snp])),
+                n_missing=int(np.sum(np.isnan(self.genotypes[snp]))),
+                n_non_missing=int(np.sum(~np.isnan(self.genotypes[snp])))
             )
             variants.append(var)
 
