@@ -277,7 +277,7 @@ class LogisticReportSection(Section):
         p_values = -1 * np.log10(p_values)
         n = len(p_values)
 
-        expected = -1 * np.log10(np.arange(1, n + 1))
+        expected = -1 * np.log10(np.arange(1, n + 1) / n)
 
         # Computing the 95% CI
         c975 = np.zeros(n)

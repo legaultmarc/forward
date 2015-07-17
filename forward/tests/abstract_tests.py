@@ -428,8 +428,8 @@ class TestAbstractTask(object):
             ContinuousVariable("var2"),
             DiscreteVariable("var3"),
             DiscreteVariable("var4"),
-            ContinuousVariable("var5", True),  # Covariate.
-            DiscreteVariable("var6", True),  # Covariate.
+            ContinuousVariable("var5", covariate=True),
+            DiscreteVariable("var6", covariate=True),
         ]
 
         self.experiment = Experiment(

@@ -36,7 +36,7 @@ class TestExperiment(unittest.TestCase):
             ContinuousVariable("var2"),
             DiscreteVariable("var3"),
             DiscreteVariable("var4"),
-            ContinuousVariable("var5", True),  # Covariate.
+            ContinuousVariable("var5", covariate=True),
         ]
         tasks = []
 

@@ -87,9 +87,10 @@ class ContinuousVariable(Variable):
         "polymorphic_identity": "continuous"
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, name, **kwargs):
         kwargs["is_covariate"] = kwargs.pop("covariate", False)
-        super(ContinuousVariable, self).__init__(**kwargs)
+
+        super(ContinuousVariable, self).__init__(name=name, **kwargs)
 
     def compute_statistics(self, phenotypes_db):
         """Compute statistics with the filtered phenotype database."""
