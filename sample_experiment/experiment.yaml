@@ -4,6 +4,7 @@ Database:
     missing_values: ["-9", "-99", "-88", "-77"]
     sample_column: "Sample"
     filename: /Users/legaultmarc/projects/StatGen/adcy9/data/phenotypes/cohort_phenotypes.xlsx
+    exclude_correlated: 0.8
 
 Variables:
     - name: Infarctus

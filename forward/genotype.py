@@ -21,6 +21,7 @@ from sqlalchemy import Column, String, Integer, Float
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from . import SQLAlchemyBase
+from .utils import abstract, dispatch_methods
 
 try:  # pragma: no cover
     import pyplink
@@ -59,24 +60,11 @@ class Variant(SQLAlchemyBase):
         return self.n_non_missing / (self.n_non_missing + self.n_missing)
 
 
+@abstract
 class AbstractGenotypeDatabase(object):
     """Abstract class representing the genotypes for the study."""
     def __init__(self, **kwargs):
-        # Read arguments as method calls.
-        called_methods = []
-        for key, value in kwargs.items():
-            if hasattr(self, key):
-                getattr(self, key)(value)
-                called_methods.append(key)
-
-        for method in called_methods:
-            del kwargs[method]
-
-        if kwargs:
-            message = "Unrecognized argument or method call: '{}'.".format(
-                kwargs
-            )
-            raise ValueError(message)
+        dispatch_methods(self, kwargs)
 
     # Sample management interface.
     def get_sample_order(self):
