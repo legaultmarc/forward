@@ -11,6 +11,11 @@ This module is for short utility functions.
 """
 
 
+import multiprocessing
+
+from six.moves import range
+
+
 class AbstractClassException(Exception):
     def __str__(self):
         return "Can't initialize an abstract class."
@@ -73,3 +78,63 @@ def dispatch_methods(self, kwargs):
             kwargs
         )
         raise ValueError(message)
+
+
+class Parallel(object):
+    """Class used to parallelize computation.
+
+    :param num_cpu: Number of CPUs to use (size of the worker pool).
+    :type num_cpu: int
+
+    :param f: The target function.
+    :type f: function
+
+    """
+    def __init__(self, num_cpu, f):
+        self.num_cpu = num_cpu
+        self.f = f
+
+        self.job_queue = multiprocessing.Queue()
+        self.results_queue = multiprocessing.Queue()
+
+        self.pool = []
+        for cpu in range(self.num_cpu):
+            p = multiprocessing.Process(
+                target=self._process,
+            )
+            p.start()
+            self.pool.append(p)
+
+    def push_work(self, tu):
+        """Add work to the queue."""
+        if type(tu) is not tuple:
+            raise TypeError("push_work takes a tuple of arguments for the "
+                            "function (f).")
+        self.job_queue.put(tu)
+
+    def get_result(self):
+        """Fetches results from the result queue."""
+        if self.job_queue.empty() and self.results_queue.empty():
+            # Check if the processees are done.
+            if all([not p.is_alive for p in self.pool]):
+                self.results_queue.close()
+                return
+
+        return self.results_queue.get()
+
+    def done_pushing(self):
+        """Signals that we will not be pushing more work."""
+        self.job_queue.put(None)
+        self.job_queue.close()
+
+    def _process(self):
+        while True:
+            data = self.job_queue.get()
+
+            if data is None:
+                self.job_queue.put(data)  # Put the sentinel back.
+                break
+
+            results = self.f(*data)
+
+            self.results_queue.put(results)

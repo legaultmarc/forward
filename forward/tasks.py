@@ -28,7 +28,7 @@ except ImportError:  # pragma: no cover
 
 
 from .phenotype.variables import DiscreteVariable, ContinuousVariable
-from .utils import abstract
+from .utils import abstract, Parallel
 
 
 __all__ = ["LogisticTest", ]
@@ -116,13 +116,17 @@ class LogisticTest(AbstractTask):
                               "Install the package first (and patsy).")
         super(LogisticTest, self).__init__(*args, **kwargs)
 
+    def filter_variables(self):
+        # Filter outcomes to remove non discrete variables.
+        self.outcomes = [i for i in self.outcomes if
+                         isinstance(i, DiscreteVariable)]
+
+
     def run_task(self, experiment, task_name, work_dir):
         """Run the logistic regression."""
         super(LogisticTest, self).run_task(experiment, task_name, work_dir)
 
-        # Filter outcomes to remove non discrete variables.
-        self.outcomes = [i for i in self.outcomes if
-                         isinstance(i, DiscreteVariable)]
+        self.filter_variables()
 
         # Get a database session from the experiment.
         session = experiment.session
@@ -134,18 +138,7 @@ class LogisticTest(AbstractTask):
         variants = experiment.genotypes.query_variants(session, "name").all()
         variants = [i[0] for i in variants]  # Keep only the names.
 
-        # Setup the processes.
-        lock = multiprocessing.Lock()
-        job_queue = multiprocessing.Queue()
-        results_queue = multiprocessing.Queue()
-        pool = []
-        for cpu in range(experiment.cpu):
-            p = multiprocessing.Process(
-                target=LogisticTest._logistic_process,
-                args=(lock, job_queue, results_queue)
-            )
-            p.start()
-            pool.append(p)
+        self.parallel = Parallel(experiment.cpu, self._work)
 
         num_tests = 0
         for variant in variants:
@@ -170,122 +163,67 @@ class LogisticTest(AbstractTask):
                 y = experiment.phenotypes.get_phenotype_vector(phenotype)
                 missing = np.isnan(x).any(axis=1) | np.isnan(y)
 
-                job_queue.put(
+                self.parallel.push_work(
                     (variant, phenotype, x[~missing, :], y[~missing])
                 )
                 num_tests += 1
 
-        job_queue.put(None)
-        job_queue.close()
+        self.parallel.done_pushing()
 
         # We can start parsing the results.
         while num_tests > 0:
-            results = results_queue.get()
-
+            results = self.parallel.get_result()
             # Process the result.
             experiment.add_result("variant", task_name, *results)
             num_tests -= 1
 
+    def handle_sm_results(self, res, outcome_column):
+        p = res.pvalues[outcome_column]
+        beta = res.params[outcome_column]
+        std_err = res.bse[outcome_column]
 
-    @classmethod
-    def _logistic_process(cls, lock, job_queue, results_queue):
-        while True:
-            with lock:
-                data = job_queue.get()
+        conf_int = res.conf_int()
+        if type(conf_int) is not np.ndarray:
+            conf_int = conf_int.values
+        ic95_min, ic95_max = conf_int[outcome_column, :]
 
-                if data is None:
-                    job_queue.put(data)  # Put the sentinel back.
-                    break
+        return [p, beta, std_err, ic95_min, ic95_max]
 
-            results = cls._logistic(*data)
-
-            with lock:
-                results_queue.put(results)
-
-        return
-
-    @classmethod
-    def _logistic(cls, variant, phenotype, x, y, outcome_column=1):
-        """Run a logistic test using the y ~ x model.
-        
-        Returns the p-value and odds ratio.
-
-        """
+    def _work(self, variant, phenotype, x, y, outcome_column=1):
+        """Run a logistic test using the y ~ x model."""
         try:
             glm = sm.GLM(y, x, family=sm.families.Binomial())
             res = glm.fit()
-
-            p = res.pvalues[outcome_column]
-            beta = res.params[outcome_column]
-            std_err = res.bse[outcome_column]
-
-            conf_int = res.conf_int()
-            if type(conf_int) is not np.ndarray:
-                conf_int = conf_int.values
-            ic95_min, ic95_max = conf_int[outcome_column, :]
-
+            res = self.handle_sm_results(res, outcome_column)
+            res = tuple([variant, phenotype] + res)
         except Exception:
             logging.exception("")  # Log the exception and insert nulls in db.
-            p = beta = std_err = ic95_min = ic95_max = None
+            res = tuple([None for _ in range(7)])
 
-        return (variant, phenotype, p, beta, std_err, ic95_min, ic95_max)
+        return res
 
 
-class LinearRegressionTest(AbstractTask):
-    """Linear regression genetic association test."""
+class LinearTest(LogisticTest):
+    """Linear regression genetic test."""
     def __init__(self, *args, **kwargs):
         if not STATSMODELS_AVAILABLE:  # pragma: no cover
-            raise ImportError("LogisticTest class requires statsmodels. "
+            raise ImportError("LinearTest class requires statsmodels. "
                               "Install the package first (and patsy).")
-        super(LinearRegressionTest, self).__init__(*args, **kwargs)
+        super(LinearTest, self).__init__(*args, **kwargs)
 
-    def run_task(self, experiment, task_name, work_dir):
-        """Run the linear regression."""
-        super(LinearRegressionTest, self).run_task(
-            experiment, task_name, work_dir
-        )
-
-        # Filter outcomes to remove non continuous variables.
+    def filter_variables(self):
+        # Filter outcomes to remove non discrete variables.
         self.outcomes = [i for i in self.outcomes if
                          isinstance(i, ContinuousVariable)]
 
-        session = experiment.session
-        logger.info("Running a linear regression analysis.")
+    def _work(self, variables, phenotype, x, y, outcome_column=1):
+        try:
+            ols = sm.OLS(y, x)
+            res = ols.fit()
+            res = self.handle_sm_results(res, outcome_column)
+            res = tuple([variant, phenotype] + res)
+        except Exception:
+            logging.exception("")  # Log the exception and insert nulls in db.
+            res = tuple([None for _ in range(7)])
 
-        variants = experiment.genotypes.query_variants(session, "name").all()
-        variants = [i[0] for i in variants]
-
-        for variant in variants:
-            x = experiment.genotypes.get_genotypes(variant)
-            # Statsmodel does not automatically add an intercept term, so we
-            # need to do it manually here.
-            x = np.vstack((np.ones(x.shape[0]), x))
-
-            for covar in self.covariates:
-                covar = experiment.phenotypes.get_phenotype_vector(covar)
-                x = np.vstack((x, covar))
-
-            x = x.T
-
-            for phenotype in self.outcomes:
-                y = experiment.phenotypes.get_phenotype_vector(phenotype)
-                missing = np.isnan(x).any(axis=1) | np.isnan(y)
-
-                # (variant, phenotype, x[~missing, :], y[~missing])
-                model = sm.OLS(y[~missing], x[~missing])
-                res = model.fit()
-
-                p = res.pvalues[1]
-                beta = res.params[1]
-                std_err = res.bse[1]
-
-                conf_int = res.conf_int()
-                if type(conf_int) is not np.ndarray:
-                    conf_int = conf_int.values
-                ic95_min, ic95_max = conf_int[1, :]
-
-                results = [
-                    variant, phenotype, p, beta, std_err, ic95_min, ic95_max
-                ]
-
-                experiment.add_result("variant", task_name, *results)
+        return res
