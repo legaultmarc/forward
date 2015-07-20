@@ -20,17 +20,17 @@ import os
 import pandas as pd
 import numpy as np
 
-from ..tasks import LogisticTest, STATSMODELS_AVAILABLE, AbstractTask
+from ..tasks import LogisticTest, STATSMODELS_AVAILABLE
 from ..experiment import Experiment, ExperimentResult
 from ..phenotype.variables import ContinuousVariable, DiscreteVariable
 from ..genotype import Variant, PlinkGenotypeDatabase
-from .dummies import DummyPhenDatabase, DummyGenotypeDatabase
+from .dummies import DummyPhenDatabase, DummyGenotypeDatabase, DummyTask
 from .abstract_tests import TestAbstractTask
 
 
 class TestTask(TestAbstractTask, unittest.TestCase):
     def setUp(self):
-        self.task = AbstractTask()
+        self.task = DummyTask()
         super(TestTask, self).setUp()
 
 

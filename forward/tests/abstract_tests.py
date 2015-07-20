@@ -23,7 +23,6 @@ from . import dummies
 from ..phenotype.variables import (Variable, ContinuousVariable,
                                    DiscreteVariable)
 from ..genotype import Variant, FrozenDatabaseError
-from ..tasks import AbstractTask
 from ..experiment import Experiment
 
 
@@ -445,7 +444,7 @@ class TestAbstractTask(object):
         shutil.rmtree(".fwd_test_tasks")
 
     def test_constructor_outcomes(self):
-        t2 = AbstractTask(outcomes=["var3"])
+        t2 = dummies.DummyTask(outcomes=["var3"])
         self.experiment.tasks.append(t2)
         self.experiment.run_tasks()
 
@@ -453,7 +452,7 @@ class TestAbstractTask(object):
         self.assertTrue(t2.outcomes[0].name == "var3")
 
     def test_constructor_covariates(self):
-        t2 = AbstractTask(covariates=["var5"])
+        t2 = dummies.DummyTask(covariates=["var5"])
         self.experiment.tasks.append(t2)
         self.experiment.run_tasks()
 

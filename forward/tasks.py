@@ -28,11 +28,13 @@ except ImportError:  # pragma: no cover
 
 
 from .phenotype.variables import DiscreteVariable, ContinuousVariable
+from .utils import abstract
 
 
 __all__ = ["LogisticTest", ]
 
 
+@abstract
 class AbstractTask(object):
     """Class representing a task (genetic test)."""
     def __init__(self, outcomes="all", covariates="all", variants="all",

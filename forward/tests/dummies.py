@@ -15,6 +15,7 @@ import numpy as np
 
 from ..phenotype.db import AbstractPhenotypeDatabase
 from ..genotype import AbstractGenotypeDatabase, Variant
+from ..tasks import AbstractTask
 from ..experiment import Experiment
 from .. import SQLAlchemySession
 
@@ -237,3 +238,6 @@ class DummyExperiment(Experiment):
 
     def clean(self):
         shutil.rmtree(self.name)
+
+class DummyTask(AbstractTask):
+    pass

@@ -130,6 +130,9 @@ class PandasPhenotypeDatabase(AbstractPhenotypeDatabase):
         # Call parent to dispatch method calls.
         super(PandasPhenotypeDatabase, self).__init__(**kwargs)
 
+        # Keep the correlation matrix for lazy loading.
+        self._corr_mat = None
+
     def get_phenotypes(self):
         return list(self.data.columns)
 
@@ -155,8 +158,6 @@ class PandasPhenotypeDatabase(AbstractPhenotypeDatabase):
                            "been set. Make sure that it is consistent with "
                            "the genetic database (consistent order).")
 
-        transformation = lambda x: x  # Identity
-
         # Potentially a Variable object.
         if hasattr(name, "name"):
             name = name.name
@@ -166,13 +167,37 @@ class PandasPhenotypeDatabase(AbstractPhenotypeDatabase):
 
         vect =  self.data.loc[:, name].values
         if isinstance(name, ContinuousVariable) and name.transformation:
-            return apply_transformation(name.transformation, vect)
+            vect = apply_transformation(name.transformation, vect)
+
+        # Check if we need to exclude phenotypes.
+        if hasattr(self, "_exclusion_mapper"):
+            for phen in self._exclusion_mapper(name):
+                corr_y = self.data.loc[:, name].values
+                # Exclude samples that don't have the current phenotype but
+                # that are affected with a correlated phenotype.
+                vect[(corr_y == 1) & (vect == 0)] = np.nan
 
         return vect
 
     def exclude_correlated(self, threshold):
-        # TODO TODO
-        logger.warning("Doin' no thang.")
+        """Define a private function that will be used for filtering based on
+        phenotype correlation.
+
+        """
+
+        ys = self.get_phenotypes()
+        m = self.get_correlation_matrix(ys) >= threshold
+
+        def f(phenotype):
+            x = ys.index(phenotype)
+            exclusions = []
+            for j in np.where(m[x, :])[0]:
+                if j != x:
+                    exclusions.append(ys[j])
+
+            return exclusions
+
+        self._exclusion_mapper = f
 
     def get_correlation_matrix(self, names):
         return self.data[names].corr().values
