@@ -125,7 +125,6 @@ class Parallel(object):
     def done_pushing(self):
         """Signals that we will not be pushing more work."""
         self.job_queue.put(None)
-        self.job_queue.close()
 
     def _process(self):
         while True:
