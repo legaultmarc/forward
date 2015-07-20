@@ -111,6 +111,7 @@ class AbstractTask(object):
 class LogisticTest(AbstractTask):
     """Logistic regression genetic test."""
     def __init__(self, *args, **kwargs):
+        logger.info("Running a logistic regression analysis.")
         if not STATSMODELS_AVAILABLE:  # pragma: no cover
             raise ImportError("LogisticTest class requires statsmodels. "
                               "Install the package first (and patsy).")
@@ -130,8 +131,6 @@ class LogisticTest(AbstractTask):
 
         # Get a database session from the experiment.
         session = experiment.session
-
-        logger.info("Running a logistic regression analysis.")
 
         # Get the list of variants to analyze.
         # No extra filtering for now (TODO).
@@ -205,6 +204,7 @@ class LogisticTest(AbstractTask):
 
 class LinearTest(LogisticTest):
     """Linear regression genetic test."""
+    logger.info("Running a linear regression analysis.")
     def __init__(self, *args, **kwargs):
         if not STATSMODELS_AVAILABLE:  # pragma: no cover
             raise ImportError("LinearTest class requires statsmodels. "
@@ -216,7 +216,7 @@ class LinearTest(LogisticTest):
         self.outcomes = [i for i in self.outcomes if
                          isinstance(i, ContinuousVariable)]
 
-    def _work(self, variables, phenotype, x, y, outcome_column=1):
+    def _work(self, variant, phenotype, x, y, outcome_column=1):
         try:
             ols = sm.OLS(y, x)
             res = ols.fit()

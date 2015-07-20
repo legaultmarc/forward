@@ -65,6 +65,6 @@ Experiment:
           covariates: all # [PC1, PC2, PC3]
           alpha: 0.05
 
-        - pyclass: LinearRegressionTest
+        - pyclass: LinearTest
           outcomes: all
           covariates: all

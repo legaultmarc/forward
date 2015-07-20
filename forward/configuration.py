@@ -114,12 +114,12 @@ def get_class(name, class_type=None):
         pass
 
     # Try importing from user class.
-    path, class_name = name.rsplit(".", 1)
     try:
+        path, class_name = name.rsplit(".", 1)
         pkg = __import__(path, globals(), locals(), [class_name], 0)
         if hasattr(pkg, class_name):
             return getattr(pkg, class_name)
-    except ImportError:
+    except ValueError, ImportError:
         pass
 
     raise AttributeError("Could not find class '{}'.".format(name))

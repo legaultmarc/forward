@@ -341,7 +341,7 @@ class LogisticReportSection(Section):
         template = self.report.env.get_template("section_logistic.html")
         return template.render(**self.template_vars)
 
-@register_handler("LinearRegressionTest")
+@register_handler("LinearTest")
 class LinearReportSection(Section):
     def __init__(self, task_id, report):
             super(LinearReportSection, self).__init__(task_id, report)
