@@ -172,7 +172,7 @@ class LogisticReportSection(Section):
     def __init__(self, task_id, report):
         super(LogisticReportSection, self).__init__(task_id, report)
         self.template_vars = {
-            "variables": self._get_variables(),
+            "variables": get_variables(self.report.query, task_id),
             "corrplot": self._create_variables_corrplot(),
             "num_variants": self._number_analyzed_variants(),
             "qq_plot": self._qq_plot(),
@@ -345,8 +345,27 @@ class LogisticReportSection(Section):
 class LinearReportSection(Section):
     def __init__(self, task_id, report):
             super(LinearReportSection, self).__init__(task_id, report)
-            self.template_vars = {}
+            self.template_vars = {
+                "variables": get_variables(self.report.query, task_id)
+            }
 
     def html(self):
             template = self.report.env.get_template("section_linear.html")
             return template.render(**self.template_vars)
+
+def get_variables(query, task_name):
+    # Get variable names for this task.
+    variables = []
+    for var_name in query(ExperimentResult.phenotype).\
+                          filter_by(task_name=task_name).\
+                          distinct():
+        # TODO: Refactor ExperimentResult so that .phenotype is a FK to
+        # Variable objects. Then we can use a join here instead of two
+        # queries. Performance impact should be minimal though...
+
+        # Get the corresponding variable.
+        variables.append(
+            query(Variable).filter_by(name=var_name[0]).one()
+        )
+
+    return variables

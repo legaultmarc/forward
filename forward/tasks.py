@@ -111,7 +111,6 @@ class AbstractTask(object):
 class LogisticTest(AbstractTask):
     """Logistic regression genetic test."""
     def __init__(self, *args, **kwargs):
-        logger.info("Running a logistic regression analysis.")
         if not STATSMODELS_AVAILABLE:  # pragma: no cover
             raise ImportError("LogisticTest class requires statsmodels. "
                               "Install the package first (and patsy).")
@@ -122,10 +121,13 @@ class LogisticTest(AbstractTask):
         self.outcomes = [i for i in self.outcomes if
                          isinstance(i, DiscreteVariable)]
 
+    def log_task_start(self):
+        logger.info("Running a logistic regression analysis.")
 
     def run_task(self, experiment, task_name, work_dir):
         """Run the logistic regression."""
         super(LogisticTest, self).run_task(experiment, task_name, work_dir)
+        self.log_task_start()
 
         self.filter_variables()
 
@@ -204,12 +206,14 @@ class LogisticTest(AbstractTask):
 
 class LinearTest(LogisticTest):
     """Linear regression genetic test."""
-    logger.info("Running a linear regression analysis.")
     def __init__(self, *args, **kwargs):
         if not STATSMODELS_AVAILABLE:  # pragma: no cover
             raise ImportError("LinearTest class requires statsmodels. "
                               "Install the package first (and patsy).")
         super(LinearTest, self).__init__(*args, **kwargs)
+
+    def log_task_start(self):
+        logger.info("Running a linear regression analysis.")
 
     def filter_variables(self):
         # Filter outcomes to remove non discrete variables.

@@ -24,6 +24,13 @@ Variables:
       exclude_outliers: 3  # Samples that are |z| > 3sigma will be exluded.
       transformation: log
 
+    - name: BPSystolic
+      type: continuous
+
+    - name: BPDiastolic
+      type: continuous
+      transformation: inverse-normal-transform
+
     - name: PC1
       type: continuous
       covariate: Yes

@@ -25,6 +25,9 @@ import numpy as np
 from .. import SQLAlchemyBase
 
 
+TRANSFORMATIONS = {"log", "inverse-normal-transform"}
+
+
 class Variable(SQLAlchemyBase):
 
     __tablename__ = "variables"
@@ -80,7 +83,7 @@ class ContinuousVariable(Variable):
     name = Column(String(30), ForeignKey("variables.name"), primary_key=True)
     mean = Column(Float())
     std = Column(Float())
-    transformation = Column(Enum("inverse-normal-transform", "log"))
+    transformation = Column(Enum(*TRANSFORMATIONS))
     exclude_outliers = Column(Float())
 
     __mapper_args__ = {

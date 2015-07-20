@@ -29,7 +29,8 @@ from six.moves import cPickle as pickle
 
 from . import SQLAlchemySession, SQLAlchemyBase, FORWARD_INIT_TIME
 from .utils import format_time_delta
-from .phenotype.variables import Variable, DiscreteVariable, ContinuousVariable
+from .phenotype.variables import (Variable, DiscreteVariable,
+                                  ContinuousVariable, TRANSFORMATIONS)
 
 
 class ExperimentResult(SQLAlchemyBase):
@@ -118,8 +119,20 @@ class Experiment(object):
             obj.__table__.create(self.engine)
 
         for variable in self.variables:
+            # Check the validity of the transformation.
+            if hasattr(variable, "transformation"):
+                transformation = variable.transformation
+                if transformation and transformation not in TRANSFORMATIONS:
+                    msg = ("Invalid transformation {}. Recognized "
+                           "transformations are: {}.")
+                    msg = msg.format(
+                        variable.transformation, ", ".join(TRANSFORMATIONS)
+                    )
+                    raise ValueError(msg)
             variable.compute_statistics(self.phenotypes)
             self.session.add(variable)
+
+        self.session.commit()
 
         # We also compute a correlation matrix and serialize it.
         var_names = [var.name for var in self.variables]
