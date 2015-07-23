@@ -8,10 +8,19 @@
 import logging
 import datetime
 from sqlalchemy.ext.declarative import declarative_base
-import sqlalchemy.orm
+from sqlalchemy.orm import sessionmaker, class_mapper
 
 SQLAlchemyBase = declarative_base()
-SQLAlchemySession = sqlalchemy.orm.sessionmaker()
+
+# We extend this class to add json serialization.
+def _to_json(self):
+    columns = [c.key for c in class_mapper(self.__class__).columns]
+    return {c: getattr(self, c) for c in columns}
+SQLAlchemyBase.to_json = _to_json
+del _to_json
+
+
+SQLAlchemySession = sessionmaker()
 
 FORWARD_INIT_TIME = datetime.datetime.now()
 

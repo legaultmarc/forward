@@ -1,0 +1,27 @@
+{
+  "name": "forwardUI",
+  "version": "0.0.0",
+  "homepage": "https://github.com/legaultmarc/forward",
+  "authors": [
+    "Marc-André Legault <legaultmarc@gmail.com>"
+  ],
+  "description": "Small ui that uses the forward backend to generate a dynamic, interactive report.",
+  "keywords": [
+    "bioinformatics",
+    "forward",
+    "report"
+  ],
+  "dependencies": {
+    "react": "0.13.3",
+    "bokehjs": "http://cdn.pydata.org/bokeh/release/bokeh-0.9.1.min.js",
+    "jquery": "2.1.4"
+  },
+  "license": "CC BY-NC 4.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

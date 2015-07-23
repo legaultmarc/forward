@@ -1,0 +1,13 @@
+{
+  "name": "bokehjs",
+  "_cacheHeaders": {
+    "ETag": "74b8820ad1f7f0cfbcf51d90fe2301f6",
+    "Last-Modified": "Sat, 04 Jul 2015 00:55:02 GMT",
+    "Content-Type": "application/javascript"
+  },
+  "_release": "e-tag:74b8820ad1",
+  "main": "index.js",
+  "_source": "http://cdn.pydata.org/bokeh/release/bokeh-0.9.1.min.js",
+  "_target": "*",
+  "_originalSource": "http://cdn.pydata.org/bokeh/release/bokeh-0.9.1.min.js"
+}

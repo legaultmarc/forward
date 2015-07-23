@@ -46,6 +46,8 @@ class Variant(SQLAlchemyBase):
     chrom = Column(String(15))
     pos = Column(Integer)
     mac = Column(Float)  # Minor allele count can be approximated using dosage.
+    minor = Column(String(10))
+    major = Column(String(10))
     n_missing = Column(Integer)
     n_non_missing = Column(Integer)
 
@@ -224,6 +226,7 @@ class MemoryImpute2Geno(AbstractGenotypeDatabase):
             db_buffer.append(
                 dict(name=name, chrom=info["chrom"], pos=int(info["pos"]),
                      mac=float(info["minor_allele_count"]),
+                     minor=info["minor"], major=info["major"],
                      n_missing=int(n_missing),
                      n_non_missing=int(n_non_missing))
             )

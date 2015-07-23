@@ -25,7 +25,7 @@ def run_from_configuration(yaml_file):
 
     # Generate an analysis report.
     report = Report(experiment)
-    report.html()
+    report.serve()
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:

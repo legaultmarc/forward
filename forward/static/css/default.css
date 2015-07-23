@@ -94,6 +94,9 @@ th {
     height: 30px;
     font-weight: bold;
 }
+th span, th em {
+    font-weight: bold;
+}
 
 td {
     height: 25px;

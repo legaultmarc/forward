@@ -173,7 +173,8 @@ class Experiment(object):
 
         if engine_type == "sqlite":
             db_path = os.path.join(experiment_name, "forward_database.db")
-            return sqlalchemy.create_engine("sqlite:///{}".format(db_path))
+            db_url = "sqlite:///{}".format(db_path)
+            return sqlalchemy.create_engine(db_url)
         else:
             raise NotImplementedError("Only sqlite is supported (for now).")
 

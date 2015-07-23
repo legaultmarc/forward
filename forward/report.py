@@ -36,6 +36,7 @@ from bokeh.embed import components
 from bokeh.models import HoverTool
 
 from . import SQLAlchemySession
+from .backend import Backend
 from .experiment import ExperimentResult, Experiment
 from .phenotype.variables import Variable
 
@@ -79,6 +80,9 @@ class Report(object):
         logger.info("Generating a report for experiment {}".format(
             self.experiment["name"]
         ))
+
+        # Backend
+        self.backend = Backend(self.experiment["name"])
 
         # SQLAlchemy
         self.engine = sqlalchemy.create_engine(self.experiment["engine_url"])
