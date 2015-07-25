@@ -24,6 +24,7 @@ logger = logging.getLogger()
 
 import numpy as np
 import sqlalchemy
+import h5py
 from sqlalchemy import Column, Enum, String, Float
 from six.moves import cPickle as pickle
 
@@ -133,6 +134,17 @@ class Experiment(object):
             self.session.add(variable)
 
         self.session.commit()
+
+        # Serialize all the outcome data to disk using hdf5.
+        # This is useful for the backend.
+        hdf5_filename = os.path.join(self.name, "phenotypes.hdf5")
+        hdf5_file = h5py.File(hdf5_filename, "w")
+
+        for variable in self.variables:
+            v = self.phenotypes.get_phenotype_vector(variable.name)
+            dataset = hdf5_file.create_dataset(variable.name, data=v)
+
+        hdf5_file.close()
 
         # We also compute a correlation matrix and serialize it.
         var_names = [var.name for var in self.variables]

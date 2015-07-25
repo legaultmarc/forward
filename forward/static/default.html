@@ -7,8 +7,9 @@
     <!-- Third party //-->
     <script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
-    <link href="static/css/bokeh-0.9.1.min.css" rel="stylesheet" type="text/css">
-    <script src="static/bower_components/bokehjs/index.js"></script>
+    <link href="static/css/bokeh-0.9.1.min.css" rel="stylesheet" type="text/css" />
+    <script src="http://cdn.pydata.org/bokeh/release/bokeh-0.8.0.min.js"></script>
+    <!-- <script src="static/bower_components/bokehjs/index.js"></script> //-->
 
     <script type="text/javascript" src="static/bower_components/jquery/dist/jquery.min.js"></script>
 
@@ -17,9 +18,9 @@
 
     <!-- Local imports //-->
     <link rel="stylesheet" href="static/css/default.css" />
-    <script type="text/javascript" src="static/js/build/forward_report.js"></script>
     <script type="text/javascript" src="static/js/build/react_components.js"></script>
     <script type="text/javascript" src="static/js/build/react_rendering.js"></script>
+    <script type="text/javascript" src="static/js/build/forward_report.js"></script>
   </head>
 
   <body>
@@ -47,10 +48,15 @@
         <div id="continuous-variables-table"></div>
         <h3>Discrete variables</h3>
         <div id="discrete-variables-table"></div>
+        <div id="variable-modal"></div>
       </div>
 
       <div id="results">
         <h3>Results</h3>
+      </div>
+
+      <div id="figures">
+        <h3>Figures</h3>
       </div>
 
       <div id="annex">

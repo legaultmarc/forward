@@ -80,6 +80,35 @@ p.caption {
     font-size: 8pt;
 }
 
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.modal {
+    width: 800px;
+	position: fixed;
+    top: 20%;
+	padding: 5px 20px 13px 20px;
+	border-radius: 10px;
+	background: #eee;
+}
+
+.modal .close {
+    display: block;
+    float: right;
+    font-size: 23px;
+}
+
+.modal h2 {
+    clear: both;
+}
+
 /* Table Design */
 table {
     border-collapse: collapse;

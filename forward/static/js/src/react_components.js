@@ -53,6 +53,18 @@ var VariantTable = React.createClass({
 
 // Variables Table
 var ContinuousVariableRow = React.createClass({
+  buildModal: function() {
+
+    document.getElementById("variable-modal").innerHTML = "";
+    var modal = React.render(
+      <Modal title={this.props.name}>
+        <ContinuousVariablePlotForm name={this.props.name} />
+      </Modal>,
+      document.getElementById("variable-modal")
+    );
+    modal.show();
+
+  },
   render: function() {
       return (
         <tr>
@@ -60,7 +72,9 @@ var ContinuousVariableRow = React.createClass({
           <td>{this.props.std.toFixed(3)}</td><td>{this.props.nmissing}</td>
           <td>{this.props.transformation ? this.props.transformation: "none"}</td>
           <td>{this.props.covariate}</td>
-          <td><a href="">icon</a></td>
+          <td>
+            <a className="button" role="button" onClick={this.buildModal}>generate plot</a>
+          </td>
         </tr>
       )
   }
@@ -143,14 +157,104 @@ var VariableTable = React.createClass({
     }
 
     return (
-      <table>
-        <thead>
-          {thead}
-        </thead>
-        <tbody>
-          {nodes}
-        </tbody>
-      </table>
+      <div>
+        <table>
+          <thead>
+            {thead}
+          </thead>
+          <tbody>
+            {nodes}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+});
+
+var ContinuousVariablePlotForm = React.createClass({
+  handleSubmit: function(e) {
+    e.preventDefault();
+
+    for (ref in this.refs) {
+      var node = React.findDOMNode(this.refs[ref])
+      if (node.checked) {
+
+        console.log("Generate the " + node.value + " plot for " + this.props.name);
+
+        switch(node.value) {
+
+          case "hist":
+            var transformed = false;
+          case "histt":
+            var transformed = true;
+            var figName = this.props.name + node.value;
+            if (forward.figureExists(figName)) {
+              break;
+            }
+
+            var figure = forward.Figure(figName);
+            forward.variableHist(figure, this.props.name, transformed)
+            break;
+        }
+      }
+    }
+
+    React.unmountComponentAtNode(document.getElementById("variable-modal"));
+    if (figure) figure.scrollIntoView();
+  },
+  render: function() {
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <fieldset>
+          <input type="checkbox" name="plots" value="QQ" id="QQ" ref="QQ" /><label htmlFor="QQ">QQ plot</label>
+          <input type="checkbox" name="plots" value="QQt" id="QQt" ref="QQt" /><label htmlFor="QQt">QQ plot (transformed)</label>
+        </fieldset>
+
+        <fieldset>
+          <input type="checkbox" name="plots" value="hist" id="hist" ref="hist" /><label htmlFor="hist">Histogram</label>
+          <input type="checkbox" name="plots" value="histt" id="histt" ref="histt" /><label htmlFor="histt">Histogram (transformed)</label>
+        </fieldset>
+
+        <input type="submit" value="Generate plots" />
+      </form>
+    );
+  }
+});
+
+// Modal box.
+var Modal = React.createClass({
+  getInitialState: function() {
+    return {visible: false};
+  },
+  hide: function() {
+    if (this.isMounted()) {
+      this.setState({visible: false});
+    }
+  },
+  show: function() {
+    if (this.isMounted()) {
+      this.setState({visible: true});
+    }
+  },
+  componentDidMount: function() {
+    $(document.body).on("keydown", this.keyClose)
+  },
+  keyClose: function(e) {
+    if (e.keyCode === 27) {
+      this.hide();
+    }
+  },
+  render: function() {
+    return (
+      <div className="modal-wrapper"
+           style={{"display": this.state.visible ? "block": "none"}}>
+        <div className="modal-overlay"></div>
+        <div className="modal">
+          <a role="button" onClick={this.hide} className="close">&times;</a>
+          <h2>{this.props.title}</h2>
+          {this.props.children}
+        </div>
+      </div>
     );
   }
 });
