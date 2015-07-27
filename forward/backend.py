@@ -19,9 +19,12 @@ report module.
 
 """
 
+from __future__ import division
+
 import json
 import os
 
+import scipy.stats
 import numpy as np
 import h5py
 import sqlalchemy
@@ -62,21 +65,48 @@ class Backend(object):
         variables = self.session.query(Variable).all()
         return [variable.to_json() for variable in variables]
 
-    def get_outcome_vector(self, variable, transformation=None):
+    def get_outcome_vector(self, variable, transformation=None, nan=True):
         try:
             y = self.hdf5_file[variable]
         except KeyError:
             msg = "Could not find variable {} in serialized file."
             raise ValueError(msg.format(variable))
         if transformation:
-            y = apply_transformation(y)
+            y = apply_transformation(transformation, y)
+        if not nan:
+            y = y[~np.isnan(y)]
+
         return y
 
     def get_variable_histogram(self, variable, transformation=None, **kwargs):
-        y = self.get_outcome_vector(variable, transformation)
-        y = y[~np.isnan(y)]
+        y = self.get_outcome_vector(variable, transformation, nan=False)
         return np.histogram(y, **kwargs)
 
+    def get_variable_normal_qqplot(self, variable, transformation=None):
+        obs = self.get_outcome_vector(variable, transformation, nan=False)
+        obs = sorted(obs)
+
+        # Compare to a N(mu, sigma)
+        mu = np.mean(obs)
+        std = np.std(obs)
+
+        # Generate the expected (we use the offsetting strategy that
+        # statsmodels uses).
+        a = 0
+        n = len(obs)
+        exp = scipy.stats.norm.ppf(
+            (np.arange(1, n + 1) - a) / (n - 2 * a + 1),
+            loc=mu, scale=std
+        )
+
+        # Fit a regression line.
+        m, b = self._fit_line(obs, exp)
+
+        return exp, obs, m, b
+
+    def _fit_line(self, y, x):
+        m, b, r, p, stderr = scipy.stats.linregress(x, y)
+        return m, b
 
 def initialize_application(experiment_name):
     """Initialize database connection and bind to the application context."""
@@ -112,9 +142,9 @@ def api_get_outcome_vector():
 def api_histogram():
     variable, transformation = _variable_arg_check(request)
     kwargs = {}
-    bins = int(request.args.get("bins"))
+    bins = request.args.get("bins")
     if bins:
-        kwargs["bins"] = bins
+        kwargs["bins"] = int(bins)
 
     try:
         hist, edges = www_backend.get_variable_histogram(
@@ -125,6 +155,26 @@ def api_histogram():
     return json.dumps({
         "hist": nan_to_none(hist),
         "edges": nan_to_none(edges)
+    })
+
+
+@app.route("/variables/plots/normalqq.json")
+def api_normal_qq():
+    variable, transformation = _variable_arg_check(request)
+    try:
+        exp, obs, m, b = www_backend.get_variable_normal_qqplot(
+            variable, transformation
+        )
+    except ValueError:
+        raise InvalidAPIUsage("Could not find variable {}.".format(variable))
+
+    return json.dumps({
+        "expected": nan_to_none(exp),
+        "observed": nan_to_none(obs),
+        "xLimits": [np.min(exp), np.max(exp)],
+        "yLimits": [np.min(obs), np.max(obs)],
+        "m": m,
+        "b": b
     })
 
 

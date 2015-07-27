@@ -29,24 +29,27 @@ var VariantTable = React.createClass({
       );
     });
     return (
-      <table>
-        <thead>
-          <tr>
-            <th>name</th>
-            <th>chrom</th>
-            <th>pos</th>
-            <th>minor</th>
-            <th>major</th>
-            <th>mac</th>
-            <th>maf</th>
-            <th><em>n</em> missing</th>
-            <th><em>n</em> non missing</th>
-          </tr>
-        </thead>
-        <tbody>
-          {variantNodes}
-        </tbody>
-     </table>
+     <div>
+       <p className="caption">{this.props.children}</p>
+       <table>
+          <thead>
+            <tr>
+              <th>name</th>
+              <th>chrom</th>
+              <th>pos</th>
+              <th>minor</th>
+              <th>major</th>
+              <th>mac</th>
+              <th>maf</th>
+              <th><em>n</em> missing</th>
+              <th><em>n</em> non missing</th>
+            </tr>
+          </thead>
+          <tbody>
+            {variantNodes}
+          </tbody>
+       </table>
+     </div>
     );
   }
 });
@@ -58,7 +61,8 @@ var ContinuousVariableRow = React.createClass({
     document.getElementById("variable-modal").innerHTML = "";
     var modal = React.render(
       <Modal title={this.props.name}>
-        <ContinuousVariablePlotForm name={this.props.name} />
+        <ContinuousVariablePlotForm name={this.props.name}
+         transformation={this.props.transformation} />
       </Modal>,
       document.getElementById("variable-modal")
     );
@@ -158,6 +162,7 @@ var VariableTable = React.createClass({
 
     return (
       <div>
+        <p className="caption">{ this.props.children }</p>
         <table>
           <thead>
             {thead}
@@ -179,23 +184,62 @@ var ContinuousVariablePlotForm = React.createClass({
       var node = React.findDOMNode(this.refs[ref])
       if (node.checked) {
 
-        console.log("Generate the " + node.value + " plot for " + this.props.name);
+        var figName = this.props.name + node.value;
 
+        if (forward.figureExists(figName)) { continue; }
+
+        var figure = forward.Figure(figName);
+
+        var config = {
+          "figure": figure,
+          "variable": this.props.name,
+          "transformation": null,
+          "bins": 50,
+          "xLabel": "",
+          "yLabel": "",
+          "width": 500,
+          "height": 200,
+          "fillColor": "#781B1F"
+        };
+
+        var plotFunction;
         switch(node.value) {
-
           case "hist":
-            var transformed = false;
-          case "histt":
-            var transformed = true;
-            var figName = this.props.name + node.value;
-            if (forward.figureExists(figName)) {
-              break;
-            }
-
-            var figure = forward.Figure(figName);
-            forward.variableHist(figure, this.props.name, transformed)
+            plotFunction = forward.variableHist;
+            config.xLabel = this.props.name;
+            config.yLabel = "Number of occurences (n)"
             break;
+
+          case "histt":
+            config.transformation = this.props.transformation;
+            config.xLabel = this.props.name + " (transformed)";
+            config.yLabel = "Number of occurences (n)"
+            plotFunction = forward.variableHist;
+            break;
+
+          case "QQ":
+            config.xLabel = "expected"
+            config.yLabel = "observed"
+            config.width = 400;
+            config.height = 400;
+            config.fillColor = "#000000";
+            plotFunction = forward.variableNormalQQ;
+            break;
+
+          case "QQt":
+            config.transformation = this.props.transformation;
+            config.xLabel = "expected"
+            config.yLabel = "observed (transformed)"
+            config.width = 400;
+            config.height = 400;
+            config.fillColor = "#000000";
+            plotFunction = forward.variableNormalQQ;
+            break;
+
         }
+
+        plotFunction(config)
+
       }
     }
 
@@ -203,19 +247,31 @@ var ContinuousVariablePlotForm = React.createClass({
     if (figure) figure.scrollIntoView();
   },
   render: function() {
+    var transformed_form_elements;
+    if (this.props.transformation) {
+      transformed_form_elements = (
+        <fieldset>
+          <legend>Plots for transformed variables</legend>
+          <input type="checkbox" name="plots" value="histt" id="histt" ref="histt" />
+          <label htmlFor="histt">Histogram (transformed)</label>
+
+          <input type="checkbox" name="plots" value="QQt" id="QQt" ref="QQt" />
+          <label htmlFor="QQt">Normal QQ plot (transformed)</label>
+        </fieldset>
+      );
+    }
     return (
-      <form onSubmit={this.handleSubmit}>
+      <form onSubmit={this.handleSubmit} className="plot-form">
         <fieldset>
-          <input type="checkbox" name="plots" value="QQ" id="QQ" ref="QQ" /><label htmlFor="QQ">QQ plot</label>
-          <input type="checkbox" name="plots" value="QQt" id="QQt" ref="QQt" /><label htmlFor="QQt">QQ plot (transformed)</label>
-        </fieldset>
+          <legend>Plot types</legend>
+          <input type="checkbox" name="plots" value="hist" id="hist" ref="hist" />
+          <label htmlFor="hist">Histogram</label>
 
-        <fieldset>
-          <input type="checkbox" name="plots" value="hist" id="hist" ref="hist" /><label htmlFor="hist">Histogram</label>
-          <input type="checkbox" name="plots" value="histt" id="histt" ref="histt" /><label htmlFor="histt">Histogram (transformed)</label>
+          <input type="checkbox" name="plots" value="QQ" id="QQ" ref="QQ" />
+          <label htmlFor="QQ">Normal QQ plot</label>
         </fieldset>
-
-        <input type="submit" value="Generate plots" />
+        { transformed_form_elements }
+        <input type="submit" value="Generate plots" className="button" />
       </form>
     );
   }

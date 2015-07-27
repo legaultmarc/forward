@@ -242,6 +242,6 @@ def apply_transformation(transformation, vector):
     }
 
     if transformation not in transformations:
-        return vector
+        raise ValueError("Invalid transformation '{}'.".format(transformation))
     else:
         return transformations[transformation](vector)
