@@ -24,4 +24,13 @@ $(document).ready(function() {
     document.getElementById("continuous-variables-table")
   );
 
+  (function () {
+    var correlationPlot = forward.Figure("correlationPlot");
+    forward.phenotypeCorrelationPlot({
+      "figure": correlationPlot,
+      "width": 650,
+      "height": 650
+    });
+  })();
+
 });

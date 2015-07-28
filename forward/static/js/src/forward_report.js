@@ -13,6 +13,77 @@ forward.withVariables = function(f) {
   });
 };
 
+forward.phenotypeCorrelationPlot = function(config) {
+  $.ajax({
+    url: "/variables/plots/correlation_plot.json",
+    dataType: "json",
+    success: function(data) {
+      plot(data);
+    },
+    error: function() {
+      console.log("Correlation matrix request failed.");
+    }
+  });
+
+  var plot = function(data) {
+    var xs = data["xs"];
+
+    _data = {
+      x: forward.add(xs, 1),
+      y: forward.add(data["ys"], 1),
+      width: forward.valuesLike(xs, 0.95),
+      height: forward.valuesLike(xs, 0.95),
+      color: data["colors"],
+      alpha: forward.valuesLike(xs, 1)
+    }
+
+    spec = {
+      type: 'Rect',
+      source: _data,
+      x: 'x',
+      y: 'y',
+      width: 'width',
+      height: 'height',
+      fill_alpha: 'alpha',
+      fill_color: 'color',
+      line_color: 'color'
+    }
+        
+    options = {
+      title: null,
+      min_border: 10,
+      plot_width: config["width"] || 600,
+      plot_height: config["height"] || 600,
+      x_range: data["names"],
+      y_range: data["names"],
+    } 
+
+    xaxis = {
+      type: "auto",
+      location: "below",
+      grid: false,
+      "major_label_orientation": 1
+    }
+
+    yaxis = {
+      type: "auto",
+      location: "left",
+      grid: false
+    }
+
+    Bokeh.$("#" + config.figure.id).bokeh("figure", {
+      "options": options,
+      "glyphs": [spec],
+      "guides": [xaxis, yaxis],
+    })
+
+    // Adjust the parent div so it has the same width.
+    config.figure.style.width = (options.plot_width + 20) + "px";
+    config.figure.style.margin = "0 auto";
+  }
+};
+
+
 forward.variableNormalQQ = function(config) {
   $.ajax({
     url: "variables/plots/normalqq.json",
@@ -124,7 +195,7 @@ forward.variableHist = function(config) {
   var plot = function(data) {
     var plot_data = {
       "top": data["hist"],
-      "bottom": forward.zerosLike(data["hist"]),
+      "bottom": forward.valuesLike(data["hist"]),
       "left": data["edges"].slice(0, data["edges"].length - 1),
       "right": data["edges"].slice(1, data["edges"].length),
       "fill_color": [config.fillColor || "black"],
@@ -245,10 +316,32 @@ forward.figureExists = function(name) {
   return forward._figures.hasOwnProperty(name);
 };
 
-forward.zerosLike = function(li) {
+forward.valuesLike = function(li, value) {
+  if (value === undefined) value = 0;
   var out = new Array(li.length);
   for (var i = 0; i < li.length; i++) {
-    out[i] = 0;
+    out[i] = value;
   }
   return out;
+};
+
+forward.range = function(n) {
+  return Array.apply(null, Array(n)).map(function(_, i) { return i; });
+};
+
+/**
+ * Elementwise or vector addition.
+ **/
+forward.add = function(array, elem) {
+  // If it's an array, we do element wise.
+  if ($.isArray(elem)) {
+    return array.map(function(e, i) {
+      return e + elem[i];
+    });
+  }
+  else {
+    return array.map(function(e) {
+      return e + elem
+    });
+  }
 };

@@ -102,7 +102,7 @@ var VariableTable = React.createClass({
   },
   componentDidMount: function() {
     forward.withVariables(function(data) {
-      this.setState({data: data})
+      this.setState({"data": data})
     }.bind(this));
   },
   render: function() {
