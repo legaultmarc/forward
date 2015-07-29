@@ -28,8 +28,9 @@ $(document).ready(function() {
     var correlationPlot = forward.Figure("correlationPlot");
     forward.phenotypeCorrelationPlot({
       "figure": correlationPlot,
-      "width": 650,
-      "height": 650
+      "width": 500,
+      "height": 500,
+      "margins": {"top": 30, "right": 30, "bottom": 30, "left": 30}
     });
   })();
 

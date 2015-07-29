@@ -118,36 +118,7 @@ class Backend(object):
     def get_variable_corrplot(self):
         names = self.info["outcomes"]
         corr_mat = self.correlation_matrix
-
-        colors = matplotlib.cm.coolwarm(np.linspace(0, 1, 100))
-        colors = [tu for tu in (255 * colors[:, :3])]
-        for i in range(len(colors)):
-            html = "#{}{}{}".format(
-                *[hex(int(j)).ljust(4, "0")[2:] for j in colors[i]]
-            )
-            colors[i] = html
-
-        xs = []
-        ys = []
-        values = []
-        mapped_colors = []
-
-        for x in range(len(names)):
-            for y in range(len(names) - x):
-                xs.append(x)
-                ys.append(corr_mat.shape[0] - y - 1)
-                val = corr_mat[x, corr_mat.shape[0] - y - 1]
-                values.append("{:.3f}".format(val))
-
-                color = int(
-                    round(0.5 * (len(colors) - 1) * val +
-                          (len(colors) - 1) / 2)
-                )
-                mapped_colors.append(colors[color])
-
-        return {"xs": xs, "ys": ys, "colors": mapped_colors, "value": values,
-                "names": names}
-
+        return corr_mat, names
 
     def _fit_line(self, y, x):
         m, b, r, p, stderr = scipy.stats.linregress(x, y)
@@ -224,7 +195,8 @@ def api_normal_qq():
 
 @app.route("/variables/plots/correlation_plot.json")
 def api_correlation_plot():
-    return jsonify(**www_backend.get_variable_corrplot())
+    data, names = www_backend.get_variable_corrplot()
+    return jsonify(data=[list(row) for row in data], names=names)
 
 
 def _variable_arg_check(request):

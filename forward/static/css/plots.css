@@ -1,0 +1,17 @@
+/* Styles for D3 plots. */
+
+/* Correlation plot. */
+svg.corrplot .box {
+  stroke: #FFFFFF;
+  stroke-width:2px; 
+}
+
+svg.corrplot .label, svg.corrplot .info {
+  font-family: "Helvetica Neue", Helvetica, sans-serif;
+  font-size: 11px;
+}
+
+svg.corrplot .info { fill: #444444; }
+
+svg.corrplot .ylabel { font-weight: 200; }
+svg.corrplot .xlabel { font-weight: 400; }

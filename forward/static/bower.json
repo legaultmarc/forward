@@ -14,7 +14,8 @@
   "dependencies": {
     "react": "0.13.3",
     "bokehjs": "http://cdn.pydata.org/bokeh/release/bokeh-0.9.1.min.js",
-    "jquery": "2.1.4"
+    "jquery": "2.1.4",
+    "d3": "3.5.6"
   },
   "license": "CC BY-NC 4.0",
   "ignore": [
