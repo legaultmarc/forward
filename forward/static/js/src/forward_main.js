@@ -101,3 +101,33 @@ forward.add = function(array, elem) {
     });
   }
 };
+
+/**
+ * Get task handler.
+ **/
+forward.handleTask = function(taskType, taskName) {
+  switch (taskType) {
+    case "LogisticTest":
+        forward._handleLogistic(taskName);
+        break;
+    case "LinearTest":
+      break;
+  }
+};
+
+forward._handleLogistic = function(taskName) {
+  var node = document.createElement("div");
+  node.id = "section_" + taskName;
+  document.getElementById("results").appendChild(node);
+
+  $.ajax({
+    url: "/tasks/logistic_section.html",
+    data: {"task": taskName},
+    success: function(data) { node.innerHTML = data; renderSection(); }
+  });
+
+  var renderSection = function() {
+    fwdLogistic.renderResultsTable(taskName + "_results", taskName);
+  };
+
+}

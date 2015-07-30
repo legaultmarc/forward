@@ -15,7 +15,7 @@
     <script type="text/javascript" src="static/bower_components/jquery/dist/jquery.min.js"></script>
 
     <!-- React //-->
-    <script type="text/javascript" src="static/bower_components/react/react.js"></script>
+    <script type="text/javascript" src="static/bower_components/react/react-with-addons.js"></script>
 
     <!-- D3 //-->
     <script type="text/javascript" src="static/bower_components/d3/d3.min.js"></script>
@@ -27,6 +27,11 @@
     <script type="text/javascript" src="static/js/build/react_rendering.js"></script>
     <script type="text/javascript" src="static/js/build/forward_main.js"></script>
     <script type="text/javascript" src="static/js/build/forward_plotting.js"></script>
+
+    <!-- Section specific
+         TODO At some point, it would be better to load them dynamically. //-->
+    <script type="text/javascript" src="static/js/build/section_logistic.js"></script>
+
   </head>
 
   <body>
@@ -63,6 +68,25 @@
 
       <div id="results">
         <h3>Results</h3>
+
+        <!--
+            Dynamically check the tasks and render them as sections in the
+            results.
+            This will work by including html snippets corresponding to the
+            different task names. It won't be a REST api because of the need
+            for text formatting.
+        //-->
+        <script type="text/javascript">
+          // Get the tasks.
+          $.getJSON("/tasks.json", function(data) {
+            var tasks = data.tasks;
+            // For every task, fetch the html snippet.
+            tasks.map(function(task) {
+              forward.handleTask(task.type, task.name);
+            });
+          });
+        </script>
+
       </div>
 
       <div id="figures">

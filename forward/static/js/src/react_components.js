@@ -285,6 +285,7 @@ var Modal = React.createClass({
   hide: function() {
     if (this.isMounted()) {
       this.setState({visible: false});
+      $(document.body).off("keydown");
     }
   },
   show: function() {

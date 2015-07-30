@@ -30,11 +30,11 @@ import h5py
 import sqlalchemy
 import matplotlib.cm
 from six.moves import cPickle as pickle
-from flask import Flask, request, url_for, render_template, jsonify
+from flask import (Flask, request, url_for, render_template, jsonify,
+                   render_template)
 app = Flask(__name__)
 
-from . import SQLAlchemySession, genotype
-from .experiment import Experiment
+from . import SQLAlchemySession, genotype, experiment
 from .phenotype.variables import Variable
 from .phenotype.db import apply_transformation
 
@@ -50,7 +50,9 @@ class Backend(object):
     """
 
     def __init__(self, experiment_name):
-        self.engine = Experiment.get_engine(experiment_name, "sqlite")
+        self.engine = experiment.Experiment.get_engine(
+            experiment_name, "sqlite"
+        )
         SQLAlchemySession.configure(bind=self.engine)
         self.session = SQLAlchemySession()
 
@@ -119,6 +121,24 @@ class Backend(object):
         names = self.info["outcomes"]
         corr_mat = self.correlation_matrix
         return corr_mat, names
+
+    def get_tasks(self):
+        tasks = self.session.query(
+            experiment.ExperimentResult.task_name
+        ).distinct()
+        return [tu[0] for tu in tasks]
+
+    def get_results(self, task, filters=[]):
+        task = "{}_%".format(task)
+        results = self.session.query(experiment.ExperimentResult)\
+                    .filter(experiment.ExperimentResult.task_name.like(task))
+
+        if filters:
+            for f in filters:
+                results = results.filter(f)
+
+        return [e.to_json() for e in results.all()]
+
 
     def _fit_line(self, y, x):
         m, b, r, p, stderr = scipy.stats.linregress(x, y)
@@ -193,10 +213,43 @@ def api_normal_qq():
         "b": b
     })
 
+
 @app.route("/variables/plots/correlation_plot.json")
 def api_correlation_plot():
     data, names = www_backend.get_variable_corrplot()
     return jsonify(data=[list(row) for row in data], names=names)
+
+
+@app.route("/tasks.json")
+def api_tasks():
+    tasks = www_backend.get_tasks()
+    for i in range(len(tasks)):
+        name, task_type = tasks[i].split("_")
+        tasks[i] = {"name": name, "type": task_type}
+    return jsonify(tasks=tasks)
+
+
+@app.route("/tasks/results.json")
+def api_task_results():
+    task = request.args.get("task")
+    p_thresh = request.args.get("pthresh", 0.05)
+    if task is None:
+        raise InvalidAPIUsage("A 'task' parameter is expected.")
+
+    filters = [
+        experiment.ExperimentResult.significance <= p_thresh,
+    ]
+
+    return jsonify(results=www_backend.get_results(task, filters))
+
+
+@app.route("/tasks/logistic_section.html")
+def task_rendered_logistic():
+    task = request.args.get("task")
+    if task is None:
+        raise InvalidAPIUsage("A 'task' parameter is expected.")
+
+    return render_template("logistictest.html", task=task)
 
 
 def _variable_arg_check(request):
