@@ -48,7 +48,7 @@ var LogisticResultsTable = React.createClass({
     var resultNodes = this.state.data.results.map(function(d, i) {
       var fmt = d3.format(".3f");
       return (
-        <LogisticResultRow key={i} variant={d.entity_name}
+        <LogisticResultRow key={i} variant={d.variant.name}
            outcome={d.phenotype} p={d3.format(".3e")(d.significance)}
            oddsRatio={fmt(Math.exp(d.coefficient))}
            orLow={fmt(Math.exp(d.confidence_interval_min))}
@@ -90,4 +90,39 @@ fwdLogistic.renderResultsTable = function(nodeId, taskName) {
     </LogisticResultsTable>,
     document.getElementById(nodeId)
   );
-}
+};
+
+fwdLogistic.renderManhattan = function(nodeId, taskName) {
+  var config = {
+    width: 750,
+    height: 340
+  };
+
+  // Get data.
+  $.ajax({
+    url: "/tasks/results.json",
+    data: {"task": taskName, "pthresh": 1},
+    success: function(data) {
+      // Format data.
+      data = data["results"].map(function(d) {
+        return {
+          "outcome": d.phenotype,
+          "variant": d.variant.name,
+          "p": d.significance,
+          "effect": Math.exp(d.coefficient),
+          "position": d.variant.pos
+        };
+      });
+      manhattan(config, data, nodeId);
+    }
+  });
+
+};
+
+fwdLogistic.renderSection = function(taskName) {
+  // Results table.
+  fwdLogistic.renderResultsTable(taskName + "_results", taskName);
+
+  // Manhattan plot.
+  fwdLogistic.renderManhattan(taskName + "_manhattan", taskName);
+};

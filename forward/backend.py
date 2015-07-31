@@ -137,7 +137,27 @@ class Backend(object):
             for f in filters:
                 results = results.filter(f)
 
-        return [e.to_json() for e in results.all()]
+        results = [e.to_json() for e in results.all()]
+
+        # If the entity type is variant, we will fetch information on them in
+        # the variants table.
+        if results[0]["tested_entity"] == "variant":
+            variants_dict = {}
+            for var in self.session.query(genotype.Variant).all():
+                variants_dict[var.name] = var
+
+            for res in results:
+                info = variants_dict.get(res["entity_name"]).to_json()
+                if info is None:
+                    msg = "Could not find variant {} in database.".format(
+                        res["entity_name"]
+                    )
+                    raise ValueError(msg)
+
+                res.pop("entity_name")
+                res["variant"] = info
+
+        return results
 
 
     def _fit_line(self, y, x):

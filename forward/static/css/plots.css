@@ -15,3 +15,42 @@ svg.corrplot .info { fill: #444444; }
 
 svg.corrplot .ylabel { font-weight: 200; }
 svg.corrplot .xlabel { font-weight: 400; }
+
+.manhattan .axis path, .axis line {
+  fill: none;
+  stroke: black;
+  shape-rendering: crispEdges;
+}
+
+.manhattan .axis text {
+  font-family: sans-serif;
+  font-size: 10px;
+}
+
+.manhattan .axis .minor line {
+  stroke: #777;
+  stroke-dasharray: 2,2;
+}
+
+.manhattan .label {
+  font-family: "Helvetic Neue", Helvetica, sans-serif;
+  font-size: 11px;
+}
+
+.manhattanPlotInformation {
+  width: 300px;
+  border: 1px solid #BBBBBB;
+  font-family: "Helvetic Neue", Helvetica, sans-serif;
+  font-size: 12px;
+  margin: 0 auto;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.manhattanPlotInformation p {
+    margin: 0;
+}
+
+.plotControls {
+    margin-bottom: 20px;
+}

@@ -123,11 +123,10 @@ forward._handleLogistic = function(taskName) {
   $.ajax({
     url: "/tasks/logistic_section.html",
     data: {"task": taskName},
-    success: function(data) { node.innerHTML = data; renderSection(); }
+    success: function(data) {
+      node.innerHTML = data;
+      fwdLogistic.renderSection(taskName);
+    }
   });
-
-  var renderSection = function() {
-    fwdLogistic.renderResultsTable(taskName + "_results", taskName);
-  };
 
 }

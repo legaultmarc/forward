@@ -1,4 +1,19 @@
 <section class="logistic-test">
   <p>This is a report section for a logistic test.</p>
   <div id="{{ task }}_results"></div>
+
+  <p>And the interactive Manhattan plot</p>
+
+  <div id="{{ task }}_manhattan">
+    <div class="plot manhattan"></div>
+    <div class="manhattanPlotInformation">
+      <p>Hover on the plot to display extra information.</p>
+    </div>
+    <div class="plotControls">
+      <input type="button" class="colorByPhen" value="Color by phenotype" />
+      <input type="button" class="colorByEffect" value="Color by effect" />
+      <input type="button" class="axisEffect" value="Effect as x axis" />
+    </div>
+  </div>
+
 </section>
