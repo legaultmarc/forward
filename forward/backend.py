@@ -128,8 +128,40 @@ class Backend(object):
         ).distinct()
         return [tu[0] for tu in tasks]
 
+    def p_value_qq_plot(self, task):
+        """Return the scatter data and confidence bands.
+
+        This is assuming we're expecting a uniform distribution. We also take
+        a log transform to accentuate small differences.
+
+        """
+        # Get the association p values (or other significance metric).
+        # expected, observed, ci, phenotype, variant, effect.
+        results = self.session.query(experiment.ExperimentResult)\
+                    .filter(experiment.ExperimentResult.task_name.like(task))\
+                    .order_by(experiment.ExperimentResult.significance)
+
+        n = results.count()
+        out = []
+        for i, res in enumerate(results):
+            ppf = scipy.stats.beta.ppf
+            d = {
+                "expected": -1 * np.log10((i + 1) / n),
+                "observed": -1 * np.log10(res.significance),
+                "ci": [
+                    -1 * np.log10(ppf(0.975, i + 1, n - i + 2)),
+                    -1 * np.log10(ppf(0.025, i + 1, n - i + 2))
+                ],
+                "phenotype": res.phenotype,
+                "variant": res.entity_name,
+                "effect": res.coefficient
+            }
+            out.append(d)
+
+        return out
+
+
     def get_results(self, task, filters=[]):
-        task = "{}_%".format(task)
         results = self.session.query(experiment.ExperimentResult)\
                     .filter(experiment.ExperimentResult.task_name.like(task))
 
@@ -256,11 +288,22 @@ def api_task_results():
     if task is None:
         raise InvalidAPIUsage("A 'task' parameter is expected.")
 
+    task = "task_%"  # Used to match without the type.
     filters = [
         experiment.ExperimentResult.significance <= p_thresh,
     ]
 
     return jsonify(results=www_backend.get_results(task, filters))
+
+
+@app.route("/tasks/plots/qqpvalue.json")
+def api_p_value_qqplot():
+    task = request.args.get("task")
+    if task is None:
+        raise InvalidAPIUsage("A 'task' parameter is expected.")
+
+    task = "task_%"  # Used to match without the type.
+    return json.dumps(www_backend.p_value_qq_plot(task))
 
 
 @app.route("/tasks/logistic_section.html")

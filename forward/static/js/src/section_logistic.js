@@ -119,10 +119,34 @@ fwdLogistic.renderManhattan = function(nodeId, taskName) {
 
 };
 
+fwdLogistic.renderQQPlot = function(nodeId, taskName) {
+  var config = {
+    width: 600,
+    height: 400
+  };
+
+  // Get data.
+  $.ajax({
+    url: "/tasks/plots/qqpvalue.json",
+    dataType: "json",
+    data: {"task": taskName},
+    success: function(data) {
+      createQQ(config, data, nodeId);
+    },
+    error: function() {
+      console.log("Fail parsing request for qq plot of p values.");
+    }
+  });
+
+};
+
 fwdLogistic.renderSection = function(taskName) {
   // Results table.
   fwdLogistic.renderResultsTable(taskName + "_results", taskName);
 
   // Manhattan plot.
   fwdLogistic.renderManhattan(taskName + "_manhattan", taskName);
+
+  // QQ plot.
+  fwdLogistic.renderQQPlot(taskName + "_qqplot", taskName);
 };

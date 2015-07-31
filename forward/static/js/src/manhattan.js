@@ -28,7 +28,13 @@ var manhattan = function(config, data, mountNodeId) {
   plotComponents.xScale = xScale;
 
   var yScale = d3.scale.linear()
-    .domain([0, 10])
+    .domain([
+      0,
+      Math.max(
+        d3.max(data, function(d) { return -Math.log10(d.p); }) + 1,
+        10
+      )
+    ])
     .range([height, 0])
   plotComponents.yScale = yScale;
 
@@ -102,7 +108,7 @@ var bindControls = function(data, plotComponents, mountNodeId) {
   var phenotypeScale = d3.scale.category20();
 
   var _colorByPhen = function() {
-    var points = d3.selectAll(".point")
+    var points = d3.selectAll(".manhattan .point")
     if (points.classed("colored")) {
       points.transition().duration(800)
         .attr("fill", "#555555")
@@ -119,11 +125,11 @@ var bindControls = function(data, plotComponents, mountNodeId) {
   $("#" + mountNodeId + " .colorByPhen").click(_colorByPhen);
 
   var effectScale = d3.scale.linear()
-    .domain([-5, 0, 5])
-    .range(["#3A92E8", "#FFFFFF", "#FA6052"]).clamp(true);
+    .domain([-5, 1, 6])
+    .range(["#3A92E8", "#DDDDDD", "#FA6052"]).clamp(true);
 
   var _colorByEffect = function() {
-    var points = d3.selectAll(".point")
+    var points = d3.selectAll(".manhattan .point")
     if (points.classed("colored")) {
       points.transition().duration(800)
         .attr("fill", "#555555")
@@ -140,7 +146,7 @@ var bindControls = function(data, plotComponents, mountNodeId) {
   $("#" + mountNodeId + " .colorByEffect").click(_colorByEffect);
 
   var _axisEffect = function() {
-    var label = d3.select(".xAxisLabel");
+    var label = d3.select(".manhattan .xAxisLabel");
 
     var x;
     if (label.text() == "Position") {
@@ -157,11 +163,11 @@ var bindControls = function(data, plotComponents, mountNodeId) {
         d3.max(data, function(d) { return d[x]; })
     ]);
 
-    d3.select(".xAxis")
+    d3.select(".manhattan .xAxis")
       .transition().duration(1500).ease("sin")
       .call(plotComponents.xAxis);
 
-    d3.selectAll(".point").transition().duration(1500)
+    d3.selectAll(".manhattan .point").transition().duration(1500)
       .attr("cx", function(d) {
         return plotComponents.xScale(d[x]);
       });

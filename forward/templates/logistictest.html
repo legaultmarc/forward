@@ -10,10 +10,12 @@
       <p>Hover on the plot to display extra information.</p>
     </div>
     <div class="plotControls">
-      <input type="button" class="colorByPhen" value="Color by phenotype" />
-      <input type="button" class="colorByEffect" value="Color by effect" />
-      <input type="button" class="axisEffect" value="Effect as x axis" />
+      <a role="button" class="button colorByPhen">Color by phenotype</a>
+      <a role="button" class="button colorByEffect">Color by effect</a>
+      <a role="button" class="button axisEffect">Effect as x axis</a>
     </div>
   </div>
+
+  <div id="{{ task }}_qqplot" class="qqplot"></div>
 
 </section>
