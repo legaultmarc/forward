@@ -171,6 +171,9 @@ class Backend(object):
 
         results = [e.to_json() for e in results.all()]
 
+        if not results:
+            return []
+
         # If the entity type is variant, we will fetch information on them in
         # the variants table.
         if results[0]["tested_entity"] == "variant":
@@ -288,7 +291,7 @@ def api_task_results():
     if task is None:
         raise InvalidAPIUsage("A 'task' parameter is expected.")
 
-    task = "task_%"  # Used to match without the type.
+    task = "{}_%".format(task)  # Used to match without the type.
     filters = [
         experiment.ExperimentResult.significance <= p_thresh,
     ]
@@ -313,6 +316,15 @@ def task_rendered_logistic():
         raise InvalidAPIUsage("A 'task' parameter is expected.")
 
     return render_template("logistictest.html", task=task)
+
+
+@app.route("/tasks/linear_section.html")
+def task_rendered_linear():
+    task = request.args.get("task")
+    if task is None:
+        raise InvalidAPIUsage("A 'task' parameter is expected.")
+
+    return render_template("lineartest.html", task=task)
 
 
 def _variable_arg_check(request):

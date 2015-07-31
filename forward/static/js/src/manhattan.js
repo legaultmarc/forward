@@ -73,7 +73,7 @@ var manhattan = function(config, data, mountNodeId) {
 
   // Create the scatter plot.
   var scatter = svg.append("g").attr("class", "dataPoints")
-  infoBox(mountNodeId);
+  var infoBox = infoBoxInit(mountNodeId);
 
   scatter.selectAll(".point").data(data).enter()
     .append("circle")
@@ -97,18 +97,19 @@ var manhattan = function(config, data, mountNodeId) {
       delete this._prev_color
     })
 
-    bindControls(data, plotComponents, mountNodeId);
+    bindControls(data, plotComponents, mountNodeId, config.effectLabel);
 
 }
 
 /**
  * Event binding for controls.
  **/
-var bindControls = function(data, plotComponents, mountNodeId) {
+var bindControls = function(data, plotComponents, mountNodeId, effectLabel) {
+  var sel = "#" + mountNodeId;
   var phenotypeScale = d3.scale.category20();
 
   var _colorByPhen = function() {
-    var points = d3.selectAll(".manhattan .point")
+    var points = d3.selectAll(sel + " .manhattan .point")
     if (points.classed("colored")) {
       points.transition().duration(800)
         .attr("fill", "#555555")
@@ -122,14 +123,14 @@ var bindControls = function(data, plotComponents, mountNodeId) {
       points.classed({"colored": true})
     }
   };
-  $("#" + mountNodeId + " .colorByPhen").click(_colorByPhen);
+  $(sel + " .colorByPhen").click(_colorByPhen);
 
   var effectScale = d3.scale.linear()
     .domain([-5, 1, 6])
     .range(["#3A92E8", "#DDDDDD", "#FA6052"]).clamp(true);
 
   var _colorByEffect = function() {
-    var points = d3.selectAll(".manhattan .point")
+    var points = d3.selectAll(sel + " .manhattan .point")
     if (points.classed("colored")) {
       points.transition().duration(800)
         .attr("fill", "#555555")
@@ -143,15 +144,15 @@ var bindControls = function(data, plotComponents, mountNodeId) {
       points.classed({"colored": true})
     }
   };
-  $("#" + mountNodeId + " .colorByEffect").click(_colorByEffect);
+  $(sel + " .colorByEffect").click(_colorByEffect);
 
   var _axisEffect = function() {
-    var label = d3.select(".manhattan .xAxisLabel");
+    var label = d3.select(sel + " .manhattan .xAxisLabel");
 
     var x;
     if (label.text() == "Position") {
       x = "effect";
-      label.text("Effect");
+      label.text(effectLabel || "Effect");
     }
     else {
       x = "position";
@@ -163,23 +164,23 @@ var bindControls = function(data, plotComponents, mountNodeId) {
         d3.max(data, function(d) { return d[x]; })
     ]);
 
-    d3.select(".manhattan .xAxis")
+    d3.select(sel + " .manhattan .xAxis")
       .transition().duration(1500).ease("sin")
       .call(plotComponents.xAxis);
 
-    d3.selectAll(".manhattan .point").transition().duration(1500)
+    d3.selectAll(sel + " .manhattan .point").transition().duration(1500)
       .attr("cx", function(d) {
         return plotComponents.xScale(d[x]);
       });
 
   };
-  $("#" + mountNodeId + " .axisEffect").click(_axisEffect);
+  $(sel + " .axisEffect").click(_axisEffect);
   
 };
 
-var infoBox = function(mountNodeId) {
+var infoBoxInit = function(mountNodeId) {
   var box = $("#" + mountNodeId + " .manhattanPlotInformation");
-  infoBox = function(data) {
+  return function(data) {
     if (!data) {
       box.html("");
       return;

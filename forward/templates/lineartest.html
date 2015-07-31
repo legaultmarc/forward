@@ -1,0 +1,21 @@
+<section class="linear-test">
+  <p>This is a report section for a linear test.</p>
+  <div id="{{ task }}_results"></div>
+
+  <p>And the interactive Manhattan plot</p>
+
+  <div id="{{ task }}_manhattan">
+    <div class="plot manhattan"></div>
+    <div class="manhattanPlotInformation">
+      <p>Hover on the plot to display extra information.</p>
+    </div>
+    <div class="plotControls">
+      <a role="button" class="button colorByPhen">Color by phenotype</a>
+      <a role="button" class="button colorByEffect">Color by effect</a>
+      <a role="button" class="button axisEffect">Effect as x axis</a>
+    </div>
+  </div>
+
+  <div id="{{ task }}_qqplot" class="qqplot"></div>
+
+</section>

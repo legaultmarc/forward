@@ -108,9 +108,10 @@ forward.add = function(array, elem) {
 forward.handleTask = function(taskType, taskName) {
   switch (taskType) {
     case "LogisticTest":
-        forward._handleLogistic(taskName);
-        break;
+      forward._handleLogistic(taskName);
+      break;
     case "LinearTest":
+      forward._handleLinear(taskName);
       break;
   }
 };
@@ -125,8 +126,22 @@ forward._handleLogistic = function(taskName) {
     data: {"task": taskName},
     success: function(data) {
       node.innerHTML = data;
-      fwdLogistic.renderSection(taskName);
+      fwdGLM.renderSection(taskName, "logistic");
     }
   });
+};
 
-}
+forward._handleLinear = function(taskName) {
+  var node = document.createElement("div");
+  node.id = "section_" + taskName;
+  document.getElementById("results").appendChild(node);
+
+  $.ajax({
+    url: "/tasks/linear_section.html",
+    data: {"task": taskName},
+    success: function(data) {
+      node.innerHTML = data;
+      fwdGLM.renderSection(taskName, "linear");
+    }
+  });
+};

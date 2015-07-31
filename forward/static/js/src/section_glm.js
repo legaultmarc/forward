@@ -1,21 +1,23 @@
-forward.fwdLogistic = {};
-var fwdLogistic = forward.fwdLogistic;
+forward.fwdGLM = {};
+var fwdGLM = forward.fwdGLM;
 
 // Results Table
-var LogisticResultRow = React.createClass({
+var GLMResultRow = React.createClass({
   render: function() {
     return (
       <tr>
         <td>{this.props.variant}</td>
         <td>{this.props.outcome}</td>
         <td>{this.props.p}</td>
-        <td>{this.props.oddsRatio} [{this.props.orLow} - {this.props.orHigh}]</td>
+        <td>
+          {this.props.effect} [{this.props.effectLow} - {this.props.effectHigh}]
+        </td>
       </tr>
     );
   }
 });
 
-var LogisticResultsTable = React.createClass({
+var GLMResultsTable = React.createClass({
   getInitialState: function() {
     return {
       data: {"results": []},
@@ -47,14 +49,18 @@ var LogisticResultsTable = React.createClass({
   render: function() {
     var resultNodes = this.state.data.results.map(function(d, i) {
       var fmt = d3.format(".3f");
+      var effect;
+      if (this.props.modelType == "logistic") effect = Math.exp(d.coefficient);
+      else effect = d.coefficient;
+
       return (
-        <LogisticResultRow key={i} variant={d.variant.name}
+        <GLMResultRow key={i} variant={d.variant.name}
            outcome={d.phenotype} p={d3.format(".3e")(d.significance)}
-           oddsRatio={fmt(Math.exp(d.coefficient))}
-           orLow={fmt(Math.exp(d.confidence_interval_min))}
-           orHigh={fmt(Math.exp(d.confidence_interval_max))} />
+           effect={fmt(effect)}
+           effectLow={fmt(Math.exp(d.confidence_interval_min))}
+           effectHigh={fmt(Math.exp(d.confidence_interval_max))} />
       );
-    });
+    }.bind(this));
 
     return (
       <div>
@@ -69,7 +75,7 @@ var LogisticResultsTable = React.createClass({
               <th>Variant</th>
               <th>Outcome</th>
               <th>p-value</th>
-              <th>OR (95% CI)</th>
+              <th>{ this.props.modelType == "logistic"? "OR": "Beta" } (95% CI)</th>
             </tr>
           </thead>
           <tbody>
@@ -82,20 +88,21 @@ var LogisticResultsTable = React.createClass({
   }
 });
 
-fwdLogistic.renderResultsTable = function(nodeId, taskName) {
+fwdGLM.renderResultsTable = function(nodeId, taskName, modelType) {
   React.render(
-    <LogisticResultsTable task={taskName}>
-      <strong>Table.</strong> Results from the logistic regression analysis of
-      the described variables and outcomes.
-    </LogisticResultsTable>,
+    <GLMResultsTable task={taskName} modelType={modelType}>
+      <strong>Table.</strong> Results from the {modelType} regression analysis
+      of the described variables and outcomes.
+    </GLMResultsTable>,
     document.getElementById(nodeId)
   );
 };
 
-fwdLogistic.renderManhattan = function(nodeId, taskName) {
+fwdGLM.renderManhattan = function(nodeId, taskName, modelType) {
   var config = {
     width: 750,
-    height: 340
+    height: 340,
+    effectLabel: modelType == "logistic"? "OR": "Beta"
   };
 
   // Get data.
@@ -119,7 +126,7 @@ fwdLogistic.renderManhattan = function(nodeId, taskName) {
 
 };
 
-fwdLogistic.renderQQPlot = function(nodeId, taskName) {
+fwdGLM.renderQQPlot = function(nodeId, taskName) {
   var config = {
     width: 600,
     height: 400
@@ -140,13 +147,13 @@ fwdLogistic.renderQQPlot = function(nodeId, taskName) {
 
 };
 
-fwdLogistic.renderSection = function(taskName) {
+fwdGLM.renderSection = function(taskName, modelType) {
   // Results table.
-  fwdLogistic.renderResultsTable(taskName + "_results", taskName);
+  fwdGLM.renderResultsTable(taskName + "_results", taskName, modelType);
 
   // Manhattan plot.
-  fwdLogistic.renderManhattan(taskName + "_manhattan", taskName);
+  fwdGLM.renderManhattan(taskName + "_manhattan", taskName, modelType);
 
   // QQ plot.
-  fwdLogistic.renderQQPlot(taskName + "_qqplot", taskName);
+  fwdGLM.renderQQPlot(taskName + "_qqplot", taskName, modelType);
 };
