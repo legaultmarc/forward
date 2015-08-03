@@ -11,6 +11,7 @@ from __future__ import division
 This module provides utilities to handle genotype data.
 """
 
+import os
 import logging
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ from sqlalchemy import Column, String, Integer, Float
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from . import SQLAlchemyBase
-from .utils import abstract, dispatch_methods
+from .utils import abstract, dispatch_methods, expand
 
 try:  # pragma: no cover
     import pyplink
@@ -155,10 +156,10 @@ class AbstractGenotypeDatabase(object):
 
 class MemoryImpute2Geno(AbstractGenotypeDatabase):
     def __init__(self, filename, samples, filter_probability=0, **kwargs):
-        self.filename = filename
-        self.samples = self.load_samples(samples)
+        self.filename = expand(filename)
+        self.samples = self.load_samples(expand(samples))
 
-        self.impute2file = Impute2File(filename, "dosage",
+        self.impute2file = Impute2File(self.filename, "dosage",
                                        prob_threshold=filter_probability)
 
         # Filters (init).
@@ -310,6 +311,9 @@ class MemoryImpute2Geno(AbstractGenotypeDatabase):
             logger.info("Keeping only variants with IDs in file: '{}'".format(
                 names_list
             ))
+            if not os.path.isfile(names_list):
+                names_list = expand(names_list)
+
             with open(names_list, "r") as f:
                 self.names = set(f.read().splitlines())
 
@@ -349,7 +353,7 @@ class PlinkGenotypeDatabase(AbstractGenotypeDatabase):
                 self.__class__.__name__,
             ))
 
-        self.ped = pyplink.PyPlink(prefix)
+        self.ped = pyplink.PyPlink(expand(prefix))
         self.fam = self.ped.get_fam()
         self.bim = self.ped.get_bim()
 

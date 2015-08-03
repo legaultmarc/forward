@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 from .phenotype.variables import DiscreteVariable, ContinuousVariable
 from .experiment import Experiment
+from .utils import expand
 
 try:
     import yaml
@@ -52,9 +53,10 @@ def parse_configuration(filename):
     # Create the experiment object
     experiment_name = config["Experiment"].pop("name", "forward_experiment")
     experiment_cpu = int(config["Experiment"].pop("cpu", 1))
+    experiment_build = config["Experiment"].pop("build", "GRCh37")
 
     return Experiment(experiment_name, database, genotypes, variables, tasks,
-                      cpu=experiment_cpu)
+                      experiment_build, cpu=experiment_cpu)
 
 
 def _parse_database(database):

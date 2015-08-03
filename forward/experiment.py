@@ -61,7 +61,7 @@ class ExperimentResult(SQLAlchemyBase):
 class Experiment(object):
     """Class representing an experiment."""
     def __init__(self, name, phenotype_container, genotype_container,
-                 variables, tasks, cpu=1):
+                 variables, tasks, build, cpu=1):
 
         # Create a directory for the experiment.
         try:
@@ -86,6 +86,8 @@ class Experiment(object):
         self.info = {}
 
         self.cpu = max(1, cpu)
+        self.build = build
+        logger.info("The build set for this experiment is {}.".format(build))
 
         # Make the genotypes and phenotypes sample order consistent.
         self.phenotypes.set_sample_order(self.genotypes.get_sample_order(),
@@ -105,7 +107,8 @@ class Experiment(object):
         self.info.update({
             "name": self.name,
             "engine_url": self.engine.url,
-            "start_time": FORWARD_INIT_TIME
+            "start_time": FORWARD_INIT_TIME,
+            "build": self.build
         })
         # TODO using this constant will not be representative if the user is
         # not using the scripts/cli.py

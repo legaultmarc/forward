@@ -11,6 +11,7 @@ This module is for short utility functions.
 """
 
 
+import os
 import multiprocessing
 
 from six.moves import range
@@ -137,3 +138,8 @@ class Parallel(object):
             results = self.f(*data)
 
             self.results_queue.put(results)
+
+
+def expand(s):
+    """Expand environment variables and the tilde."""
+    return os.path.expandvars(os.path.expanduser(s))

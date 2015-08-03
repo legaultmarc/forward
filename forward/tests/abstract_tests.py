@@ -437,6 +437,7 @@ class TestAbstractTask(object):
             genotype_container=dummies.DummyGenotypeDatabase(),
             variables=variables,
             tasks=[self.task],
+            build="GRCh37",
             cpu=1
         )
 

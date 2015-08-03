@@ -3,7 +3,7 @@ Database:
     pyclass: ExcelPhenotypeDatabase
     missing_values: ["-9", "-99", "-88", "-77"]
     sample_column: "Sample"
-    filename: /Users/legaultmarc/projects/StatGen/adcy9/data/phenotypes/cohort_phenotypes.xlsx
+    filename: ~/projects/StatGen/adcy9/data/phenotypes/cohort_phenotypes.xlsx
     exclude_correlated: 0.8
 
 Variables:
@@ -54,17 +54,18 @@ Variables:
 # Variants can be filtered in the genotype db or on a task specific basis.
 Genotypes:
     pyclass: MemoryImpute2Geno
-    filename: /Users/legaultmarc/projects/StatGen/adcy9/data/impute2/impute2_extractor.impute2
-    samples: /Users/legaultmarc/projects/StatGen/adcy9/data/impute2/forward_samples.txt
+    filename: ~/projects/StatGen/adcy9/data/impute2/impute2_extractor.impute2
+    samples: ~/projects/StatGen/adcy9/data/impute2/forward_samples.txt
     filter_probability: 0.90
     filter_completion: 0.95
     filter_maf: 0.01
-    filter_name: /Users/legaultmarc/projects/StatGen/adcy9/data/impute2/chr16.imputed.good_sites
+    filter_name: ~/projects/StatGen/adcy9/data/impute2/chr16.imputed.good_sites
     exclude_samples: ["9210", ]
 
 Experiment:
     name: "ADCY9_forward"
     cpu: 4
+    build: "GRCh37"
 
     tasks:
         - pyclass: LogisticTest

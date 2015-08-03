@@ -55,6 +55,7 @@ class TestLogisticTask(TestAbstractTask, unittest.TestCase):
             genotype_container=DummyGenotypeDatabase(),
             variables=self.variables,
             tasks=[self.task],
+            build="GRCh37",
             cpu=self.cpu
         )
 
@@ -118,6 +119,7 @@ class TestLogisticTask(TestAbstractTask, unittest.TestCase):
             genotype_container=geno,
             variables=self.variables,
             tasks=[self.task],
+            build="GRCh37",
             cpu=self.cpu
         )
         self.experiment.run_tasks()

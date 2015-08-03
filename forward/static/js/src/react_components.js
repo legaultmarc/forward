@@ -2,7 +2,8 @@
 var VariantRow = React.createClass({
   render: function() {
     return (
-      <tr><td>{this.props.name}</td><td>{this.props.chrom}</td>
+      <tr><td><a name={this.props.name}></a>{this.props.name}</td>
+          <td>{this.props.chrom}</td>
           <td>{this.props.pos}</td><td>{this.props.minor}</td>
           <td>{this.props.major}</td><td>{Math.round(this.props.mac)}</td>
           <td>{(0.5 * this.props.mac / this.props.n_non_missing).toFixed(3)}</td>

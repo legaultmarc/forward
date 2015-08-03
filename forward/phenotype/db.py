@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 import pandas as pd
 import numpy as np
 from ..statistics.utilities import inverse_normal_transformation
-from ..utils import abstract, dispatch_methods
+from ..utils import abstract, dispatch_methods, expand
 from .variables import ContinuousVariable
 
 __all__ = ["ExcelPhenotypeDatabase"]
@@ -206,7 +206,7 @@ class PandasPhenotypeDatabase(AbstractPhenotypeDatabase):
 class CSVPhenotypeDatabase(PandasPhenotypeDatabase):
     """Collection of phenotypes based on a CSV file."""
     def __init__(self, filename, sample_column, **kwargs):
-        self.filename = filename
+        self.filename = expand(filename)
 
         csv_allowed_kwargs = ["sep", "compression", "header", "skiprows",
                               "names", "na_values", "decimal"]
@@ -215,7 +215,7 @@ class CSVPhenotypeDatabase(PandasPhenotypeDatabase):
             if k in csv_allowed_kwargs:
                 csv_kwargs[k] = kwargs.pop(k)
 
-        self.data = pd.read_csv(filename, *csv_kwargs)
+        self.data = pd.read_csv(self.filename, *csv_kwargs)
 
         # The arguments that are not feed to the pandas csv reader are assumed
         # to be method calls and will be dispatched by the parent.
@@ -229,8 +229,8 @@ class ExcelPhenotypeDatabase(PandasPhenotypeDatabase):
 
     """
     def __init__(self, filename, sample_column, missing_values=None, **kwargs):
-        self.filename = filename
-        self.data = pd.read_excel(filename, na_values=missing_values)
+        self.filename = expand(filename)
+        self.data = pd.read_excel(self.filename, na_values=missing_values)
         super(ExcelPhenotypeDatabase, self).__init__(sample_column, **kwargs)
 
 
