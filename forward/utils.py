@@ -11,15 +11,29 @@ This module is for short utility functions.
 """
 
 
+import collections
+import uuid
 import os
 import multiprocessing
+import json
 
 from six.moves import range
+from gepyto.formats.gtf import GTFFile
 
 
 class AbstractClassException(Exception):
     def __str__(self):
         return "Can't initialize an abstract class."
+
+
+def namedtuple_to_dict(tu):
+    """Convert a namedtuple to a regular Python dict."""
+    return {k: getattr(tu, k) for k in tu._fields}
+
+
+def expand(s):
+    """Expand environment variables and the tilde."""
+    return os.path.expandvars(os.path.expanduser(s))
 
 
 def format_time_delta(delta):
@@ -140,6 +154,92 @@ class Parallel(object):
             self.results_queue.put(results)
 
 
-def expand(s):
-    """Expand environment variables and the tilde."""
-    return os.path.expandvars(os.path.expanduser(s))
+class EnsemblAnnotationParser(object):
+    """Parser for GTF/GFF files from Ensembl (used to rebuild hierarchy).
+
+    This is used because we want to show some hierarchy in the annotation. We
+    want gene -> transcript -> exon.
+
+    """
+    def __init__(self, filename):
+        self.genes = {}
+        with GTFFile(filename) as gtf:
+            # We need to build the hierarchy in order.
+            _build_queue = collections.defaultdict(list)
+            for annot in gtf:
+                if annot.features == "gene":
+                    self._add_gene(annot)
+                elif annot.features == "transcript":
+                    _build_queue[0].append(annot)
+                elif annot.features in ("UTR", "exon", "CDS"):
+                    _build_queue[1].append(annot)
+
+        for annot in _build_queue[0]:
+            self._add_transcript(annot)
+
+        for annot in _build_queue[1]:
+            self._add_transcript_feature(annot)
+
+    def _add_gene(self, annot):
+        """Add a gene node to the graph.
+
+        This method can be called with a GTF line object or with a string
+        containing the gene name. This is authorized because the genes are
+        top level components so we don't really need the extra information to
+        place it in the hierarchy.
+
+        """
+        if hasattr(annot, "attributes"):
+            name = annot.attributes["gene_id"]
+            self.genes[name] = {
+                "value": namedtuple_to_dict(annot),
+                "transcripts": {}
+            }
+            return self.genes[name]
+        else:
+            self.genes[annot] = {"value": None, "transcripts": {}}
+            return self.genes[annot]
+
+    def _add_transcript(self, annot):
+        gene_name = annot.attributes["gene_id"]
+        transcript_name = annot.attributes["transcript_id"]
+        parent_gene = self.genes.get(gene_name)
+
+        if parent_gene is None:
+            parent_gene = self._add_gene(gene_name)
+
+        transcript = {
+            "value": namedtuple_to_dict(annot), "exon": {}, "CDS": {},
+            "UTR": {}
+        }
+        parent_gene["transcripts"][transcript_name] = transcript
+        return transcript
+
+    def _add_transcript_feature(self, annot):
+        feature_type = annot.features
+        transcript_name = annot.attributes["transcript_id"]
+        gene_name = annot.attributes["gene_id"]
+
+        try:
+            transcript = self.genes[gene_name]["transcripts"][transcript_name]
+        except KeyError:
+            raise ValueError("Some parents are missing from the GTF File. "
+                             "Make sure that all the references are correct.")
+
+        if feature_type == "exon":
+            feature_id = annot.attributes["exon_id"]
+        else:
+            feature_id = self._generate_id()
+
+        # Check for colisions in the generated ids.
+        assert transcript[feature_type].get(feature_id) is None
+        annot = namedtuple_to_dict(annot)
+        transcript[feature_type][feature_id] = annot
+
+        return annot
+
+    def _generate_id(self):
+        return str(uuid.uuid4()).split("-")[0]
+
+    def to_json(self):
+        return json.dumps(self.genes)
