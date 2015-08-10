@@ -4,6 +4,9 @@ forward/version.py
 *.pyc
 *.egg-info
 *.egg/
+.eggs
 htmlcov/
-dist/
-build/
+/build
+/dist
+.module-cache
+.pversion
