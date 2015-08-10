@@ -40,18 +40,10 @@ The important concept and modules are as follows:
 
 # Installation
 
-Eventually, this will go on `pypi`. In the meantime, I have created a Makefile
-that should take care of everything. The recommended method to install the
-package (for now) is to clone it and make it.
-
-```sh
-git clone git@github.com:legaultmarc/forward.git
-cd forward
-make
-```
-
-and testing is achieved using:
-
-```sh
-make test
-```
+This package will go on pypy following the first official release. In the
+meantime, user's interested in the package should clone it and install it
+from the source. Because it's still changing very fast and some critical
+aspects are not fully implemented and tested, this package should not be used
+for real studies (yet).
+Note that the first official release is expected to be around the end of
+October 2015.
