@@ -177,6 +177,11 @@ forward.phenotypeCorrelationPlot = function(config) {
     url: "variables/plots/correlation_plot.json",
     dataType: "json",
     success: function(data) {
+      // Adjust the size wrt. the number of phenotypes.
+      var n = data.data.length;
+
+      config.width = Math.min(750, n * 6.25 + 430);
+      config.height = config.width;
       plot(config, data)
     },
     error: function(error) {
@@ -247,6 +252,11 @@ forward.phenotypeCorrelationPlot = function(config) {
       })
       .style("text-anchor", "end")
       .attr("class", "label xlabel");
+
+    if (data.data.length > 30) {
+        xLabels.style("font-size", "10px");
+        yLabels.style("font-size", "10px");
+    }
 
     // Draw the actual correlation plot.
     var rows = svg.selectAll("g")

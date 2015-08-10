@@ -2,7 +2,8 @@
 var VariantRow = React.createClass({displayName: "VariantRow",
   render: function() {
     return (
-      React.createElement("tr", null, React.createElement("td", null, this.props.name), React.createElement("td", null, this.props.chrom), 
+      React.createElement("tr", null, React.createElement("td", null, React.createElement("a", {name: this.props.name}), this.props.name), 
+          React.createElement("td", null, this.props.chrom), 
           React.createElement("td", null, this.props.pos), React.createElement("td", null, this.props.minor), 
           React.createElement("td", null, this.props.major), React.createElement("td", null, Math.round(this.props.mac)), 
           React.createElement("td", null, (0.5 * this.props.mac / this.props.n_non_missing).toFixed(3)), 
