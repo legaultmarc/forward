@@ -25,13 +25,32 @@ logger = logging.getLogger()
 import numpy as np
 import sqlalchemy
 import h5py
-from sqlalchemy import Column, Enum, String, Float
+from sqlalchemy import Column, Enum, String, Float, ForeignKey, Integer
 from six.moves import cPickle as pickle
 
 from . import SQLAlchemySession, SQLAlchemyBase, FORWARD_INIT_TIME
 from .utils import format_time_delta
 from .phenotype.variables import (Variable, DiscreteVariable,
                                   ContinuousVariable, TRANSFORMATIONS)
+
+
+class RelatedPhenotypesExclusions(SQLAlchemyBase):
+    """Record of the related phenotypes when the user asked for correlation
+    based exclusions.
+
+    When phenotypes are related (correlated), it is common practice in pheWAS
+    to exclude samples that are unaffected for the considered outcome but
+    affected for a correlated outcome. This keeps track of such exclusions.
+
+    An important remark is that the sum of exclusions does not make up the
+    total number of NAs, as we also need to count actual missing values.
+
+    """
+    __tablename__ = "related_phenotypes_exclusions"
+
+    phen1 = Column(ForeignKey("variables.name"), primary_key=True)
+    phen2 = Column(ForeignKey("variables.name"), primary_key=True)
+    n_excluded = Column(Integer())
 
 
 class ExperimentResult(SQLAlchemyBase):
@@ -144,7 +163,7 @@ class Experiment(object):
         hdf5_file = h5py.File(hdf5_filename, "w")
 
         for variable in self.variables:
-            v = self.phenotypes.get_phenotype_vector(variable.name)
+            v = self.phenotypes.get_phenotype_vector(variable)
             dataset = hdf5_file.create_dataset(variable.name, data=v)
 
         hdf5_file.close()
@@ -156,9 +175,14 @@ class Experiment(object):
         mat_filename = os.path.join(self.name, "phen_correlation_matrix.npy")
         np.save(mat_filename, corr_mat)
 
+        # Set the variables list on the phenotype database side.
+        self.phenotypes.set_experiment_variables(self.variables)
+        corr_thresh = self.phenotypes.get_phenotype_relation_threshold()
+
         self.info.update({
             "phen_correlation": mat_filename,
             "outcomes": var_names,
+            "phenotype_correlation_for_exclusion": corr_thresh
         })
 
     def add_result(self, entity_type, task, entity, phenotype, significance,
@@ -193,6 +217,26 @@ class Experiment(object):
         else:
             raise NotImplementedError("Only sqlite is supported (for now).")
 
+    def _write_exclusions(self):
+        # Check if exclusions were made.
+        try:
+            exclusions = self.phenotypes._exclusion_mappings
+        except Exception:
+            logger.debug("Could not access the exclusions from the phenotype "
+                         "database.")
+            return
+
+        # Create the table.
+        RelatedPhenotypesExclusions.__table__.create(self.engine)
+
+        for phen1, phen2, n in exclusions:
+            self.session.add_all([
+                RelatedPhenotypesExclusions(phen1=phen1, phen2=phen2,
+                                            n_excluded=n)
+            ])
+
+        self.session.commit()
+
     def run_tasks(self):
         """Run the tasks registered for this experiment.
 
@@ -218,6 +262,10 @@ class Experiment(object):
 
         # Commit the database.
         self.session.commit()
+
+        # Write the exclusions that were made based on related phenotypes to
+        # the database.
+        self._write_exclusions()
 
         # All tasks are done, set the walltime.
         self.info["walltime"] = (datetime.datetime.now() -

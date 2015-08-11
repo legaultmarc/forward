@@ -41,6 +41,9 @@ class Variable(SQLAlchemyBase):
         "polymorphic_on": variable_type,
     }
 
+    def is_variable(self):
+        return True
+
     def compute_statistics(self, phenotypes_db):
         """Used by subclasses to initialize extra fields after filtering."""
         raise NotImplementedError()
@@ -67,7 +70,7 @@ class DiscreteVariable(Variable):
 
     def compute_statistics(self, phenotypes_db):
         """Compute some n values given the filtered phenotype database."""
-        vect = phenotypes_db.get_phenotype_vector(self.name)
+        vect = phenotypes_db.get_phenotype_vector(self)
 
         self.n_cases = int(np.sum(vect == 1))
         self.n_controls = int(np.sum(vect == 0))
@@ -98,7 +101,7 @@ class ContinuousVariable(Variable):
     def compute_statistics(self, phenotypes_db):
         """Compute statistics with the filtered phenotype database."""
 
-        vect = phenotypes_db.get_phenotype_vector(self.name)
+        vect = phenotypes_db.get_phenotype_vector(self)
         mask = ~np.isnan(vect)
         self.mean = vect[mask].mean()
         self.std = vect[mask].std()

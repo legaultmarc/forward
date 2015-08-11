@@ -60,7 +60,8 @@ class TestAbstractPhenDB(object):
     def test_get_phenotype_vector(self):
         """Check the type and length of the generated variables."""
         n_samples = len(self.db.get_sample_order())
-        for var in self.db.get_phenotypes():
+        for name in self.db.get_phenotypes():
+            var = Variable(name=name)
             vec = self.db.get_phenotype_vector(var)
             self.assertEqual(vec.shape[0], n_samples)
             self.assertTrue(type(vec) is np.ndarray)
@@ -71,7 +72,8 @@ class TestAbstractPhenDB(object):
         bad_name = "".join(
             [random.choice(string.ascii_lowercase) for _ in range(100)]
         )
-        self.assertRaises(ValueError, self.db.get_phenotype_vector, bad_name)
+        variable = DiscreteVariable(bad_name)
+        self.assertRaises(ValueError, self.db.get_phenotype_vector, variable)
 
     def test_get_phen_vector_variable(self):
         """Test accession using a variable object."""
@@ -101,8 +103,9 @@ class TestAbstractPhenDB(object):
         """
         # Save the initial data.
         temp = {}
-        for var in self.db.get_phenotypes():
-            temp[var] = self.db.get_phenotype_vector(var)
+        for name in self.db.get_phenotypes():
+            var = Variable(name=name)
+            temp[name] = self.db.get_phenotype_vector(var)
 
         samples = self.db.get_sample_order()
         permutation = np.random.permutation(len(samples))
@@ -113,9 +116,10 @@ class TestAbstractPhenDB(object):
         self.assertEqual(samples_perm, self.db.get_sample_order())
 
         # Check that the data was also reordered.
-        for var in self._variables:
+        for name in self._variables:
+            var = Variable(name=name)
             np.testing.assert_equal(
-                temp[var][permutation], self.db.get_phenotype_vector(var)
+                temp[name][permutation], self.db.get_phenotype_vector(var)
             )
 
     def test_set_sample_order_subset_raises(self):

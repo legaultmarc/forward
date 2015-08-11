@@ -122,6 +122,23 @@ class Backend(object):
         corr_mat = self.correlation_matrix
         return corr_mat, names
 
+    def get_related_phenotypes_exclusions(self):
+        exclusions = self.session.query(
+            experiment.RelatedPhenotypesExclusions
+        )
+        counts = {"exclusions": {}}
+        counts["threshold"] = self.info.get(
+            "phenotype_correlation_for_exclusion"
+        )
+        for e in exclusions:
+            if counts.get(e.phen1) is None:
+                counts["exclusions"][e.phen1] = {"related": [], "excluded": 0}
+
+            counts["exclusions"][e.phen1]["related"].append(e.phen2)
+            counts["exclusions"][e.phen1]["excluded"] += e.n_excluded
+
+        return counts
+
     def get_tasks(self):
         tasks = self.session.query(
             experiment.ExperimentResult.task_name
@@ -216,6 +233,12 @@ def api_get_variants():
 @app.route("/variables.json")
 def api_get_variables():
     return json.dumps(www_backend.get_variables())
+
+
+@app.route("/exclusions.json")
+def api_get_related_phenotypes_exclusions():
+    return json.dumps(www_backend.get_related_phenotypes_exclusions())
+
 
 @app.route("/variables/data.json")
 def api_get_outcome_vector():

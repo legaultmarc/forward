@@ -160,6 +160,6 @@ class TestExperiment(unittest.TestCase):
         for var in self.experiment.variables:
             # Get the phenotypes.
             if type(var) is DiscreteVariable:
-                y = self.experiment.phenotypes.get_phenotype_vector(var.name)
+                y = self.experiment.phenotypes.get_phenotype_vector(var)
                 prevalence = np.sum(y == 1) / np.sum(~np.isnan(y))
                 self.assertEqual(var.prevalence, prevalence)

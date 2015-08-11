@@ -14,6 +14,7 @@ import shutil
 import numpy as np
 
 from ..phenotype.db import AbstractPhenotypeDatabase
+from ..phenotype.variables import Variable
 from ..genotype import AbstractGenotypeDatabase, Variant
 from ..tasks import AbstractTask
 from ..experiment import Experiment
@@ -56,14 +57,16 @@ class DummyPhenDatabase(AbstractPhenotypeDatabase):
     def get_phenotypes(self):
         return list(self.data.keys())
 
-    def get_phenotype_vector(self, name):
-        if hasattr(name, "name"):
-            name = name.name  # Potentially a variable object.
+    def get_phenotype_vector(self, variable, exclude_related=False):
+        try:
+            assert variable.is_variable()
+        except AssertionError:
+            raise ValueError("'{}' is not a variable object.".format(variable))
 
-        if name not in self.get_phenotypes():
-            raise ValueError("{} not in database.".format(name))
+        if variable.name not in self.get_phenotypes():
+            raise ValueError("{} not in database.".format(variable.name))
 
-        return self.data[name]
+        return self.data[variable.name]
 
     def set_sample_order(self, sequence, allow_subset=False):
         self.validate_sample_sequences(
@@ -86,10 +89,10 @@ class DummyPhenDatabase(AbstractPhenotypeDatabase):
         v = None
         for name in names:
             if v is None:
-                v = self.get_phenotype_vector(name)
+                v = self.data[name]
                 continue
 
-            v = np.vstack((v, self.get_phenotype_vector(name)))
+            v = np.vstack((v, self.data[name]))
 
         return np.corrcoef(v)
 

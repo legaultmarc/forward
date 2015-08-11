@@ -17,9 +17,10 @@ logger = logging.getLogger(__name__)
 
 import pandas as pd
 import numpy as np
+
 from ..statistics.utilities import inverse_normal_transformation
 from ..utils import abstract, dispatch_methods, expand
-from .variables import ContinuousVariable
+from .variables import ContinuousVariable, DiscreteVariable, Variable
 
 __all__ = ["ExcelPhenotypeDatabase"]
 
@@ -43,12 +44,17 @@ class AbstractPhenotypeDatabase(object):
         """Returns a numpy array representing the selected outcome for all
         samples.
 
-        :param name: The name of the phenotype to extract.
-        :type name: str, unicode or
-                    :py:class:`forward.phenotype.variables.Variable`
+        :param name: The Variable object representing the phenotype to extract.
+        :type name: :py:class:`forward.phenotype.variables.Variable`
 
         :returns: A vector representing the outcome.
         :rtype: :py:class:`numpy.ndarray`
+
+        """
+        raise NotImplementedError()
+
+    def set_experiment_variables(self, variables):
+        """Set the variables attribute containing all the possible variables.
 
         """
         raise NotImplementedError()
@@ -59,6 +65,23 @@ class AbstractPhenotypeDatabase(object):
 
     def get_sample_order(self, allow_subset=False):
         """Get the order of the samples."""
+        raise NotImplementedError()
+
+    def get_related_phenotype_exclusions(self):
+        """Get the phenotypes for which there was an exclusion based on
+        correlation.
+
+        Using forward, it is possible to use the "exclude_correlated" function
+        to exclude from controls samples that are cases for a related
+        (correlated) phenotype.
+        In order to access this information in the report, it is necessary to
+        implement this function.
+
+        """
+        raise NotImplementedError()
+
+    def get_phenotype_relation_threshold(self):
+        """Get the threshold set by exclude_correlated."""
         raise NotImplementedError()
 
     def exclude_correlated(self, threshold):
@@ -127,14 +150,52 @@ class PandasPhenotypeDatabase(AbstractPhenotypeDatabase):
         # User will be warned if the required sample order was not defined.
         self._order_is_set = False
 
+        self.variables = None
+
         # Call parent to dispatch method calls.
         super(PandasPhenotypeDatabase, self).__init__(**kwargs)
 
-        # Keep the correlation matrix for lazy loading.
-        self._corr_mat = None
-
     def get_phenotypes(self):
         return list(self.data.columns)
+
+    def set_experiment_variables(self, variables):
+        self.variables = variables
+        # Check if the user asked for exclusions.
+        if not hasattr(self, "_exclusions_were_initialized"):
+            return
+
+        # Check if the exclusions were already initialized.
+        if self._exclusions_were_initialized:
+            raise Exception("Can't set the experiment variables after "
+                            "exclusions were initialized.")
+
+        # Compute the exclusions.
+        names = [v.name for v in variables]
+        mat = self.get_correlation_matrix(names)
+        for var in variables:
+            if var.variable_type != "discrete":
+                return
+            if var.is_covariate:
+                return
+
+            y = self.get_phenotype_vector(var)
+
+            # Check for correlated variables.
+            i = names.index(var.name)
+            for j in np.where(mat[i, :])[0]:
+                if j != i:
+                    # j is a candidate related outcome.
+                    valid = (variables[j].variable_type == "discrete" and 
+                             not variables[j].is_covariate)
+                    if valid:
+                        # Exclude and write down.
+                        related_phenotype_y = self.get_phenotype_vector(
+                            variables[j]
+                        )
+                        mask = (y == 0) & (related_phenotype_y == 1)
+                        self.data.loc[mask, var.name] = np.nan
+                        n = np.sum(mask)
+                        self._exclusion_mappings.add((var.name, names[j], n))
 
     def set_sample_order(self, sequence, allow_subset=False):
         ExcelPhenotypeDatabase.validate_sample_sequences(
@@ -152,52 +213,49 @@ class PandasPhenotypeDatabase(AbstractPhenotypeDatabase):
                            "database.")
         return list(self.data.index.values)
 
-    def get_phenotype_vector(self, name, warn=True):
+    def get_phenotype_vector(self, variable, warn=True):
         if not self._order_is_set and warn:
             logger.warning("The order of samples for the database has not "
                            "been set. Make sure that it is consistent with "
                            "the genetic database (consistent order).")
 
-        # Potentially a Variable object.
-        if hasattr(name, "name"):
-            name = name.name
+        if not variable.is_variable():
+            raise ValueError(
+                "'{}' is not a Variable instance (type: {}).".format(
+                    variable, type(variable)
+                )
+            )
+
+        name = variable.name
 
         if name not in self.data.columns:
             raise ValueError("'{}' is not in the database.".format(name))
 
         vect =  self.data.loc[:, name].values
-        if isinstance(name, ContinuousVariable) and name.transformation:
-            vect = apply_transformation(name.transformation, vect)
-
-        # Check if we need to exclude phenotypes.
-        if hasattr(self, "_exclusion_mapper"):
-            for phen in self._exclusion_mapper(name):
-                corr_y = self.data.loc[:, name].values
-                # Exclude samples that don't have the current phenotype but
-                # that are affected with a correlated phenotype.
-                vect[(corr_y == 1) & (vect == 0)] = np.nan
+        if variable.variable_type == "continuous" and variable.transformation:
+            vect = apply_transformation(variable.transformation, vect)
 
         return vect
 
+    def get_related_phenotype_exclusions(self):
+        if hasattr(self, "related_phenotypes"):
+            return self.related_phenotypes
+        return None
+
     def exclude_correlated(self, threshold):
-        """Define a private function that will be used for filtering based on
-        phenotype correlation.
+        """This is called if the user specified it in the configuration.
+        
+        Because we need the Variables to properly compute the exclusions, we
+        will just remember that the user wants exclusions and wait for the
+        experiment to pass the variables to define the exclusion mappings.
 
         """
+        self._exclusion_threshold = threshold
+        self._exclusion_mappings = set()
+        self._exclusions_were_initialized = False
 
-        ys = self.get_phenotypes()
-        m = self.get_correlation_matrix(ys) >= threshold
-
-        def f(phenotype):
-            x = ys.index(phenotype)
-            exclusions = []
-            for j in np.where(m[x, :])[0]:
-                if j != x:
-                    exclusions.append(ys[j])
-
-            return exclusions
-
-        self._exclusion_mapper = f
+    def get_phenotype_relation_threshold(self):
+        return getattr(self, "_exclusion_threshold", None)
 
     def get_correlation_matrix(self, names):
         return self.data[names].corr().values
