@@ -1,6 +1,6 @@
 forward.variableNormalQQ = function(config) {
   $.ajax({
-    url: "variables/plots/normalqq.json",
+    url: window.location.pathname + "/variables/plots/normalqq.json",
     dataType: "json",
     data: {
       "name": config.variable,
@@ -91,7 +91,7 @@ forward.variableNormalQQ = function(config) {
 
 forward.variableHist = function(config) {
   $.ajax({
-    url: "variables/plots/histogram.json",
+    url: window.location.pathname + "/variables/plots/histogram.json",
     dataType: "json",
     data: {
       "name": config.variable,
@@ -174,7 +174,7 @@ forward.variableHist = function(config) {
 forward.phenotypeCorrelationPlot = function(config) {
 
   $.ajax({
-    url: "variables/plots/correlation_plot.json",
+    url: window.location.pathname + "/variables/plots/correlation_plot.json",
     dataType: "json",
     success: function(data) {
       // Adjust the size wrt. the number of phenotypes.

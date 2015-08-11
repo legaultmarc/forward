@@ -26,7 +26,7 @@ var GLMResultsTable = React.createClass({displayName: "GLMResultsTable",
   },
   queryServer: function(task, threshold, callback) {
     $.ajax({
-      url: "/tasks/results.json",
+      url: window.location.pathname + "/tasks/results.json",
       data: {"task": task, "pthresh": threshold},
       success: function(data) { callback(data); }
     });
@@ -107,7 +107,7 @@ fwdGLM.renderManhattan = function(nodeId, taskName, modelType) {
 
   // Get data.
   $.ajax({
-    url: "/tasks/results.json",
+    url: window.location.pathname + "/tasks/results.json",
     data: {"task": taskName, "pthresh": 1},
     success: function(data) {
       // Format data.
@@ -134,7 +134,7 @@ fwdGLM.renderQQPlot = function(nodeId, taskName) {
 
   // Get data.
   $.ajax({
-    url: "/tasks/plots/qqpvalue.json",
+    url: window.location.pathname + "/tasks/plots/qqpvalue.json",
     dataType: "json",
     data: {"task": taskName},
     success: function(data) {

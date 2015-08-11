@@ -24,6 +24,9 @@ SQLAlchemySession = sessionmaker()
 
 FORWARD_INIT_TIME = datetime.datetime.now()
 
+FORWARD_REPORT_ROOT = "/forward"
+STATIC_ROOT = "/static"
+
 logging.basicConfig()
 
 try:

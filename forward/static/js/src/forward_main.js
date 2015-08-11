@@ -2,13 +2,13 @@ forward = {};
 
 // TODO. We could use caching.
 forward.withVariants = function(f) {
-  $.getJSON("variants.json", function(data) {
+  $.getJSON(window.location.pathname + "/variants.json", function(data) {
     f(data);
   });
 };
 
 forward.withVariables = function(f) {
-  $.getJSON("variables.json", function(data) {
+  $.getJSON(window.location.pathname + "/variables.json", function(data) {
     f(data);
   });
 };
@@ -122,7 +122,7 @@ forward._handleLogistic = function(taskName) {
   document.getElementById("results").appendChild(node);
 
   $.ajax({
-    url: "/tasks/logistic_section.html",
+    url: window.location.pathname + "/tasks/logistic_section.html",
     data: {"task": taskName},
     success: function(data) {
       node.innerHTML = data;
@@ -137,7 +137,7 @@ forward._handleLinear = function(taskName) {
   document.getElementById("results").appendChild(node);
 
   $.ajax({
-    url: "/tasks/linear_section.html",
+    url: window.location.pathname + "/tasks/linear_section.html",
     data: {"task": taskName},
     success: function(data) {
       node.innerHTML = data;
