@@ -41,6 +41,7 @@ from .phenotype.db import apply_transformation
 
 www_backend = None
 BASE = os.path.abspath(os.path.dirname(__file__))
+API_ROOT = ""
 
 
 class Backend(object):
@@ -216,31 +217,40 @@ class Backend(object):
         m, b, r, p, stderr = scipy.stats.linregress(x, y)
         return m, b
 
+
+def set_api_root(path):
+    global API_ROOT
+    API_ROOT = path
+
+
 def initialize_application(experiment_name):
     """Initialize database connection and bind to the application context."""
     global www_backend
     www_backend = Backend(experiment_name)
+
 
 @app.route("/")
 def empty_report():
     with open(os.path.join(BASE, "static", "default.html"), "r") as f:
         return f.read()
 
-@app.route("/variants.json")
+
+@app.route(API_ROOT + "/variants.json")
 def api_get_variants():
     return json.dumps(www_backend.get_variants())
 
-@app.route("/variables.json")
+
+@app.route(API_ROOT + "/variables.json")
 def api_get_variables():
     return json.dumps(www_backend.get_variables())
 
 
-@app.route("/exclusions.json")
+@app.route(API_ROOT + "/exclusions.json")
 def api_get_related_phenotypes_exclusions():
     return json.dumps(www_backend.get_related_phenotypes_exclusions())
 
 
-@app.route("/variables/data.json")
+@app.route(API_ROOT + "/variables/data.json")
 def api_get_outcome_vector():
     variable, transformation = _variable_arg_check(request)
     try:
@@ -252,7 +262,7 @@ def api_get_outcome_vector():
         raise InvalidAPIUsage("Could not find variable {}.".format(variable))
 
 
-@app.route("/variables/plots/histogram.json")
+@app.route(API_ROOT + "/variables/plots/histogram.json")
 def api_histogram():
     variable, transformation = _variable_arg_check(request)
     kwargs = {}
@@ -272,7 +282,7 @@ def api_histogram():
     })
 
 
-@app.route("/variables/plots/normalqq.json")
+@app.route(API_ROOT + "/variables/plots/normalqq.json")
 def api_normal_qq():
     variable, transformation = _variable_arg_check(request)
     try:
@@ -292,13 +302,13 @@ def api_normal_qq():
     })
 
 
-@app.route("/variables/plots/correlation_plot.json")
+@app.route(API_ROOT + "/variables/plots/correlation_plot.json")
 def api_correlation_plot():
     data, names = www_backend.get_variable_corrplot()
     return jsonify(data=[list(row) for row in data], names=names)
 
 
-@app.route("/tasks.json")
+@app.route(API_ROOT + "/tasks.json")
 def api_tasks():
     tasks = www_backend.get_tasks()
     for i in range(len(tasks)):
@@ -307,7 +317,7 @@ def api_tasks():
     return jsonify(tasks=tasks)
 
 
-@app.route("/tasks/results.json")
+@app.route(API_ROOT + "/tasks/results.json")
 def api_task_results():
     task = request.args.get("task")
     p_thresh = request.args.get("pthresh", 0.05)
@@ -322,7 +332,7 @@ def api_task_results():
     return jsonify(results=www_backend.get_results(task, filters))
 
 
-@app.route("/tasks/plots/qqpvalue.json")
+@app.route(API_ROOT + "/tasks/plots/qqpvalue.json")
 def api_p_value_qqplot():
     task = request.args.get("task")
     if task is None:
@@ -332,7 +342,7 @@ def api_p_value_qqplot():
     return json.dumps(www_backend.p_value_qq_plot(task))
 
 
-@app.route("/tasks/logistic_section.html")
+@app.route(API_ROOT + "/tasks/logistic_section.html")
 def task_rendered_logistic():
     task = request.args.get("task")
     if task is None:
@@ -341,7 +351,7 @@ def task_rendered_logistic():
     return render_template("logistictest.html", task=task)
 
 
-@app.route("/tasks/linear_section.html")
+@app.route(API_ROOT + "/tasks/linear_section.html")
 def task_rendered_linear():
     task = request.args.get("task")
     if task is None:
@@ -377,8 +387,10 @@ def handle_invalid_usage(error):
     response.status_code = error.status_code
     return response
 
+
 def serve():
     app.run(debug=True)
+
 
 def nan_to_none(li):
     li = list(li)
