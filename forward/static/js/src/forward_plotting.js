@@ -173,6 +173,8 @@ forward.variableHist = function(config) {
 
 forward.phenotypeCorrelationPlot = function(config) {
 
+  var color;
+
   $.ajax({
     url: window.location.pathname + "/variables/plots/correlation_plot.json",
     dataType: "json",
@@ -182,7 +184,7 @@ forward.phenotypeCorrelationPlot = function(config) {
 
       config.width = Math.min(750, n * 6.25 + 430);
       config.height = config.width;
-      plot(config, data)
+      plot(config, data);
     },
     error: function(error) {
       console.log("Query for corrplot failed.");
@@ -205,24 +207,20 @@ forward.phenotypeCorrelationPlot = function(config) {
     // Setting up colormap.
     // Because correlation is in [-1, 1], we will map these colors from blue
     // to red (with 0 = white).
-    var color = d3.scale.linear()
+    color = d3.scale.linear()
       .domain([-1, 0, 1])
       .range(["#3687FF", "#F5F8FF", "#FF5F4C"]);
 
+    // Create the controls.
+    var controls = d3.select(config.figure).append("p");
+
     // Create the wrapping svg element.
     var svg = d3.select(config.figure).append("svg")
-      .attr("width", config.width + config.margins.left + config.margins.right)
-      .attr(
-        "height",
-        config.height + config.margins.top + config.margins.bottom
-      )
+      .attr("width", config.width)
+      .attr("height", config.height)
       .attr("class", "corrplot")
       .append("g")
-      .attr("style", "plot-wrap")
-      .attr(
-        "transform",
-        "translate(" + config.margins.left + "," + config.margins.top + ")"
-      );
+      .attr("style", "plot-wrap");
 
     // Create the axis (phenotype labels).
     var labelLength = 150;  // This is how much space we leave for labels.
@@ -300,6 +298,9 @@ forward.phenotypeCorrelationPlot = function(config) {
 
       })
       .on("mouseout", function() {
+        if (d3.select(this).classed("highlighted")) {
+          return;  // Ignore permanantly highlighted samples.
+        }
         d3.select(this).transition().duration(200)
           .style("fill", function(d) {
             if (d.val == -10) return "#FFFFFF";
@@ -329,7 +330,71 @@ forward.phenotypeCorrelationPlot = function(config) {
     info.append("tspan").attr("class", "value")
       .attr("dy", "1.5em").attr("x", 270)
 
+    // Add controls to higlight cells based on phenotype correlation.
+    var box = svg[0][0].getBBox();
+
+    controls.attr(
+      "style",
+      ("position:relative;top:" + parseInt(box.height + 70) + "px;" +
+       "text-align:center")
+    )
+    .append("a")
+    .attr("role", "button")
+    .classed("button", true)
+    .text("Highlight correlated")
+    .on("click", _highlight_correlated);
 
   } // End plot.
+
+  /**
+   * Highlight all cells with correlations above the provided threshold.
+   **/
+  var _highlight_correlated = function() {
+    var threshold = window.prompt(
+      "Select an absolute value correlation threshold to show potentially " +
+      "related phenotypes. You can reset by leaving this field empty.",
+      "0.8"
+    );
+
+    threshold = Math.abs(parseFloat(threshold));
+
+    d3.selectAll(".box").classed("highlighted", false)
+      .style("fill", function(d) {
+        if (d.val == -10) return "#FFFFFF";
+        return color(d.val);
+      });
+
+    if (threshold) {
+      // Highlight.
+      d3.selectAll(".box")
+        .select(function(d) {
+          if (d.x < d.y) {
+            return null;
+          }
+          if (Math.abs(d.val) >= threshold) {
+            return this;
+          }
+          return null;
+        })
+        .classed("highlighted", true)
+        .transition().duration(200)
+        .style(
+          "fill",
+          function(d) {
+            if (d.val == -10) { return "#FFFFFF"; }
+            if (Math.abs(d.val) >= threshold) {
+              return "#444444";
+            }
+            return color(d.val);
+          }
+        )
+        .style("opacity", 1);
+
+    }
+    else {
+      // TODO: Report that this was an invalid number.
+    }
+
+  };
 
 }

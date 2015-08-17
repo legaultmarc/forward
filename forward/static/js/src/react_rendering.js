@@ -29,8 +29,7 @@ $(document).ready(function() {
     forward.phenotypeCorrelationPlot({
       "figure": correlationPlot,
       "width": 500,
-      "height": 500,
-      "margins": {"top": 30, "right": 30, "bottom": 30, "left": 30}
+      "height": 500
     });
   })();
 
