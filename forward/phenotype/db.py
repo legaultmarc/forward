@@ -182,7 +182,10 @@ class PandasPhenotypeDatabase(AbstractPhenotypeDatabase):
 
             # Check for correlated variables.
             i = names.index(var.name)
-            for j in np.where(mat[i, :])[0]:
+            # FIXME This np.where is weird. where's the threshold.
+            # Also add it to the mappings to account for the new database
+            # structures.
+            for j in np.where(abs(mat[i, :]) >= self._exclusion_threshold)[0]:
                 if j != i:
                     # j is a candidate related outcome.
                     valid = (variables[j].variable_type == "discrete" and 
@@ -195,7 +198,9 @@ class PandasPhenotypeDatabase(AbstractPhenotypeDatabase):
                         mask = (y == 0) & (related_phenotype_y == 1)
                         self.data.loc[mask, var.name] = np.nan
                         n = np.sum(mask)
-                        self._exclusion_mappings.add((var.name, names[j], n))
+                        self._exclusion_mappings.add(
+                            (var.name, names[j], mat[i, j], n)
+                        )
 
     def set_sample_order(self, sequence, allow_subset=False):
         ExcelPhenotypeDatabase.validate_sample_sequences(

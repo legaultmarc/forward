@@ -50,6 +50,7 @@ class RelatedPhenotypesExclusions(SQLAlchemyBase):
 
     phen1 = Column(ForeignKey("variables.name"), primary_key=True)
     phen2 = Column(ForeignKey("variables.name"), primary_key=True)
+    correlation = Column(Float())
     n_excluded = Column(Integer())
 
 
@@ -229,9 +230,10 @@ class Experiment(object):
         # Create the table.
         RelatedPhenotypesExclusions.__table__.create(self.engine)
 
-        for phen1, phen2, n in exclusions:
+        for phen1, phen2, correlation, n in exclusions:
             self.session.add_all([
                 RelatedPhenotypesExclusions(phen1=phen1, phen2=phen2,
+                                            correlation=correlation,
                                             n_excluded=n)
             ])
 
