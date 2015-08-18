@@ -2,19 +2,19 @@ forward = {};
 
 // TODO. We could use caching.
 forward.withVariants = function(f) {
-  $.getJSON(window.location.pathname + "/variants.json", function(data) {
+  $.getJSON(window.location.pathname + "/experiment/variants.json", function(data) {
     f(data);
   });
 };
 
 forward.withVariables = function(f) {
-  $.getJSON(window.location.pathname + "/variables.json", function(data) {
+  $.getJSON(window.location.pathname + "/experiment/variables.json", function(data) {
     f(data);
   });
 };
 
 forward.withExclusions = function(f) {
-  $.getJSON(window.location.pathname + "/exclusions.json", function(data) {
+  $.getJSON(window.location.pathname + "/experiment/exclusions.json", function(data) {
     f(data);
   });
 };
@@ -23,7 +23,7 @@ forward.withExclusions = function(f) {
  * Get metadata on the experiment and make it available to everyone.
  **/
 forward.info = (function() {
-  $.getJSON(window.location.pathname + "/info.json", function(data) {
+  $.getJSON(window.location.pathname + "/experiment/info.json", function(data) {
     forward.info = data;
 
     // Also fill all the relevant dom placeholders.
@@ -39,6 +39,23 @@ forward.info = (function() {
       }
 
     });
+
+    // Add the YAML file if it's available.
+    if (data.configuration) {
+      $.get(
+        window.location.pathname + "/experiment/yaml_configuration.html",
+        function(data) {
+          var node = document.createElement("div");
+          node.id = "yaml-configuration";
+          content = ("<p>The YAML configuration file used to describe this " +
+                     "experiment is as follows:</p>");
+          content += data;
+          node.innerHTML = content;
+
+          document.getElementById("annex").appendChild(node);
+        }
+      );
+    }
 
   });
 })();

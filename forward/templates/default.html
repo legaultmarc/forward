@@ -23,6 +23,7 @@
     <!-- Local imports //-->
     <link rel="stylesheet" href="{{ STATIC_ROOT }}/css/default.css" />
     <link rel="stylesheet" href="{{ STATIC_ROOT }}/css/plots.css" />
+    <link rel="stylesheet" href="{{ STATIC_ROOT }}/css/pygments.css" />
     <script type="text/javascript" src="{{ STATIC_ROOT }}/js/build/react_components.js"></script>
     <script type="text/javascript" src="{{ STATIC_ROOT }}/js/build/react_rendering.js"></script>
     <script type="text/javascript" src="{{ STATIC_ROOT }}/js/build/forward_main.js"></script>
@@ -99,7 +100,7 @@
         //-->
         <script type="text/javascript">
           // Get the tasks.
-          $.getJSON(window.location.pathname + "/tasks.json", function(data) {
+          $.getJSON(window.location.pathname + "/experiment/tasks.json", function(data) {
             var tasks = data.tasks;
             // For every task, fetch the html snippet.
             tasks.map(function(task) {

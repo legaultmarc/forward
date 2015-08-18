@@ -18,6 +18,7 @@ Overall goals for this module will be to provide:
 """
 
 import os
+import shutil
 import datetime
 import logging
 logger = logging.getLogger()
@@ -276,6 +277,14 @@ class Experiment(object):
         # Write the metadata to disk.
         with open(os.path.join(self.name, "experiment_info.pkl"), "wb") as f:
             pickle.dump(self.info, f)
+
+        # If we know what yaml file was used, we copy it.
+        yaml = self.info.get("configuration")
+        if yaml is not None and os.path.isfile(yaml):
+            shutil.copyfile(
+                yaml,
+                os.path.join(self.name, "configuration.yaml")
+            )
 
         logger.info("Completed all tasks in {}.".format(
             format_time_delta(self.info["walltime"])

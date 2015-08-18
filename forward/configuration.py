@@ -55,8 +55,11 @@ def parse_configuration(filename):
     experiment_cpu = int(config["Experiment"].pop("cpu", 1))
     experiment_build = config["Experiment"].pop("build", "GRCh37")
 
-    return Experiment(experiment_name, database, genotypes, variables, tasks,
-                      experiment_build, cpu=experiment_cpu)
+    experiment = Experiment(experiment_name, database, genotypes, variables,
+                            tasks, experiment_build, cpu=experiment_cpu)
+    experiment.info.update({"configuration": filename})
+
+    return experiment
 
 
 def _parse_database(database):

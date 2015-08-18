@@ -30,6 +30,9 @@ import h5py
 import sqlalchemy
 import matplotlib.cm
 from six.moves import cPickle as pickle
+import pygments
+from pygments.lexers import YamlLexer
+from pygments.formatters import HtmlFormatter
 from flask import (Flask, request, url_for, render_template, jsonify,
                    render_template)
 app = Flask(__name__)
@@ -62,6 +65,10 @@ class Backend(object):
             os.path.join(experiment_name, "phenotypes.hdf5"),
             "r"
         )
+
+        self.config = os.path.join(experiment_name, "configuration.yaml")
+        if not os.path.isfile(self.config):
+            self.config = None
 
         # Experiment info.
         filename = os.path.join(experiment_name, "experiment_info.pkl")
@@ -214,6 +221,10 @@ class Backend(object):
 
         return results
 
+    def get_configuration(self):
+        if self.config is not None:
+            with open(self.config, "r") as f:
+                return f.read()
 
     def _fit_line(self, y, x):
         m, b, r, p, stderr = scipy.stats.linregress(x, y)
@@ -231,24 +242,25 @@ def empty_report():
     return render_template("default.html", STATIC_ROOT=STATIC_ROOT)
 
 
-@app.route(FORWARD_REPORT_ROOT + "/info.json")
+@app.route(FORWARD_REPORT_ROOT + "/experiment/info.json")
 def api_experiment_info():
     info = www_backend.info.copy()
     info["start_time"] = info["start_time"].strftime("%Y-%m-%d %H:%m:%S")
     info["walltime"] = format_time_delta(info["walltime"])
     return json.dumps(info)
 
-@app.route(FORWARD_REPORT_ROOT + "/variants.json")
+
+@app.route(FORWARD_REPORT_ROOT + "/experiment/variants.json")
 def api_get_variants():
     return json.dumps(www_backend.get_variants())
 
 
-@app.route(FORWARD_REPORT_ROOT + "/variables.json")
+@app.route(FORWARD_REPORT_ROOT + "/experiment/variables.json")
 def api_get_variables():
     return json.dumps(www_backend.get_variables())
 
 
-@app.route(FORWARD_REPORT_ROOT + "/exclusions.json")
+@app.route(FORWARD_REPORT_ROOT + "/experiment/exclusions.json")
 def api_get_related_phenotypes_exclusions():
     # Parse into a list (easier to use from ReactJS).
     li = []
@@ -319,7 +331,7 @@ def api_correlation_plot():
     return jsonify(data=[list(row) for row in data], names=names)
 
 
-@app.route(FORWARD_REPORT_ROOT + "/tasks.json")
+@app.route(FORWARD_REPORT_ROOT + "/experiment/tasks.json")
 def api_tasks():
     tasks = www_backend.get_tasks()
     for i in range(len(tasks)):
@@ -369,6 +381,17 @@ def task_rendered_linear():
         raise InvalidAPIUsage("A 'task' parameter is expected.")
 
     return render_template("lineartest.html", task=task)
+
+
+@app.route(FORWARD_REPORT_ROOT + "/experiment/yaml_configuration.html")
+def api_get_yaml_configuration():
+    """Returns a pygmentized version of the configuration file."""
+    yaml = www_backend.get_configuration()
+    return pygments.highlight(
+        yaml,
+        YamlLexer(),
+        HtmlFormatter(linenos=True, cssclass="pygments-highlight")
+    )
 
 
 def _variable_arg_check(request):
