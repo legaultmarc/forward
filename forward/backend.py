@@ -221,6 +221,21 @@ class Backend(object):
 
         return results
 
+    def get_bonferonni(self, task_name, alpha):
+        """Get the Bonferonni adjusted alpha for a given task."""
+        try:
+            n_tests, _ = self.session.query(
+                sqlalchemy.func.count(
+                    experiment.ExperimentResult.task_name
+                ), experiment.ExperimentResult.task_name
+            ).filter(
+                experiment.ExperimentResult.task_name.like(task_name)       
+            ).group_by(experiment.ExperimentResult.task_name).one()
+        except Exception:
+            return None
+
+        return alpha / n_tests
+
     def get_configuration(self):
         if self.config is not None:
             with open(self.config, "r") as f:
@@ -361,8 +376,26 @@ def api_p_value_qqplot():
     if task is None:
         raise InvalidAPIUsage("A 'task' parameter is expected.")
 
-    task = "task_%"  # Used to match without the type.
+    task = "{}_%".format(task)  # Used to match without the type.
     return json.dumps(www_backend.p_value_qq_plot(task))
+
+
+@app.route(FORWARD_REPORT_ROOT + "/tasks/corrections/bonferonni.json")
+def api_bonferonni():
+    task = request.args.get("task")
+    if task is None:
+        raise InvalidAPIUsage("A 'task' parameter is expected.")
+
+    alpha = request.args.get("alpha")
+    try:
+        alpha = float(alpha)
+    except Exception:
+        raise InvalidAPIUsage("A float 'alpha' parameter is expected.")
+
+    task = "{}_%".format(task)  # Used to match without the type.
+    return json.dumps({
+        "alpha": www_backend.get_bonferonni(task, alpha)
+    })
 
 
 @app.route(FORWARD_REPORT_ROOT + "/tasks/logistic_section.html")

@@ -1,3 +1,6 @@
+/**
+ * Module to display results from GLM (linear or logistic) regression.
+ **/
 forward.fwdGLM = {};
 var fwdGLM = forward.fwdGLM;
 
@@ -21,7 +24,7 @@ var GLMResultsTable = React.createClass({
   getInitialState: function() {
     return {
       data: {"results": []},
-      pThreshold: 0.05
+      pThreshold: null
     };
   },
   queryServer: function(task, threshold, callback) {
@@ -31,20 +34,56 @@ var GLMResultsTable = React.createClass({
       success: function(data) { callback(data); }
     });
   },
+  withBonferonni: function(task, alpha, callback) {
+    $.ajax({
+      url: window.location.pathname + "/tasks/corrections/bonferonni.json",
+      dataType: "json",
+      data: {"task": task, "alpha": alpha},
+      success: function(data) { callback(data); }
+    });
+  },
   componentDidMount: function() {
-    this.queryServer(this.props.task, this.state.pThreshold, function(data) {
-      this.setState({data: data});  
+    // Get the bonferonni correction.
+    var task = this.props.task;
+
+    this.withBonferonni(task, 0.05, function(p) {
+      p = p["alpha"];
+
+      this.queryServer(task, p, function(data) {
+        this.setState({data: data, pThreshold: p});
+      }.bind(this));
+
     }.bind(this));
+
   },
   changeThreshold: function() {
     var thresh = window.prompt(
-      "What should the new threshold be?", this.state.pThreshold
+      "What should the new threshold be (leave empty for Bonferonni)?",
+      this.state.pThreshold
     );
-    var newState = {pThreshold: parseFloat(thresh)};
-    this.queryServer(this.props.task, thresh, function(data) {
-      newState["data"] = data;
-      this.setState(newState);
-    }.bind(this));
+    var task = this.props.task;
+    var p = parseFloat(thresh);
+    if (p) {
+      var newState = {pThreshold: p};
+      this.queryServer(task, thresh, function(data) {
+        newState["data"] = data;
+        this.setState(newState);
+      }.bind(this));
+    }
+    else {
+      // Default to Bonferonni.
+      this.withBonferonni(task, 0.05, function(p) {
+        p = p["alpha"];
+        var newState = {pThreshold: p};
+
+        this.queryServer(task, p, function(data) {
+          newState["data"] = data;
+          this.setState(newState);
+        }.bind(this));
+
+      }.bind(this));
+
+    }
   },
   render: function() {
     var resultNodes = this.state.data.results.map(function(d, i) {
@@ -67,7 +106,7 @@ var GLMResultsTable = React.createClass({
        <p className="caption">{this.props.children}</p>
        <p>
          The current p-value threshold is <a role="button"
-          onClick={this.changeThreshold}>{this.state.pThreshold}</a>.
+          onClick={this.changeThreshold}>{d3.format(".3g")(this.state.pThreshold)}</a>.
        </p>
        <table>
           <thead>
