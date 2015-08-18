@@ -24,7 +24,8 @@ var GLMResultsTable = React.createClass({
   getInitialState: function() {
     return {
       data: {"results": []},
-      pThreshold: null
+      pThreshold: null,
+      humanThreshold: ""  // Human readable version of the threshold.
     };
   },
   queryServer: function(task, threshold, callback) {
@@ -42,6 +43,9 @@ var GLMResultsTable = React.createClass({
       success: function(data) { callback(data); }
     });
   },
+  guessFormat: function(p) {
+    return (p > 0.001) ? d3.format(".3f")(p): d3.format(".3e")(p);
+  },
   componentDidMount: function() {
     // Get the bonferonni correction.
     var task = this.props.task;
@@ -50,7 +54,11 @@ var GLMResultsTable = React.createClass({
       p = p["alpha"];
 
       this.queryServer(task, p, function(data) {
-        this.setState({data: data, pThreshold: p});
+        this.setState({
+          data: data,
+          pThreshold: p,
+          humanThreshold: "Bonferonni (" + this.guessFormat(p) + ")"
+        });
       }.bind(this));
 
     }.bind(this));
@@ -59,12 +67,15 @@ var GLMResultsTable = React.createClass({
   changeThreshold: function() {
     var thresh = window.prompt(
       "What should the new threshold be (leave empty for Bonferonni)?",
-      this.state.pThreshold
+      this.guessFormat(this.state.pThreshold).toString()
     );
     var task = this.props.task;
     var p = parseFloat(thresh);
     if (p) {
-      var newState = {pThreshold: p};
+      var newState = {
+          pThreshold: p,
+          humanThreshold: this.guessFormat(p).toString()
+      };
       this.queryServer(task, thresh, function(data) {
         newState["data"] = data;
         this.setState(newState);
@@ -74,7 +85,10 @@ var GLMResultsTable = React.createClass({
       // Default to Bonferonni.
       this.withBonferonni(task, 0.05, function(p) {
         p = p["alpha"];
-        var newState = {pThreshold: p};
+        var newState = {
+            pThreshold: p,
+            humanThreshold: "Bonferonni (" + this.guessFormat(p) + ")"
+        };
 
         this.queryServer(task, p, function(data) {
           newState["data"] = data;
@@ -106,7 +120,7 @@ var GLMResultsTable = React.createClass({
        <p className="caption">{this.props.children}</p>
        <p>
          The current p-value threshold is <a role="button"
-          onClick={this.changeThreshold}>{d3.format(".3g")(this.state.pThreshold)}</a>.
+          onClick={this.changeThreshold}>{this.state.humanThreshold}</a>.
        </p>
        <table>
           <thead>
