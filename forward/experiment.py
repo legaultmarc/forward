@@ -126,7 +126,7 @@ class Experiment(object):
 
         self.info.update({
             "name": self.name,
-            "engine_url": self.engine.url,
+            "engine_url": str(self.engine.url),
             "start_time": FORWARD_INIT_TIME,
             "build": self.build
         })

@@ -66,6 +66,25 @@
         <h3>Discrete variables</h3>
         <div id="discrete-variables-table"></div>
         <div id="variable-modal"></div>
+
+        <div id="related-exclusions">
+          <h3>Related outcomes</h3>
+          <p>For discrete outcomes, it is important to account for the possible
+          relationship between phenotypes. When assigning case-control status,
+          it is best to excludes samples that are affected with a correlated
+          and thus potentially functionally related phenotype from controls.
+          This additional quality control step helps reduce the probability of
+          including an latent case in the control group.</p>
+          <p>In this experiment, outcomes that had an absolute correlation
+          coefficient above <span class="fwdinfo phenotype_correlation_for_exclusion"></span> 
+          were considered to be related and the affected individuals were
+          discarded from the relevant analyses. A summary of the relevant 
+          exclusions is available in Table X.</p>
+
+          <div id="related-exclusions-table"></div>
+        </div>
+
+
       </div>
 
       <div id="results">

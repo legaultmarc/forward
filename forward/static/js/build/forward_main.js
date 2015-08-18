@@ -13,6 +13,36 @@ forward.withVariables = function(f) {
   });
 };
 
+forward.withExclusions = function(f) {
+  $.getJSON(window.location.pathname + "/exclusions.json", function(data) {
+    f(data);
+  });
+};
+
+/**
+ * Get metadata on the experiment and make it available to everyone.
+ **/
+forward.info = (function() {
+  $.getJSON(window.location.pathname + "/info.json", function(data) {
+    forward.info = data;
+
+    // Also fill all the relevant dom placeholders.
+    $(".fwdinfo").each(function(i, e) {
+
+      classList = e.className.split(" ");
+      for (var i = 0; i < classList.length; i++) {
+        var key = classList[i];
+        if (data[key]) {
+          e.innerHTML = data[key];
+          return;
+        }
+      }
+
+    });
+
+  });
+})();
+
 
 /**
  * Create a figure object.

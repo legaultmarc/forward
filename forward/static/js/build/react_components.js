@@ -55,6 +55,54 @@ var VariantTable = React.createClass({displayName: "VariantTable",
   }
 });
 
+var ExclusionRow = React.createClass({displayName: "ExclusionRow",
+  render: function() {
+    var relatedList = this.props.related.join(", ");
+    return (
+      React.createElement("tr", null, React.createElement("td", null, this.props.phenotype), React.createElement("td", null, relatedList), 
+          React.createElement("td", null, this.props.n_excluded))
+    );
+  }
+});
+
+var ExclusionTable = React.createClass({displayName: "ExclusionTable",
+  getInitialState: function() {
+    return {exclusions: [], threshold: null};
+  },
+  componentDidMount: function() {
+    forward.withExclusions(function(data) {
+      this.setState({exclusions: data});
+    }.bind(this));
+  },
+  render: function() {
+    var rows = this.state.exclusions.map(function(o, idx) {
+      return (
+        React.createElement(ExclusionRow, {key: idx, phenotype: o.phenotype, related: o.related, 
+         n_excluded: o.n_excluded})
+      );
+    });
+    return (
+      React.createElement("div", null, 
+        React.createElement("p", {className: "caption"}, this.props.children), 
+        React.createElement("table", null, 
+          React.createElement("thead", null, 
+            React.createElement("tr", null, 
+              React.createElement("th", null, "Phenotype"), 
+              React.createElement("th", null, "Related phenotypes"), 
+              React.createElement("th", null, 
+                "n excluded (threshold: ", React.createElement("span", {className: "fwdinfo phenotype_correlation_for_exclusion"}), ")"
+              )
+            )
+          ), 
+          React.createElement("tbody", null, 
+            rows
+          )
+        )
+      )
+    );
+  }
+});
+
 // Variables Table
 var ContinuousVariableRow = React.createClass({displayName: "ContinuousVariableRow",
   buildModal: function() {

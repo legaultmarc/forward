@@ -38,6 +38,7 @@ from . import genotype, experiment
 from . import FORWARD_REPORT_ROOT, STATIC_ROOT, SQLAlchemySession
 from .phenotype.variables import Variable
 from .phenotype.db import apply_transformation
+from .utils import format_time_delta
 
 
 www_backend = None
@@ -133,10 +134,11 @@ class Backend(object):
         )
         for e in exclusions:
             if counts.get(e.phen1) is None:
-                counts["exclusions"][e.phen1] = {"related": [], "excluded": 0}
+                counts["exclusions"][e.phen1] = {"related": [],
+                                                 "n_excluded": 0}
 
             counts["exclusions"][e.phen1]["related"].append(e.phen2)
-            counts["exclusions"][e.phen1]["excluded"] += e.n_excluded
+            counts["exclusions"][e.phen1]["n_excluded"] += e.n_excluded
 
         return counts
 
@@ -229,6 +231,13 @@ def empty_report():
     return render_template("default.html", STATIC_ROOT=STATIC_ROOT)
 
 
+@app.route(FORWARD_REPORT_ROOT + "/info.json")
+def api_experiment_info():
+    info = www_backend.info.copy()
+    info["start_time"] = info["start_time"].strftime("%Y-%m-%d %H:%m:%S")
+    info["walltime"] = format_time_delta(info["walltime"])
+    return json.dumps(info)
+
 @app.route(FORWARD_REPORT_ROOT + "/variants.json")
 def api_get_variants():
     return json.dumps(www_backend.get_variants())
@@ -241,7 +250,15 @@ def api_get_variables():
 
 @app.route(FORWARD_REPORT_ROOT + "/exclusions.json")
 def api_get_related_phenotypes_exclusions():
-    return json.dumps(www_backend.get_related_phenotypes_exclusions())
+    # Parse into a list (easier to use from ReactJS).
+    li = []
+    exclusions = www_backend.get_related_phenotypes_exclusions()["exclusions"]
+    for k in exclusions:
+        d = exclusions[k]
+        d.update({"phenotype": k})
+        li.append(d)
+
+    return json.dumps(li)
 
 
 @app.route(FORWARD_REPORT_ROOT + "/variables/data.json")

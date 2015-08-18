@@ -55,6 +55,54 @@ var VariantTable = React.createClass({
   }
 });
 
+var ExclusionRow = React.createClass({
+  render: function() {
+    var relatedList = this.props.related.join(", ");
+    return (
+      <tr><td>{this.props.phenotype}</td><td>{relatedList}</td>
+          <td>{this.props.n_excluded}</td></tr>
+    );
+  }
+});
+
+var ExclusionTable = React.createClass({
+  getInitialState: function() {
+    return {exclusions: [], threshold: null};
+  },
+  componentDidMount: function() {
+    forward.withExclusions(function(data) {
+      this.setState({exclusions: data});
+    }.bind(this));
+  },
+  render: function() {
+    var rows = this.state.exclusions.map(function(o, idx) {
+      return (
+        <ExclusionRow key={idx} phenotype={o.phenotype} related={o.related}
+         n_excluded={o.n_excluded} />
+      );
+    });
+    return (
+      <div>
+        <p className="caption">{this.props.children}</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Phenotype</th>
+              <th>Related phenotypes</th>
+              <th>
+                n excluded (threshold: <span className="fwdinfo phenotype_correlation_for_exclusion"></span>)
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+});
+
 // Variables Table
 var ContinuousVariableRow = React.createClass({
   buildModal: function() {

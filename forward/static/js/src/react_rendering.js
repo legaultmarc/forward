@@ -24,6 +24,17 @@ $(document).ready(function() {
     document.getElementById("continuous-variables-table")
   );
 
+  // Related phenotypes exclusions.
+  React.render(
+    <ExclusionTable>
+      <strong>Table { forward.Table("related-exclusions").number }. </strong>
+      Summary of the sample exclusions (from controls) based on phenotype
+      correlation.
+    </ExclusionTable>,
+    document.getElementById("related-exclusions-table")
+  );
+
+  // Correlation plot.
   (function () {
     var correlationPlot = forward.Figure("correlationPlot");
     forward.phenotypeCorrelationPlot({
