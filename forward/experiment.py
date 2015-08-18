@@ -21,7 +21,7 @@ import os
 import shutil
 import datetime
 import logging
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 import numpy as np
 import sqlalchemy

@@ -5,6 +5,7 @@
 # http://creativecommons.org/licenses/by-nc/4.0/ or send a letter to Creative
 # Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
+import os
 import logging
 import datetime
 from sqlalchemy.ext.declarative import declarative_base
@@ -24,8 +25,8 @@ SQLAlchemySession = sessionmaker()
 
 FORWARD_INIT_TIME = datetime.datetime.now()
 
-FORWARD_REPORT_ROOT = "/forward"
-STATIC_ROOT = "/static"
+FORWARD_REPORT_ROOT = os.environ.get("FORWARD_REPORT_ROOT", "/forward")
+STATIC_ROOT = os.environ.get("FORWARD_STATIC_ROOT", "/static")
 
 logging.basicConfig()
 

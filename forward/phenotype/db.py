@@ -174,9 +174,9 @@ class PandasPhenotypeDatabase(AbstractPhenotypeDatabase):
         mat = self.get_correlation_matrix(names)
         for var in variables:
             if var.variable_type != "discrete":
-                return
+                continue
             if var.is_covariate:
-                return
+                continue
 
             y = self.get_phenotype_vector(var)
 
