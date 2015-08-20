@@ -17,7 +17,7 @@ $(document).ready(function() {
   );
 
   React.render(
-    React.createElement(VariableTable, {type: "continuous"}, 
+    React.createElement(ContinuousVariableTable, null, 
       React.createElement("strong", null, "Table ",  forward.Table("continuous-variables").number, ". "), 
       "Description of the continous variables analyzed in this experiment."   
     ),

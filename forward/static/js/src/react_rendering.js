@@ -17,10 +17,10 @@ $(document).ready(function() {
   );
 
   React.render(
-    <VariableTable type="continuous">
+    <ContinuousVariableTable>
       <strong>Table { forward.Table("continuous-variables").number }. </strong>
       Description of the continous variables analyzed in this experiment.   
-    </VariableTable>,
+    </ContinuousVariableTable>,
     document.getElementById("continuous-variables-table")
   );
 

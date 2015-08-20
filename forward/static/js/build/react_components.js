@@ -1,60 +1,3 @@
-// Variant Table
-var VariantRow = React.createClass({displayName: "VariantRow",
-  render: function() {
-    return (
-      React.createElement("tr", null, React.createElement("td", null, React.createElement("a", {name: this.props.name}), this.props.name), 
-          React.createElement("td", null, this.props.chrom), 
-          React.createElement("td", null, this.props.pos), React.createElement("td", null, this.props.minor), 
-          React.createElement("td", null, this.props.major), React.createElement("td", null, Math.round(this.props.mac)), 
-          React.createElement("td", null, (0.5 * this.props.mac / this.props.n_non_missing).toFixed(3)), 
-          React.createElement("td", null, this.props.n_missing), React.createElement("td", null, this.props.n_non_missing))
-    );
-  }
-});
-
-var VariantTable = React.createClass({displayName: "VariantTable",
-  getInitialState: function() {
-    return {data: []};
-  },
-  componentDidMount: function() {
-    forward.withVariants(function(variants) {
-      this.setState({data: variants})
-    }.bind(this));
-  },
-  render: function() {
-    var variantNodes = this.state.data.map(function(v, idx) {
-      return (
-        React.createElement(VariantRow, {key: idx, name: v.name, chrom: v.chrom, pos: v.pos, 
-         mac: v.mac, minor: v.minor, major: v.major, n_missing: v.n_missing, 
-         n_non_missing: v.n_non_missing})
-      );
-    });
-    return (
-     React.createElement("div", null, 
-       React.createElement("p", {className: "caption"}, this.props.children), 
-       React.createElement("table", null, 
-          React.createElement("thead", null, 
-            React.createElement("tr", null, 
-              React.createElement("th", null, "name"), 
-              React.createElement("th", null, "chrom"), 
-              React.createElement("th", null, "pos"), 
-              React.createElement("th", null, "minor"), 
-              React.createElement("th", null, "major"), 
-              React.createElement("th", null, "mac"), 
-              React.createElement("th", null, "maf"), 
-              React.createElement("th", null, React.createElement("em", null, "n"), " missing"), 
-              React.createElement("th", null, React.createElement("em", null, "n"), " non missing")
-            )
-          ), 
-          React.createElement("tbody", null, 
-            variantNodes
-          )
-       )
-     )
-    );
-  }
-});
-
 var ExclusionRow = React.createClass({displayName: "ExclusionRow",
   render: function() {
     var relatedList = this.props.related.join(", ");
@@ -133,24 +76,12 @@ var ContinuousVariableRow = React.createClass({displayName: "ContinuousVariableR
   }
 });
 
-var DiscreteVariableRow = React.createClass({displayName: "DiscreteVariableRow",
-  render: function() {
-      return (
-        React.createElement("tr", null, 
-          React.createElement("td", null, this.props.name), React.createElement("td", null, this.props.ncontrols), 
-          React.createElement("td", null, this.props.ncases), React.createElement("td", null, this.props.nmissing), 
-          React.createElement("td", null, this.props.covariate)
-        )
-      );
-  }
-});
-
-var VariableTable = React.createClass({displayName: "VariableTable",
+var ContinuousVariableTable = React.createClass({displayName: "ContinuousVariableTable",
   getInitialState: function() {
     return {data: []};
   },
   componentDidMount: function() {
-    forward.withVariables(function(data) {
+    forward.withContinuousVariables(function(data) {
       this.setState({"data": data})
     }.bind(this));
   },
@@ -159,54 +90,11 @@ var VariableTable = React.createClass({displayName: "VariableTable",
     var data = this.state.data
     for (var i = 0; i < data.length; i++) {
       var v = data[i]
-      if (v.variable_type === this.props.type) {
-        if (v.variable_type === "discrete") {
-          nodes.push(
-            React.createElement(DiscreteVariableRow, {key: i, name: v.name, ncontrols: v.n_controls, 
-             nmissing: v.n_missing, ncases: v.n_cases, 
-             covariate: v.is_covariate ? "yes": "no"})
-          )
-        }
-        else if (v.variable_type === "continuous") {
-          nodes.push(
-            React.createElement(ContinuousVariableRow, {key: i, name: v.name, std: v.std, 
-             mean: v.mean, covariate: v.is_covariate ? "yes": "no", 
-             transformation: v.transformation, nmissing: v.n_missing})
-          )
-        }
-        else {
-          throw "ValueError: Unknown variable type " + v.variable_type;
-        }
-      }
-    }
-
-    var thead;
-    if (this.props.type === "discrete") {
-      thead = (
-        React.createElement("tr", null, 
-          React.createElement("th", null, "Name"), 
-          React.createElement("th", null, "n controls"), 
-          React.createElement("th", null, "n cases"), 
-          React.createElement("th", null, "n missing"), 
-          React.createElement("th", null, "covariate")
-        )
-      );
-    }
-    else if (this.props.type === "continuous") {
-      thead = (
-        React.createElement("tr", null, 
-          React.createElement("th", null, "Name"), 
-          React.createElement("th", null, "Mean"), 
-          React.createElement("th", null, "Std"), 
-          React.createElement("th", null, "n missing"), 
-          React.createElement("th", null, "transformation"), 
-          React.createElement("th", null, "covariate"), 
-          React.createElement("th", null, "plots")
-        )
-      );
-    }
-    else {
-      throw "ValueError: Invalid prop variable type " + this.props.type;
+      nodes.push(
+        React.createElement(ContinuousVariableRow, {key: i, name: v.name, std: v.std, 
+          mean: v.mean, covariate: v.is_covariate ? "yes": "no", 
+          transformation: v.transformation, nmissing: v.n_missing})
+      )
     }
 
     return (
@@ -214,7 +102,15 @@ var VariableTable = React.createClass({displayName: "VariableTable",
         React.createElement("p", {className: "caption"},  this.props.children), 
         React.createElement("table", null, 
           React.createElement("thead", null, 
-            thead
+            React.createElement("tr", null, 
+              React.createElement("th", null, "Name"), 
+              React.createElement("th", null, "Mean"), 
+              React.createElement("th", null, "Std"), 
+              React.createElement("th", null, "n missing"), 
+              React.createElement("th", null, "transformation"), 
+              React.createElement("th", null, "covariate"), 
+              React.createElement("th", null, "plots")
+            )
           ), 
           React.createElement("tbody", null, 
             nodes

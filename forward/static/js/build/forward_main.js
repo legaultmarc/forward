@@ -1,16 +1,10 @@
 forward = {};
 
-// TODO. We could use caching.
-forward.withVariants = function(f) {
-  $.getJSON(window.location.pathname + "/experiment/variants.json", function(data) {
-    f(data);
-  });
-};
-
-forward.withVariables = function(f) {
-  $.getJSON(window.location.pathname + "/experiment/variables.json", function(data) {
-    f(data);
-  });
+forward.withContinuousVariables = function(f) {
+  $.getJSON(
+    window.location.pathname + "/experiment/variables.json?type=continuous",
+    function(data) { f(data); }
+  );
 };
 
 forward.withExclusions = function(f) {
