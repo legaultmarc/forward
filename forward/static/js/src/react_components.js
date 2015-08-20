@@ -175,7 +175,7 @@ var VariableTable = React.createClass({
           )
         }
         else {
-          console.log("Unknown variable type " + v.variable_type);
+          throw "ValueError: Unknown variable type " + v.variable_type;
         }
       }
     }
@@ -206,7 +206,7 @@ var VariableTable = React.createClass({
       );
     }
     else {
-      console.log("Invalid prop variable type " + this.props.type);
+      throw "ValueError: Invalid prop variable type " + this.props.type;
     }
 
     return (
@@ -361,6 +361,90 @@ var Modal = React.createClass({
           {this.props.children}
         </div>
       </div>
+    );
+  }
+});
+
+// Generic components, refactor.
+
+/**
+ * Given a known action, calls this.setState with a new state that was loaded
+ * and parsed from the server.
+ **/
+var dataProviderInterface = function(action, argList) {
+  if (this === window) {
+    throw ("ValueError: The provider interface's 'this' variable should be " +
+           "bound to the React component.");
+  }
+
+  var data = {
+    columns: ["Col1", "Col2", "Col3"],
+    data: [["test1", 1, 3.14151], ["test3", -3, 1.4159]],
+  };
+
+  switch(action.toLowerCase()) {
+    case "init":
+      // Initial data.
+      this.setState(data);
+      break;
+
+    case "sort":
+      key = argList[0];
+      if (!key) {
+        throw "ValueError: 'sort' action needs a sort key."
+      }
+      // Get sorted list from the server and update.
+      data.data.sort(function(a, b) { console.log(a, b); return 1; });
+      this.setState({data: data.data})
+      break;
+  }
+};
+
+
+var GenericTable = React.createClass({
+  getInitialState: function() {
+    return {columns: [], data: []};
+  },
+  componentDidMount: function() {
+    (dataProviderInterface.bind(this))("init");
+  },
+  sort: function(col) {
+    (dataProviderInterface.bind(this))("sort", [col]);
+  },
+  render: function() {
+    var rows = this.state.data.map(function(rowData, idx) {
+      return (
+        <tr key={idx}>
+        {rowData.map(function(e, idx2) { return <td key={idx2}>{e}</td>; })}
+        </tr>
+      );
+    });
+
+    return (
+      <div>
+        <table>
+          <GenericTableHead columns={this.state.columns} onClick={this.sort} />
+          <tbody>
+            {rows}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+});
+
+var GenericTableHead = React.createClass({
+  render: function() {
+    var columns = this.props.columns.map(function(col, idx) {
+      var click = this.props.onClick.bind(null, col);
+      return <th key={idx} onClick={click}>{col}</th>;
+    }.bind(this));
+    return (
+      <thead>
+        <tr>
+          {columns}
+        </tr>
+      </thead>
     );
   }
 });

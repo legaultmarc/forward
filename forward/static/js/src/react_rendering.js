@@ -44,4 +44,7 @@ $(document).ready(function() {
     });
   })();
 
+  // Temp
+  React.render(<GenericTable />, document.getElementById("table-test"));
+
 });
