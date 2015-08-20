@@ -369,12 +369,13 @@ var Modal = React.createClass({displayName: "Modal",
 
 var GenericTable = React.createClass({displayName: "GenericTable",
   getInitialState: function() {
-    return {columns: [], serverColumns: [], data: []};
+    return {columns: [], serverColumns: [], data: [], loading: true};
   },
   componentDidMount: function() {
     (forward.discreteVariablesProvider.bind(this))("init");
   },
   sort: function(col, ascending) {
+    this.setState({loading: true});
     (forward.discreteVariablesProvider.bind(this))("sort", [col, ascending]);
   },
   render: function() {
@@ -385,6 +386,16 @@ var GenericTable = React.createClass({displayName: "GenericTable",
         )
       );
     });
+
+    if (this.state.loading || (rows.length === 0)) {
+      var className = this.state.loading? "table-loading": "table-no-results";
+      // Display a "no results" message.
+      rows = (
+        React.createElement("tr", {className: className}, React.createElement("td", {colSpan: this.state.columns.length}, 
+          "No results"
+        ))
+      );
+    }
 
     return (
       React.createElement("div", null, 
@@ -427,15 +438,23 @@ var GenericTableHead = React.createClass({displayName: "GenericTableHead",
       var click = this.sort.bind(this, idx);
 
       var arrow;
-      arrow = this.state.sortAscending? "\u2193": "\u2191";
+      arrow = this.state.sortAscending? "\u25BC": "\u25B2";
       if (this.state.sortAscending === null) {
         arrow = "";
       }
 
       if (this.state.sortCol === idx) {
-        return React.createElement("th", {key: idx, onClick: click}, col + " " + arrow);
+        return (
+          React.createElement("th", {key: idx, onClick: click}, 
+            col, " ", React.createElement("span", {className: "caret"}, arrow)
+          )
+        );
       }
-      return React.createElement("th", {key: idx, onClick: click}, col);
+      return (
+        React.createElement("th", {key: idx, onClick: click}, 
+          col, " ", React.createElement("span", {className: "caret"})
+        )
+      );
 
     }.bind(this));
     return (

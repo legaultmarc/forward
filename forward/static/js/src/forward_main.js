@@ -56,7 +56,8 @@ forward.discreteVariablesProvider = function(action, argList) {
                 d.is_covariate? "yes": "no"];
       });
       this.setState(
-        {serverColumns: serverColumns,columns: columns, data: data}
+        {loading: false, serverColumns: serverColumns, columns: columns,
+         data: data}
       );
     }.bind(this),
     error: function() {
@@ -69,6 +70,7 @@ forward.discreteVariablesProvider = function(action, argList) {
 
 /**
  * Get metadata on the experiment and make it available to everyone.
+ * FIXME this is dependant on the DOM loading. We need to wait for it.
  **/
 forward.info = (function() {
   $.getJSON(window.location.pathname + "/experiment/info.json", function(data) {

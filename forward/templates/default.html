@@ -35,6 +35,14 @@
          TODO At some point, it would be better to load them dynamically. //-->
     <script type="text/javascript" src="{{ STATIC_ROOT }}/js/build/section_glm.js"></script>
 
+  <style type="text/css">
+    tbody tr.table-loading td {
+      padding: 10px 0;
+      background: url("{{ STATIC_ROOT }}/img/loading.gif") no-repeat center;
+      text-indent: -999999px;
+    }
+  </style>
+
   </head>
 
   <body>

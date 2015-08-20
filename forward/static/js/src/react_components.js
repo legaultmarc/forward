@@ -369,12 +369,13 @@ var Modal = React.createClass({
 
 var GenericTable = React.createClass({
   getInitialState: function() {
-    return {columns: [], serverColumns: [], data: []};
+    return {columns: [], serverColumns: [], data: [], loading: true};
   },
   componentDidMount: function() {
     (forward.discreteVariablesProvider.bind(this))("init");
   },
   sort: function(col, ascending) {
+    this.setState({loading: true});
     (forward.discreteVariablesProvider.bind(this))("sort", [col, ascending]);
   },
   render: function() {
@@ -385,6 +386,16 @@ var GenericTable = React.createClass({
         </tr>
       );
     });
+
+    if (this.state.loading || (rows.length === 0)) {
+      var className = this.state.loading? "table-loading": "table-no-results";
+      // Display a "no results" message.
+      rows = (
+        <tr className={className}><td colSpan={this.state.columns.length}>
+          No results
+        </td></tr>
+      );
+    }
 
     return (
       <div>
@@ -427,15 +438,23 @@ var GenericTableHead = React.createClass({
       var click = this.sort.bind(this, idx);
 
       var arrow;
-      arrow = this.state.sortAscending? "\u2193": "\u2191";
+      arrow = this.state.sortAscending? "\u25BC": "\u25B2";
       if (this.state.sortAscending === null) {
         arrow = "";
       }
 
       if (this.state.sortCol === idx) {
-        return <th key={idx} onClick={click}>{col + " " + arrow}</th>;
+        return (
+          <th key={idx} onClick={click}>
+            {col} <span className="caret">{arrow}</span>
+          </th>
+        );
       }
-      return <th key={idx} onClick={click}>{col}</th>;
+      return (
+        <th key={idx} onClick={click}>
+          {col} <span className="caret"></span>
+        </th>
+      );
 
     }.bind(this));
     return (

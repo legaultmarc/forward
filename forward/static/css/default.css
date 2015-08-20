@@ -73,6 +73,12 @@ p.caption {
     margin: 0 auto;
 }
 
+.caret {
+    font-size: 9px;
+    display: inline-block;
+    width: 20px;
+}
+
 /* Bokeh tooltips */
 .bk-tooltip-custom {
     background-color: #eee !important;
@@ -194,6 +200,15 @@ td {
 
 tbody tr:hover {
     background-color: #ddd;
+}
+
+tbody tr.table-no-results {
+    text-align: center;
+    font-style: italic;
+}
+
+tbody tr.table-no-results:hover, tr.table-loading:hover {
+    background: none;
 }
 
 .bk-plot-wrapper table tr:hover {
