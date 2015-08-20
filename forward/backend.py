@@ -79,9 +79,18 @@ class Backend(object):
         filename = os.path.join(experiment_name, "phen_correlation_matrix.npy")
         self.correlation_matrix = np.load(filename)
 
-    def get_variants(self):
+    def get_variants(self, add_maf=False):
         variants = self.session.query(genotype.Variant).all()
-        return [variant.to_json() for variant in variants]
+        if not add_maf:
+            return [v.to_json() for v in variants]
+
+        response = []
+        for v in variants:
+            d = v.to_json()
+            d["maf"] = v.maf
+            response.append(d)
+
+        return response
 
     def get_variables(self, var_type=None, order_by=None, ascending=True):
         if var_type is None:
@@ -286,7 +295,14 @@ def api_experiment_info():
 
 @app.route(FORWARD_REPORT_ROOT + "/experiment/variants.json")
 def api_get_variants():
-    return json.dumps(www_backend.get_variants())
+    order_by = request.args.get("order_by", None)
+    ascending = parse_bool(request.args.get("ascending", "true"))
+
+    li = www_backend.get_variants(add_maf=True)
+    if order_by is not None:
+        li = sorted(li, key=lambda x: x[order_by], reverse=(not ascending))
+
+    return json.dumps(li)
 
 
 @app.route(FORWARD_REPORT_ROOT + "/experiment/variables.json")
@@ -303,6 +319,9 @@ def api_get_variables():
 
 @app.route(FORWARD_REPORT_ROOT + "/experiment/exclusions.json")
 def api_get_related_phenotypes_exclusions():
+    order_by = request.args.get("order_by", None)
+    ascending = parse_bool(request.args.get("ascending", "true"))
+
     # Parse into a list (easier to use from ReactJS).
     li = []
     exclusions = www_backend.get_related_phenotypes_exclusions()["exclusions"]
@@ -310,6 +329,15 @@ def api_get_related_phenotypes_exclusions():
         d = exclusions[k]
         d.update({"phenotype": k})
         li.append(d)
+
+    if order_by is not None:
+        if order_by == "related":
+            def key(x):
+                ",".join(x["related"])
+        else:
+            key = lambda x: x[order_by]
+
+        li = sorted(li, key=key, reverse=(not ascending))
 
     return json.dumps(li)
 

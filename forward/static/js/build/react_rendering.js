@@ -1,7 +1,7 @@
 $(document).ready(function() {
 
   React.render(
-    React.createElement(VariantTable, null, 
+    React.createElement(GenericTable, {provider: forward.variantProvider}, 
       React.createElement("strong", null, "Table ",  forward.Table("variant").number, ". "), 
       "information on the analyzed variants."
     ),
@@ -9,7 +9,7 @@ $(document).ready(function() {
   );
 
   React.render(
-    React.createElement(VariableTable, {type: "discrete"}, 
+    React.createElement(GenericTable, {provider: forward.discreteVariablesProvider}, 
       React.createElement("strong", null, "Table ",  forward.Table("discrete-variables").number, ". "), 
       "Description of the discrete variables analyzed in this experiment."
     ),
@@ -43,8 +43,5 @@ $(document).ready(function() {
       "height": 500
     });
   })();
-
-  // Temp
-  React.render(React.createElement(GenericTable, null), document.getElementById("table-test"));
 
 });

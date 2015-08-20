@@ -1,18 +1,18 @@
 $(document).ready(function() {
 
   React.render(
-    <VariantTable>
+    <GenericTable provider={forward.variantProvider}>
       <strong>Table { forward.Table("variant").number }. </strong>
       information on the analyzed variants.
-    </VariantTable>,
+    </GenericTable>,
     document.getElementById("variant-table")
   );
 
   React.render(
-    <VariableTable type="discrete">
+    <GenericTable provider={forward.discreteVariablesProvider}>
       <strong>Table { forward.Table("discrete-variables").number }. </strong>
       Description of the discrete variables analyzed in this experiment.
-    </VariableTable>,
+    </GenericTable>,
     document.getElementById("discrete-variables-table")
   );
 
@@ -43,8 +43,5 @@ $(document).ready(function() {
       "height": 500
     });
   })();
-
-  // Temp
-  React.render(<GenericTable />, document.getElementById("table-test"));
 
 });

@@ -365,24 +365,30 @@ var Modal = React.createClass({displayName: "Modal",
   }
 });
 
-// Generic components, refactor.
-
+// Generic table
 var GenericTable = React.createClass({displayName: "GenericTable",
   getInitialState: function() {
     return {columns: [], serverColumns: [], data: [], loading: true};
   },
   componentDidMount: function() {
-    (forward.discreteVariablesProvider.bind(this))("init");
+    (this.props.provider.bind(this))("init");
   },
   sort: function(col, ascending) {
     this.setState({loading: true});
-    (forward.discreteVariablesProvider.bind(this))("sort", [col, ascending]);
+    (this.props.provider.bind(this))("sort", [col, ascending]);
   },
   render: function() {
     var rows = this.state.data.map(function(rowData, idx) {
       return (
         React.createElement("tr", {key: idx}, 
-        rowData.map(function(e, idx2) { return React.createElement("td", {key: idx2}, e); })
+        
+          rowData.map(function(e, idx2) {
+            if (typeof e === "boolean") {
+              e = e? "yes": "no";
+            }
+            return React.createElement("td", {key: idx2}, e); 
+          })
+        
         )
       );
     });
@@ -399,6 +405,7 @@ var GenericTable = React.createClass({displayName: "GenericTable",
 
     return (
       React.createElement("div", null, 
+        this.props.children, 
         React.createElement("table", null, 
           React.createElement(GenericTableHead, {columns: this.state.columns, 
            serverColumns: this.state.serverColumns, dataSort: this.sort}), 

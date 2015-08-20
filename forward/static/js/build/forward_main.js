@@ -21,52 +21,80 @@ forward.withExclusions = function(f) {
 
 /**
  * Data providers for dynamic tables.
+ *
+ * The data providers respond to actions that are triggered in response to
+ * user interaction. They are responsible for updating the state of the table
+ * after querying the server.
+ *
  **/
-forward.discreteVariablesProvider = function(action, argList) {
-  if (this === window) {
-    throw ("ValueError: The provider interface's 'this' variable should be " +
-           "bound to the React component.");
-  }
-
-  var requestData;
-  switch(action.toLowerCase()) {
-    case "init":
-      // Load initial data.
-      requestData = {"type": "discrete"};
-      break;
-
-    case "sort":
-      column = argList[0];
-      ascending = argList[1];
-      requestData = {"type": "discrete", "order_by": column,
-                     "ascending": ascending};
-  }
-
-  $.ajax({
-    url: window.location.pathname + "/experiment/variables.json",
-    dataType: "json",
-    data: requestData,
-    success: function(data) {
-      var serverColumns = ["name", "n_controls", "n_cases", "n_missing",
-                           "is_covariate"];
-      var columns = ["Name", "n controls", "n cases", "n missing",
-                      "covariate"];
-      data = data.map(function(d) {
-        return [d.name, d.n_controls, d.n_cases, d.n_missing,
-                d.is_covariate? "yes": "no"];
-      });
-      this.setState(
-        {loading: false, serverColumns: serverColumns, columns: columns,
-         data: data}
-      );
-    }.bind(this),
-    error: function() {
-      throw ("AjaxError: The request to get discrete variables " +
-              "information failed.");
+forward._genericProviderFactory = function(config) {
+  return function(action, argList) {
+    if (this === window) {
+      throw ("ValueError: The provider interface's 'this' variable should be " +
+            "bound to the React component.");
     }
-  });
+
+    var url = config.url;
+    var serverColumns = config.serverColumns;
+    var columns = config.columns;
+    var formatters = config.formatters || {};
+    var getParams = config.getParams || {};
+
+    var requestData;
+    switch(action.toLowerCase()) {
+      case "init":
+        requestData = getParams;
+        break;
+
+      case "sort":
+        column = argList[0];
+        ascending = argList[1];
+        requestData = $.extend(getParams, {"order_by": column,
+                                           "ascending": ascending});
+    }
+
+    $.ajax({
+      url: url,
+      dataType: "json",
+      data: requestData,
+      success: function(data) {
+        data = data.map(function(d) {
+          return serverColumns.map(function(k) {
+            if (formatters[k]) {
+              return formatters[k](d[k]);
+            }
+            return d[k];
+          })
+        });
+        this.setState(
+          {loading: false, serverColumns: serverColumns, columns: columns,
+          data: data}
+        );
+      }.bind(this),
+      error: function() {
+        throw ("AjaxError: The request to get discrete variables " +
+                "information failed.");
+      }
+    });
+  };
 
 };
+
+forward.discreteVariablesProvider = forward._genericProviderFactory({
+  url: window.location.pathname + "/experiment/variables.json",
+  serverColumns: ["name", "n_controls", "n_cases", "n_missing", "is_covariate"],
+  columns: ["Name", "n controls", "n cases", "n missing", "Covariate"],
+  getParams: {"type": "discrete"}
+});
+
+forward.variantProvider = forward._genericProviderFactory({
+  url: window.location.pathname + "/experiment/variants.json",
+  serverColumns: ["name", "chrom", "pos", "minor", "major", "mac", "maf",
+                  "n_missing", "n_non_missing"],
+  columns: ["Name", "Chrom", "Pos", "Minor", "Major", "MAC", "MAF",
+            "n missing", "n non missing"],
+  formatters: {"maf": d3.format(".3f"), "mac": d3.format(".2f")}
+});
 
 /**
  * Get metadata on the experiment and make it available to everyone.

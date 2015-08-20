@@ -365,24 +365,30 @@ var Modal = React.createClass({
   }
 });
 
-// Generic components, refactor.
-
+// Generic table
 var GenericTable = React.createClass({
   getInitialState: function() {
     return {columns: [], serverColumns: [], data: [], loading: true};
   },
   componentDidMount: function() {
-    (forward.discreteVariablesProvider.bind(this))("init");
+    (this.props.provider.bind(this))("init");
   },
   sort: function(col, ascending) {
     this.setState({loading: true});
-    (forward.discreteVariablesProvider.bind(this))("sort", [col, ascending]);
+    (this.props.provider.bind(this))("sort", [col, ascending]);
   },
   render: function() {
     var rows = this.state.data.map(function(rowData, idx) {
       return (
         <tr key={idx}>
-        {rowData.map(function(e, idx2) { return <td key={idx2}>{e}</td>; })}
+        {
+          rowData.map(function(e, idx2) {
+            if (typeof e === "boolean") {
+              e = e? "yes": "no";
+            }
+            return <td key={idx2}>{e}</td>; 
+          })
+        }
         </tr>
       );
     });
@@ -399,6 +405,7 @@ var GenericTable = React.createClass({
 
     return (
       <div>
+        {this.props.children}
         <table>
           <GenericTableHead columns={this.state.columns}
            serverColumns={this.state.serverColumns} dataSort={this.sort} />
