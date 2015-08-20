@@ -1,6 +1,7 @@
 var manhattan = function(config, data, mountNodeId) {
 
   var plotComponents = {};
+  plotComponents.phenotypeScale = config.phenotypeScale;
 
   var translate = function(x, y) {
     return "translate(" + x + ", " + y + ")";
@@ -106,7 +107,6 @@ var manhattan = function(config, data, mountNodeId) {
  **/
 var bindControls = function(data, plotComponents, mountNodeId, effectLabel) {
   var sel = "#" + mountNodeId;
-  var phenotypeScale = d3.scale.category20();
 
   var _colorByPhen = function() {
     var points = d3.selectAll(sel + " .manhattan .point")
@@ -118,7 +118,7 @@ var bindControls = function(data, plotComponents, mountNodeId, effectLabel) {
     else {
       points.transition().duration(800)
         .attr("fill", function(data) {
-          return phenotypeScale(data.outcome);
+          return plotComponents.phenotypeScale(data.outcome);
         })
       points.classed({"colored": true})
     }

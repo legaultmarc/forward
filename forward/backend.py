@@ -132,9 +132,13 @@ class Backend(object):
         return corr_mat, names
 
     def get_related_phenotypes_exclusions(self):
-        exclusions = self.session.query(
-            experiment.RelatedPhenotypesExclusions
-        )
+        try:
+            exclusions = self.session.query(
+                experiment.RelatedPhenotypesExclusions
+            )
+        except Exception as e:
+            print type(e), e.__class__.__name__
+
         counts = {"exclusions": {}}
         counts["threshold"] = self.info.get(
             "phenotype_correlation_for_exclusion"

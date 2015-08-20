@@ -151,17 +151,18 @@ fwdGLM.renderResultsTable = function(nodeId, taskName, modelType) {
   );
 };
 
-fwdGLM.renderManhattan = function(nodeId, taskName, modelType) {
-  var config = {
+fwdGLM.renderManhattan = function(config) {
+  var plot_config = {
     width: 750,
     height: 340,
-    effectLabel: modelType == "logistic"? "OR": "Beta"
+    effectLabel: config.modelType == "logistic"? "OR": "Beta",
+    phenotypeScale: config.phenotypeScale
   };
 
   // Get data.
   $.ajax({
     url: window.location.pathname + "/tasks/results.json",
-    data: {"task": taskName, "pthresh": 1},
+    data: {"task": config.taskName, "pthresh": 1},
     success: function(data) {
       // Format data.
       data = data["results"].map(function(d) {
@@ -173,25 +174,26 @@ fwdGLM.renderManhattan = function(nodeId, taskName, modelType) {
           "position": d.variant.pos
         };
       });
-      manhattan(config, data, nodeId);
+      manhattan(plot_config, data, config.nodeId);
     }
   });
 
 };
 
-fwdGLM.renderQQPlot = function(nodeId, taskName) {
-  var config = {
+fwdGLM.renderQQPlot = function(config) {
+  var plot_config = {
     width: 600,
-    height: 400
+    height: 400,
+    phenotypeScale: config.phenotypeScale
   };
 
   // Get data.
   $.ajax({
     url: window.location.pathname + "/tasks/plots/qqpvalue.json",
     dataType: "json",
-    data: {"task": taskName},
+    data: {"task": config.taskName},
     success: function(data) {
-      createQQ(config, data, nodeId);
+      createQQ(plot_config, data, config.nodeId);
     },
     error: function() {
       console.log("Fail parsing request for qq plot of p values.");
@@ -201,12 +203,23 @@ fwdGLM.renderQQPlot = function(nodeId, taskName) {
 };
 
 fwdGLM.renderSection = function(taskName, modelType) {
+
+  // Create a phenotype colormap for this section.
+  var phenotypeScale = d3.scale.category20();
+
   // Results table.
   fwdGLM.renderResultsTable(taskName + "_results", taskName, modelType);
 
   // Manhattan plot.
-  fwdGLM.renderManhattan(taskName + "_manhattan", taskName, modelType);
+  var config = {
+    nodeId:  taskName + "_manhattan",
+    taskName: taskName,
+    modelType: modelType,
+    phenotypeScale: phenotypeScale
+  };
+  fwdGLM.renderManhattan(config);
 
   // QQ plot.
-  fwdGLM.renderQQPlot(taskName + "_qqplot", taskName, modelType);
+  config["nodeId"] = taskName + "_qqplot";
+  fwdGLM.renderQQPlot(config);
 };

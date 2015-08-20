@@ -37,6 +37,7 @@ var createQQ = function(config, data, mountNodeId) {
   svg.append("path").datum(data).attr("d", area)
     .attr("opacity", 0.08);
 
+  var color = d3.scale.category20();
   var scatter = svg.append("g");
   scatter.selectAll(".point").data(data).enter()
     .append("circle")
@@ -44,7 +45,9 @@ var createQQ = function(config, data, mountNodeId) {
     .attr("cx", function(d) { return xScale(d.expected); })
     .attr("cy", function(d) { return yScale(d.observed); })
     .attr("r", 1)
-    .attr("fill", "#555555")
+    .attr("fill", function(d) {
+      return config.phenotypeScale(d.phenotype);   
+    })
 
 };
 

@@ -17,6 +17,11 @@ body {
     box-shadow: 2px 2px 5px #ccc;
 }
 
+#github {
+    float: right;
+    margin: -20px -10px 0 0;
+}
+
 .section {
     margin-bottom: 70px;
 }
