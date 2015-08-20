@@ -367,49 +367,15 @@ var Modal = React.createClass({displayName: "Modal",
 
 // Generic components, refactor.
 
-/**
- * Given a known action, calls this.setState with a new state that was loaded
- * and parsed from the server.
- **/
-var dataProviderInterface = function(action, argList) {
-  if (this === window) {
-    throw ("ValueError: The provider interface's 'this' variable should be " +
-           "bound to the React component.");
-  }
-
-  var data = {
-    columns: ["Col1", "Col2", "Col3"],
-    data: [["test1", 1, 3.14151], ["test3", -3, 1.4159]],
-  };
-
-  switch(action.toLowerCase()) {
-    case "init":
-      // Initial data.
-      this.setState(data);
-      break;
-
-    case "sort":
-      key = argList[0];
-      if (!key) {
-        throw "ValueError: 'sort' action needs a sort key."
-      }
-      // Get sorted list from the server and update.
-      data.data.sort(function(a, b) { console.log(a, b); return 1; });
-      this.setState({data: data.data})
-      break;
-  }
-};
-
-
 var GenericTable = React.createClass({displayName: "GenericTable",
   getInitialState: function() {
-    return {columns: [], data: []};
+    return {columns: [], serverColumns: [], data: []};
   },
   componentDidMount: function() {
-    (dataProviderInterface.bind(this))("init");
+    (forward.discreteVariablesProvider.bind(this))("init");
   },
-  sort: function(col) {
-    (dataProviderInterface.bind(this))("sort", [col]);
+  sort: function(col, ascending) {
+    (forward.discreteVariablesProvider.bind(this))("sort", [col, ascending]);
   },
   render: function() {
     var rows = this.state.data.map(function(rowData, idx) {
@@ -423,7 +389,8 @@ var GenericTable = React.createClass({displayName: "GenericTable",
     return (
       React.createElement("div", null, 
         React.createElement("table", null, 
-          React.createElement(GenericTableHead, {columns: this.state.columns, onClick: this.sort}), 
+          React.createElement(GenericTableHead, {columns: this.state.columns, 
+           serverColumns: this.state.serverColumns, dataSort: this.sort}), 
           React.createElement("tbody", null, 
             rows
           )
@@ -434,10 +401,42 @@ var GenericTable = React.createClass({displayName: "GenericTable",
 });
 
 var GenericTableHead = React.createClass({displayName: "GenericTableHead",
+  getInitialState: function() {
+    return {sortCol: null, sortAscending: null};
+  },
+  sort: function(idx) {
+    var nextState = {sortCol: idx};
+    if (idx === this.state.sortCol) {
+      // Toggle the sort direction.
+      nextState.sortAscending = !(this.state.sortAscending);
+    }
+    else {
+      // Use ascending sort by default.
+      nextState.sortAscending = true;
+    }
+
+    // Call the parent sort.
+    this.props.dataSort(
+      this.props.serverColumns[nextState.sortCol],
+      nextState.sortAscending
+    );
+    this.setState(nextState);
+  },
   render: function() {
     var columns = this.props.columns.map(function(col, idx) {
-      var click = this.props.onClick.bind(null, col);
+      var click = this.sort.bind(this, idx);
+
+      var arrow;
+      arrow = this.state.sortAscending? "\u2193": "\u2191";
+      if (this.state.sortAscending === null) {
+        arrow = "";
+      }
+
+      if (this.state.sortCol === idx) {
+        return React.createElement("th", {key: idx, onClick: click}, col + " " + arrow);
+      }
       return React.createElement("th", {key: idx, onClick: click}, col);
+
     }.bind(this));
     return (
       React.createElement("thead", null, 

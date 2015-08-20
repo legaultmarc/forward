@@ -39,7 +39,7 @@ app = Flask(__name__)
 
 from . import genotype, experiment
 from . import FORWARD_REPORT_ROOT, STATIC_ROOT, SQLAlchemySession
-from .phenotype.variables import Variable
+from .phenotype.variables import Variable, DiscreteVariable, ContinuousVariable
 from .phenotype.db import apply_transformation
 from .utils import format_time_delta
 
@@ -83,9 +83,27 @@ class Backend(object):
         variants = self.session.query(genotype.Variant).all()
         return [variant.to_json() for variant in variants]
 
-    def get_variables(self):
-        variables = self.session.query(Variable).all()
-        return [variable.to_json() for variable in variables]
+    def get_variables(self, var_type=None, order_by=None, ascending=True):
+        if var_type is None:
+            variable_class = Variable
+        elif var_type == "discrete":
+            variable_class = DiscreteVariable
+        elif var_type == "continuous":
+            variable_class = ContinuousVariable
+        else:
+            raise ValueError("Unknown variable type '{}'.".format(var_type))
+
+        variables = self.session.query(variable_class)
+
+        if order_by is not None:
+            key = getattr(variable_class, order_by)
+            if not ascending:
+                key = sqlalchemy.desc(key)
+
+            variables = variables.order_by(key)
+
+        return [variable.to_json() for variable in variables.all()]
+
 
     def get_outcome_vector(self, variable, transformation=None, nan=True):
         try:
@@ -132,12 +150,9 @@ class Backend(object):
         return corr_mat, names
 
     def get_related_phenotypes_exclusions(self):
-        try:
-            exclusions = self.session.query(
-                experiment.RelatedPhenotypesExclusions
-            )
-        except Exception as e:
-            print type(e), e.__class__.__name__
+        exclusions = self.session.query(
+            experiment.RelatedPhenotypesExclusions
+        )
 
         counts = {"exclusions": {}}
         counts["threshold"] = self.info.get(
@@ -276,7 +291,14 @@ def api_get_variants():
 
 @app.route(FORWARD_REPORT_ROOT + "/experiment/variables.json")
 def api_get_variables():
-    return json.dumps(www_backend.get_variables())
+    var_type = request.args.get("type", None)
+    order_by = request.args.get("order_by", None)
+    ascending = parse_bool(request.args.get("ascending", "true"))
+
+    return json.dumps(
+        www_backend.get_variables(var_type=var_type, order_by=order_by,
+                                  ascending=ascending)
+    )
 
 
 @app.route(FORWARD_REPORT_ROOT + "/experiment/exclusions.json")
@@ -469,3 +491,14 @@ def nan_to_none(li):
         if np.isnan(val):
             li[i] = None
     return li
+
+
+def parse_bool(b):
+    b = b.lower()
+    if b == "true":
+        b = True
+    elif b == "false" or b == "":
+        b = False
+    else:
+        raise ValueError("Can't parse bool from '{}'.".format(b))
+    return b

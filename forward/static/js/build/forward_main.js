@@ -20,6 +20,54 @@ forward.withExclusions = function(f) {
 };
 
 /**
+ * Data providers for dynamic tables.
+ **/
+forward.discreteVariablesProvider = function(action, argList) {
+  if (this === window) {
+    throw ("ValueError: The provider interface's 'this' variable should be " +
+           "bound to the React component.");
+  }
+
+  var requestData;
+  switch(action.toLowerCase()) {
+    case "init":
+      // Load initial data.
+      requestData = {"type": "discrete"};
+      break;
+
+    case "sort":
+      column = argList[0];
+      ascending = argList[1];
+      requestData = {"type": "discrete", "order_by": column,
+                     "ascending": ascending};
+  }
+
+  $.ajax({
+    url: window.location.pathname + "/experiment/variables.json",
+    dataType: "json",
+    data: requestData,
+    success: function(data) {
+      var serverColumns = ["name", "n_controls", "n_cases", "n_missing",
+                           "is_covariate"];
+      var columns = ["Name", "n controls", "n cases", "n missing",
+                      "covariate"];
+      data = data.map(function(d) {
+        return [d.name, d.n_controls, d.n_cases, d.n_missing,
+                d.is_covariate? "yes": "no"];
+      });
+      this.setState(
+        {serverColumns: serverColumns,columns: columns, data: data}
+      );
+    }.bind(this),
+    error: function() {
+      throw ("AjaxError: The request to get discrete variables " +
+              "information failed.");
+    }
+  });
+
+};
+
+/**
  * Get metadata on the experiment and make it available to everyone.
  **/
 forward.info = (function() {
