@@ -333,7 +333,7 @@ def api_get_related_phenotypes_exclusions():
     if order_by is not None:
         if order_by == "related":
             def key(x):
-                ",".join(x["related"])
+                return ",".join(x["related"])
         else:
             key = lambda x: x[order_by]
 

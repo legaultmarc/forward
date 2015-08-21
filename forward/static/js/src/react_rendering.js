@@ -26,11 +26,11 @@ $(document).ready(function() {
 
   // Related phenotypes exclusions.
   React.render(
-    <ExclusionTable>
+    <GenericTable provider={forward.exclusionProvider}>
       <strong>Table { forward.Table("related-exclusions").number }. </strong>
       Summary of the sample exclusions (from controls) based on phenotype
       correlation.
-    </ExclusionTable>,
+    </GenericTable>,
     document.getElementById("related-exclusions-table")
   );
 

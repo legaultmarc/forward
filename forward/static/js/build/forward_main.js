@@ -7,12 +7,6 @@ forward.withContinuousVariables = function(f) {
   );
 };
 
-forward.withExclusions = function(f) {
-  $.getJSON(window.location.pathname + "/experiment/exclusions.json", function(data) {
-    f(data);
-  });
-};
-
 /**
  * Data providers for dynamic tables.
  *
@@ -29,9 +23,7 @@ forward._genericProviderFactory = function(config) {
     }
 
     var url = config.url;
-    var serverColumns = config.serverColumns;
-    var columns = config.columns;
-    var formatters = config.formatters || {};
+    var dataCallback = config.dataCallback;
     var getParams = config.getParams || {};
 
     var requestData;
@@ -51,20 +43,7 @@ forward._genericProviderFactory = function(config) {
       url: url,
       dataType: "json",
       data: requestData,
-      success: function(data) {
-        data = data.map(function(d) {
-          return serverColumns.map(function(k) {
-            if (formatters[k]) {
-              return formatters[k](d[k]);
-            }
-            return d[k];
-          })
-        });
-        this.setState(
-          {loading: false, serverColumns: serverColumns, columns: columns,
-          data: data}
-        );
-      }.bind(this),
+      success: dataCallback.bind(this),
       error: function() {
         throw ("AjaxError: The request to get discrete variables " +
                 "information failed.");
@@ -76,18 +55,72 @@ forward._genericProviderFactory = function(config) {
 
 forward.discreteVariablesProvider = forward._genericProviderFactory({
   url: window.location.pathname + "/experiment/variables.json",
-  serverColumns: ["name", "n_controls", "n_cases", "n_missing", "is_covariate"],
-  columns: ["Name", "n controls", "n cases", "n missing", "Covariate"],
-  getParams: {"type": "discrete"}
+  getParams: {"type": "discrete"},
+  dataCallback: function(data) {
+    var columns = ["Name", "n controls", "n cases", "n missing", "Covariate"];
+    var serverColumns = ["name", "n_controls", "n_cases", "n_missing",
+                         "is_covariate"];
+    data = data.map(function(d) {
+      return serverColumns.map(function(k) { return d[k]; });
+    });
+    this.setState(
+      {loading: false, serverColumns: serverColumns, columns: columns,
+       data: data}
+    );
+  }
 });
 
 forward.variantProvider = forward._genericProviderFactory({
   url: window.location.pathname + "/experiment/variants.json",
-  serverColumns: ["name", "chrom", "pos", "minor", "major", "mac", "maf",
-                  "n_missing", "n_non_missing"],
-  columns: ["Name", "Chrom", "Pos", "Minor", "Major", "MAC", "MAF",
-            "n missing", "n non missing"],
-  formatters: {"maf": d3.format(".3f"), "mac": d3.format(".2f")}
+  dataCallback: function(data) {
+    var columns = ["Name", "Chrom", "Pos", "Minor", "Major", "MAC", "MAF",
+                   "n missing", "n non missing"];
+
+    var serverColumns = ["name", "chrom", "pos", "minor", "major", "mac",
+                         "maf", "n_missing", "n_non_missing"];
+
+    data = data.map(function(d) {
+      return serverColumns.map(function(k) {
+        switch(k) {
+          case "maf":
+            return d3.format(".3f")(d[k]);
+          case "mac":
+            return d3.format(".2f")(d[k]);
+          default:
+            return d[k];
+        }
+      });
+    });
+    this.setState(
+      {loading: false, serverColumns: serverColumns, columns: columns,
+       data: data}
+    );
+  }
+});
+
+forward.exclusionProvider = forward._genericProviderFactory({
+  url: window.location.pathname + "/experiment/exclusions.json",
+  dataCallback: function(data) {
+    var threshold = forward.info.phenotype_correlation_for_exclusion;
+    var columns = ["Phenotype", "Related phenotypes",
+                   "n excluded (threshold: " + threshold + ")"];
+    var serverColumns = ["phenotype", "related", "n_excluded"];
+
+    data = data.map(function(d) {
+      return serverColumns.map(function(k) {
+        switch(k) {
+          case "related":
+            return d[k].join(", ");
+          default:
+            return d[k];
+        }
+      });
+    });
+    this.setState(
+      {loading: false, serverColumns: serverColumns, columns: columns,
+       data: data}
+    );
+  }
 });
 
 /**
