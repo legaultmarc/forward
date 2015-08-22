@@ -53,6 +53,17 @@ forward._genericProviderFactory = function(config) {
 
 };
 
+/**
+ * Format a p-value.
+ **/
+forward.formatPValue = function(p) {
+  if (Math.abs(p) < 0.001) {
+    // Use scientific notation.
+    return d3.format(".3e")(p);
+  }
+  return d3.format(".3f")(p);
+};
+
 forward.discreteVariablesProvider = forward._genericProviderFactory({
   url: window.location.pathname + "/experiment/variables.json",
   getParams: {"type": "discrete"},

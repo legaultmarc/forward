@@ -216,9 +216,16 @@ class Backend(object):
         return out
 
 
-    def get_results(self, task, filters=[]):
+    def get_results(self, task, filters=[], order_by=None, ascending=True):
         results = self.session.query(experiment.ExperimentResult)\
                     .filter(experiment.ExperimentResult.task_name.like(task))
+
+        if order_by is not None:
+            field = getattr(experiment.ExperimentResult, order_by)
+            if not ascending:
+                field = sqlalchemy.desc(field)
+
+            results = results.order_by(field)
 
         if filters:
             for f in filters:
@@ -413,6 +420,9 @@ def api_tasks():
 def api_task_results():
     task = request.args.get("task")
     p_thresh = request.args.get("pthresh", 0.05)
+    order_by = request.args.get("order_by", None)
+    ascending = parse_bool(request.args.get("ascending", "true"))
+
     if task is None:
         raise InvalidAPIUsage("A 'task' parameter is expected.")
 
@@ -421,7 +431,21 @@ def api_task_results():
         experiment.ExperimentResult.significance <= p_thresh,
     ]
 
-    return jsonify(results=www_backend.get_results(task, filters))
+    sort_by_variant = False
+    if order_by == "variant":
+        order_by = None
+        sort_by_variant = True
+
+    results = www_backend.get_results(task, filters, order_by, ascending)
+
+    if sort_by_variant:
+        results = sorted(
+            results,
+            key=lambda x: x["variant"]["name"],
+            reverse=(not ascending)
+        )
+
+    return jsonify(results=results)
 
 
 @app.route(FORWARD_REPORT_ROOT + "/tasks/plots/qqpvalue.json")

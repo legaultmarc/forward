@@ -4,151 +4,192 @@
 forward.fwdGLM = {};
 var fwdGLM = forward.fwdGLM;
 
-// Results Table
-var GLMResultRow = React.createClass({
-  render: function() {
-    return (
-      <tr>
-        <td>{this.props.variant}</td>
-        <td>{this.props.outcome}</td>
-        <td>{this.props.p}</td>
-        <td>
-          {this.props.effect} [{this.props.effectLow} - {this.props.effectHigh}]
-        </td>
-      </tr>
-    );
-  }
-});
+fwdGLM.resultsProviderFactory = function(task, taskType) {
 
-var GLMResultsTable = React.createClass({
-  getInitialState: function() {
-    return {
-      data: {"results": []},
-      pThreshold: null,
-      humanThreshold: ""  // Human readable version of the threshold.
-    };
-  },
-  queryServer: function(task, threshold, callback) {
+  if (!task) {
+    throw "A 'task' parameter is required.";
+  }
+  if (!taskType) {
+    throw "A 'taskType' parameter is required.";
+  }
+
+  var columns = ["Variant", "Outcome", "p-value *"];
+  var serverColumns = ["variant", "phenotype", "significance", "coefficient"];
+
+  if (taskType === "linear") {
+    columns.push("Beta (95% CI)");
+  }
+  else if (taskType === "logistic") {
+    columns.push("OR (95% CI)");
+  }
+
+  var threshold;
+  var isBonferonni;
+  var reactRef;
+
+  var provider = function(action, argList) {
+    if (threshold === undefined) {
+      throw "Initialize the threshold first using setThreshold().";
+    }
+
+    var requestData = {};
+
+    switch(action.toLowerCase()) {
+      case "init":
+        reactRef = this;
+        break;
+
+      case "update":
+        break;
+
+      case "sort":
+        column = argList[0];
+        ascending = argList[1];
+        requestData = $.extend(requestData, {"order_by": column,
+                                             "ascending": ascending});
+        break;
+    }
+
     $.ajax({
       url: window.location.pathname + "/tasks/results.json",
-      data: {"task": task, "pthresh": threshold},
-      success: function(data) { callback(data); }
-    });
-  },
-  withBonferonni: function(task, alpha, callback) {
-    $.ajax({
-      url: window.location.pathname + "/tasks/corrections/bonferonni.json",
-      dataType: "json",
-      data: {"task": task, "alpha": alpha},
-      success: function(data) { callback(data); }
-    });
-  },
-  guessFormat: function(p) {
-    return (p > 0.001) ? d3.format(".3f")(p): d3.format(".3e")(p);
-  },
-  componentDidMount: function() {
-    // Get the bonferonni correction.
-    var task = this.props.task;
+      data: $.extend(requestData, {"task": task, "pthresh": threshold}),
+      success: function(data) {
+        data = data.results;
 
-    this.withBonferonni(task, 0.05, function(p) {
-      p = p["alpha"];
+        data = data.map(function(datum) {
+          return serverColumns.map(function(k) {
+            var value = datum[k];
 
-      this.queryServer(task, p, function(data) {
-        this.setState({
-          data: data,
-          pThreshold: p,
-          humanThreshold: "Bonferonni (" + this.guessFormat(p) + ")"
+            // Format numbers.
+            switch (k) {
+              case "coefficient":
+                var effectMin = datum["confidence_interval_min"];
+                var effectMax = datum["confidence_interval_max"];
+                if (taskType === "logistic") {
+                  value = Math.exp(value);
+                  effectMin = Math.exp(effectMin);
+                  effectMax = Math.exp(effectMax);
+                }
+                value = d3.format(".3f")(value);
+                effectMin = d3.format(".3f")(effectMin);
+                effectMax = d3.format(".3f")(effectMax);
+                value = value + " [" + effectMin + " - " + effectMax + "]"; 
+                break;
+              case "significance":
+                value = forward.formatPValue(value);
+                break;
+              case "variant":
+                value = value.name;
+            }
+
+            return value;
+          });
         });
-      }.bind(this));
 
-    }.bind(this));
+        // Set state.
+        reactRef.setState({loading: false, serverColumns: serverColumns, 
+                           columns: columns, data: data});
+      }
+    });
+  } // Provider.
 
-  },
-  changeThreshold: function() {
-    var thresh = window.prompt(
-      "What should the new threshold be (leave empty for Bonferonni)?",
-      this.guessFormat(this.state.pThreshold).toString()
-    );
-    var task = this.props.task;
-    var p = parseFloat(thresh);
-    if (p) {
-      var newState = {
-          pThreshold: p,
-          humanThreshold: this.guessFormat(p).toString()
-      };
-      this.queryServer(task, thresh, function(data) {
-        newState["data"] = data;
-        this.setState(newState);
-      }.bind(this));
-    }
-    else {
-      // Default to Bonferonni.
-      this.withBonferonni(task, 0.05, function(p) {
-        p = p["alpha"];
-        var newState = {
-            pThreshold: p,
-            humanThreshold: "Bonferonni (" + this.guessFormat(p) + ")"
-        };
-
-        this.queryServer(task, p, function(data) {
-          newState["data"] = data;
-          this.setState(newState);
-        }.bind(this));
-
-      }.bind(this));
-
-    }
-  },
-  render: function() {
-    var resultNodes = this.state.data.results.map(function(d, i) {
-      var fmt = d3.format(".3f");
-      var effect;
-      if (this.props.modelType == "logistic") effect = Math.exp(d.coefficient);
-      else effect = d.coefficient;
-
-      return (
-        <GLMResultRow key={i} variant={d.variant.name}
-           outcome={d.phenotype} p={d3.format(".3e")(d.significance)}
-           effect={fmt(effect)}
-           effectLow={fmt(Math.exp(d.confidence_interval_min))}
-           effectHigh={fmt(Math.exp(d.confidence_interval_max))} />
-      );
-    }.bind(this));
-
-    return (
-      <div>
-       <p className="caption">{this.props.children}</p>
-       <p>
-         The current p-value threshold is <a role="button"
-          onClick={this.changeThreshold}>{this.state.humanThreshold}</a>.
-       </p>
-       <table>
-          <thead>
-            <tr>
-              <th>Variant</th>
-              <th>Outcome</th>
-              <th>p-value</th>
-              <th>{ this.props.modelType == "logistic"? "OR": "Beta" } (95% CI)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {resultNodes}
-          </tbody>
-       </table>
-     </div>
-
-    );
+  return {
+    "provider": provider,
+    "setThreshold": function(t) { threshold=t; },
+    "getThreshold": function() { return threshold; },
+    "isBonferonni": function(b) {
+      if (b === undefined) {
+        return isBonferonni;
+      } 
+      else {
+        isBonferonni = b;
+      }
+    },
   }
-});
+
+}
 
 fwdGLM.renderResultsTable = function(nodeId, taskName, modelType) {
-  React.render(
-    <GLMResultsTable task={taskName} modelType={modelType}>
-      <strong>Table.</strong> Results from the {modelType} regression analysis
-      of the described variables and outcomes.
-    </GLMResultsTable>,
-    document.getElementById(nodeId)
-  );
+  var provider = fwdGLM.resultsProviderFactory(taskName, modelType);
+  var bonferonni;
+
+  // Create another div for the controls (we can't use the same as the table
+  // because react will complain that we're messing with the DOM.
+  var root = document.getElementById(nodeId);
+  var reactTable = document.createElement("div");
+  root.appendChild(reactTable);
+
+  var controls = document.createElement("div");
+  root.appendChild(controls);
+
+  // Set the threshold to the bonferonni correction.
+  $.ajax({
+    url: window.location.pathname + "/tasks/corrections/bonferonni.json",
+    dataType: "json",
+    data: {"task": taskName, "alpha": 0.05},
+    success: function(data) {
+      bonferonni = data.alpha;
+      provider.setThreshold(bonferonni);
+      provider.isBonferonni(true);
+
+      React.render(
+        <GenericTable provider={provider.provider}>
+          <strong>Table.</strong> Results from the {modelType} regression
+          analysis of the described variables and outcomes.
+        </GenericTable>,
+        reactTable
+      );
+
+      add_controls(controls);
+
+    }
+  });
+
+  var add_controls = function(node) {
+    var threshold = forward.formatPValue(provider.getThreshold());
+    if (provider.isBonferonni()) {
+      threshold += " (Bonferonni &alpha;=0.05)";
+    }
+
+    var description = document.createElement("p");
+    var thresholdNode = document.createElement("span");
+    thresholdNode.innerHTML = threshold + " ";
+    description.innerHTML = "<sup>*</sup> <em>p</em>-values with &alpha; &leq; ";
+    description.appendChild(thresholdNode);
+    node.appendChild(description);
+
+    var button = document.createElement("a");
+    button.className = "button";
+    button.innerHTML = "Change threshold";
+    description.appendChild(button);
+
+    $(button).click(function() {
+      var thresh = window.prompt(
+        "What should the new threshold be (leave empty for Bonferonni)?",
+        forward.formatPValue(provider.getThreshold())
+      );
+
+      if (thresh == "") {
+        // Set bonferonni.
+        provider.setThreshold(bonferonni);
+        provider.isBonferonni(true);
+        provider.provider("update");
+        thresholdNode.innerHTML = bonferonni + " (Bonferonni &alpha;=0.05) ";
+      }
+      else {
+        thresh = parseFloat(thresh);
+        // Setting the numeric threshold.
+        if (thresh) {
+          provider.setThreshold(thresh);
+          provider.isBonferonni(false);
+          provider.provider("update");
+          thresholdNode.innerHTML = thresh + " ";
+        }
+      }
+
+    });
+  };
+
 };
 
 fwdGLM.renderManhattan = function(config) {
@@ -196,7 +237,7 @@ fwdGLM.renderQQPlot = function(config) {
       createQQ(plot_config, data, config.nodeId);
     },
     error: function() {
-      console.log("Fail parsing request for qq plot of p values.");
+      throw "Fail parsing request for qq plot of p values.";
     }
   });
 
@@ -211,15 +252,20 @@ fwdGLM.renderSection = function(taskName, modelType) {
   fwdGLM.renderResultsTable(taskName + "_results", taskName, modelType);
 
   // Manhattan plot.
-  var config = {
+  var manhattan_config = {
     nodeId:  taskName + "_manhattan",
     taskName: taskName,
     modelType: modelType,
     phenotypeScale: phenotypeScale
   };
-  fwdGLM.renderManhattan(config);
+  fwdGLM.renderManhattan(manhattan_config);
 
   // QQ plot.
-  config["nodeId"] = taskName + "_qqplot";
-  fwdGLM.renderQQPlot(config);
+  var qq_config = {
+    nodeId:  taskName + "_qqplot",
+    taskName: taskName,
+    modelType: modelType,
+    phenotypeScale: phenotypeScale
+  };
+  fwdGLM.renderQQPlot(qq_config);
 };
