@@ -94,7 +94,9 @@
           coefficient above <span class="fwdinfo phenotype_correlation_for_exclusion"></span> 
           were considered to be related and the affected individuals were
           discarded from the relevant analyses. A summary of the relevant 
-          exclusions is available in Table X.</p>
+          exclusions is available in <a href="#related-exclusions-table">
+          <span class="xref-link xref-related-exclusions-table"></span>.
+          </a></p>
 
           <div id="related-exclusions-table"></div>
         </div>
@@ -120,6 +122,8 @@
             tasks.map(function(task) {
               forward.handleTask(task.type, task.name);
             });
+
+            forward.xrefs.reNumber();
           });
         </script>
 

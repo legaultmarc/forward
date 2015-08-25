@@ -8,7 +8,7 @@ var manhattan = function(config, data, mountNodeId) {
   };
 
   var margin = {
-    "top": 30, "right": 30, "bottom": 50, "left": 50
+    "top": 10, "right": 30, "bottom": 50, "left": 50
   };
 
   var width = config.width - margin.left - margin.right,

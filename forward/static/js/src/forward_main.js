@@ -176,64 +176,174 @@ forward.info = (function() {
   });
 })();
 
-
 /**
- * Create a figure object.
+ * Module to handle crossreferences.
  **/
-forward.Figure = function(name) {
-  if (forward._figures === undefined) {
-    forward._figures = {}  // Hash of name to dom element.
-  }
+forward.xrefs = (function() {
 
-  var fig = forward._figures[name]
-  if (fig) {
-    return fig;
-  }
+  var _counts = {
+    "figure": 1,
+    "table": 1,
+    "reference": 1
+  }; // Counters that are incremented when creating new xrefs.
+  var _xrefs = {};
+  var _types = {};
 
-  // Create the DOM element.
-  fig = document.createElement("div");
-  forward._figures[name] = fig
-  fig.id = name;
+  /**
+   * Create a crossreferenceable div.
+   *
+   * type is either "figure", "table" or "reference".
+   * name is the unique name for this element.
+   * closeButton is a bool indicating if a x button should be added to remove
+   * the div.
+   **/
+  var create = function(type, name, closeButton) {
+    if (_xrefs[name]) {
+      throw "ValueError: '" + name + "' is already used.";
+    }
 
-  // Create a 'x' that removes this div.
-  var closeButton = document.createElement("a");
-  closeButton.innerHTML = "&times;";
-  closeButton.className = "close-figure";
+    if (closeButton === undefined) {
+      closeButton = false;
+    }
 
-  fig.appendChild(closeButton);
+    switch (type) {
+      case "figure":
+        return _create_element(name, "figure", closeButton);
+      case "table":
+        return _create_element(name, "table", closeButton);
+      case "reference":
+        return _create_reference(name);
+      default:
+        throw "Unknown type '" + type + "'";
+    }
+  };
 
-  document.getElementById("figures").appendChild(fig);
+  var _create_element = function(name, type, closeButton) {
+    var node = document.createElement("div");
+    node.id = name;
+    node.className = "xref-" + type;
+    node.number = _counts[type];
 
-  closeButton.addEventListener("click", function() {
-    delete forward._figures[fig.id];
-    document.getElementById("figures").removeChild(fig);
-  });
+    var anchor = document.createElement("a");
+    anchor.name = name;
+    node.appendChild(anchor);
 
-  return fig;
-};
+    _counts[type] += 1;
 
-/**
- * Create a table object.
- **/
-forward.Table = function(name) {
-  // TODO implement me.
-  that = {};
+    if (closeButton) _add_close(node);
 
-  if (forward._tables === undefined) {
-    forward._tables = {}  // Hash of name to dom element.
-  }
+    _xrefs[name] = node;
+    _types[name] = type;
 
-  that.number = 3;
-  return that;
-};
+    return node;
+  };
 
-/**
- * Checks if a figure with the provided name already exists.
- **/
-forward.figureExists = function(name) {
-  if (forward._figures === undefined) return false;
-  return forward._figures.hasOwnProperty(name);
-};
+  var _create_reference = function(name, closeButton) {
+    throw "NotImplementedError";
+  };
+
+  var _add_close = function(node) {
+    var closeButton = document.createElement("a");
+    closeButton.innerHTML = "&times;";
+    closeButton.className = "close-figure";
+
+    node.appendChild(closeButton);
+
+    closeButton.addEventListener("click", function() {
+      var parentNode = node.parentNode;
+      parentNode.removeChild(node);
+    });
+
+  };
+
+  /**
+   * Register an already existing node element.
+   **/
+  var register = function(node, type) {
+    var name = node.id;
+    if (!name) {
+      throw "Error: Only DOM nodes with an id can be registered as xrefs.";
+    }
+    node.number = _counts[type];
+    _counts[type] += 1;
+    _xrefs[name] = node;
+    _types[name] = type;
+    $(node).addClass("xref-" + type);
+  };
+
+  /**
+   * Renumber all xrefs according to a dom traversal.
+   **/
+  var reNumber = function() {
+    _counts = {"table": 1, "figure": 1, "reference": 1};
+    var nameExtractor = /xref-(\S+)/;
+
+    $(".xref").each(function(idx, n) {
+      // Parse the name.
+      var classes = n.className;
+      var name = nameExtractor.exec(classes)[0].substring(5);
+
+      var type = _types[name];
+      var node = _xrefs[name];
+      if (node === undefined || type === undefined) {
+        throw "Unknown crossreference '" + name + "'";
+      }
+
+      node.number = _counts[type];
+      _counts[type] += 1;
+
+      n.innerHTML = node.number;
+
+    });
+
+    $(".xref-link").each(function(_, n) {
+      var classes = n.className;
+
+      // remove the xref-link class.
+      classes = classes.replace(/xref-link/, "")
+      var name = nameExtractor.exec(classes)[0].substring(5);
+
+      var type = _types[name];
+      var node = _xrefs[name];
+
+      n.innerHTML = capitalized(type) + " " + node.number;
+
+    });
+  };
+
+  /**
+   * Get a reference which is a span with the proper class to be tracked by
+   * the cross reference system.
+   **/
+  var getXref = function(name) {
+    var n = _xrefs[name].number;
+    return "<span class='xref xref-" + name + "'>" + n + "</span>"
+  };
+
+  var getJSXXref = function(name) {
+    var node = _xrefs[name];
+    if (!node) {
+      throw "Could not find registered xref with name '" + name + "'";
+    }
+    return (
+      <span className={"xref xref-" + name}>{node.number}</span>
+    );
+  };
+
+  var exists = function(name) {
+    return (!_xrefs[name] === undefined);
+  };
+
+  return {
+    "create": create,
+    "register": register,
+    "exists": exists,
+    "reNumber": reNumber,
+    "getXref": getXref,
+    "getJSXXref": getJSXXref
+  };
+
+})();
 
 forward.valuesLike = function(li, value) {
   if (value === undefined) value = 0;
@@ -308,3 +418,7 @@ forward._handleLinear = function(taskName) {
     }
   });
 };
+
+capitalized = function(s) {
+  return s[0].toUpperCase() + s.slice(1);
+}

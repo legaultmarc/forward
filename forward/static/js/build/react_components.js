@@ -83,9 +83,10 @@ var ContinuousVariablePlotForm = React.createClass({displayName: "ContinuousVari
 
         var figName = this.props.name + node.value;
 
-        if (forward.figureExists(figName)) { continue; }
+        if (forward.xrefs.exists(figName)) { continue; }
 
-        var figure = forward.Figure(figName);
+        var figure = forward.xrefs.create("figure", figName, true);
+        document.getElementById("figures").appendChild(figure);
 
         var config = {
           "figure": figure,

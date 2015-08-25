@@ -116,6 +116,10 @@ fwdGLM.renderResultsTable = function(nodeId, taskName, modelType) {
   // Create another div for the controls (we can't use the same as the table
   // because react will complain that we're messing with the DOM.
   var root = document.getElementById(nodeId);
+
+  // Register for easier cross-referencing.
+  forward.xrefs.register(root, "table");
+
   var reactTable = document.createElement("div");
   root.appendChild(reactTable);
 
@@ -134,8 +138,7 @@ fwdGLM.renderResultsTable = function(nodeId, taskName, modelType) {
 
       React.render(
         <GenericTable provider={provider.provider}>
-          <strong>Table.</strong> Results from the {modelType} regression
-          analysis of the described variables and outcomes.
+          <strong>Table {forward.xrefs.getJSXXref(root.id)}.</strong> Results from the {modelType} regression analysis of the described variables and outcomes.
         </GenericTable>,
         reactTable
       );
@@ -193,6 +196,15 @@ fwdGLM.renderResultsTable = function(nodeId, taskName, modelType) {
 };
 
 fwdGLM.renderManhattan = function(config) {
+  var node = document.getElementById(config.nodeId);
+  forward.xrefs.register(node, "figure");
+  node.innerHTML = (
+    "<p class='caption'><strong>Figure " + 
+    forward.xrefs.getXref(config.nodeId) + "</strong>. " +
+    "Plot of association p-values with respect to genomic position or " +
+    "effect size (interactive toggle)."
+  ) + node.innerHTML;
+
   var plot_config = {
     width: 750,
     height: 340,
@@ -222,6 +234,15 @@ fwdGLM.renderManhattan = function(config) {
 };
 
 fwdGLM.renderQQPlot = function(config) {
+  var node = document.getElementById(config.nodeId)
+  forward.xrefs.register(node, "figure");
+  node.innerHTML += (
+    "<p class='caption'><strong>Figure " +
+    forward.xrefs.getXref(config.nodeId) + "</strong>. " +
+    "Quantile-Quantile plot of association p-values with respect to the " +
+    "uniform distribution."
+  );
+
   var plot_config = {
     width: 600,
     height: 400,
@@ -268,4 +289,7 @@ fwdGLM.renderSection = function(taskName, modelType) {
     phenotypeScale: phenotypeScale
   };
   fwdGLM.renderQQPlot(qq_config);
+
+  window.setTimeout(forward.xrefs.reNumber, 1500);
+
 };
