@@ -253,7 +253,9 @@ var GenericTable = React.createClass({
 
     return (
       <div>
-        {this.props.children}
+        <p className="caption">
+          {this.props.children}
+        </p>
         <table>
           <GenericTableHead columns={this.state.columns}
            serverColumns={this.state.serverColumns} dataSort={this.sort} />
