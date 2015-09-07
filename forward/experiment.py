@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 import numpy as np
 import sqlalchemy
 import h5py
-from sqlalchemy import Column, Enum, String, Float, ForeignKey, Integer
+from sqlalchemy import (Column, Enum, String, Float, ForeignKey, Integer,
+                        Sequence)
 from six.moves import cPickle as pickle
 
 from . import SQLAlchemySession, SQLAlchemyBase, FORWARD_INIT_TIME
@@ -65,11 +66,19 @@ class ExperimentResult(SQLAlchemyBase):
     """
     __tablename__ = "results"
 
+    # Id
+    pk = Column(Integer, Sequence('result_id_seq'), primary_key=True)
+
     # Test information
     tested_entity = Column(Enum("variant", "snp-set"), default="variant")
-    task_name = Column(String(25), primary_key=True)
-    entity_name = Column(String(25), primary_key=True)
-    phenotype = Column(String(30), primary_key=True)
+    results_type = Column(String(25))
+
+    task_name = Column(String(25))
+    entity_name = Column(String(25))
+    phenotype = Column(String(30))
+    sqlalchemy.UniqueConstraint(
+        "task_name", "entity_name", "phenotype", name="result_id"
+    )
 
     # Statistics
     significance = Column(Float())  # e.g. p-value
@@ -77,6 +86,12 @@ class ExperimentResult(SQLAlchemyBase):
     standard_error = Column(Float())
     confidence_interval_min = Column(Float())  # min of 95% CI on coefficient
     confidence_interval_max = Column(Float())  # max of 95% CI on coefficient
+
+    __mapper_args__ = {
+        "polymorphic_on": results_type,
+        "polymorphic_identity": "GenericResults",
+        "with_polymorphic": "*",
+    }
 
 
 class Experiment(object):
@@ -187,25 +202,8 @@ class Experiment(object):
             "phenotype_correlation_for_exclusion": corr_thresh
         })
 
-    def add_result(self, entity_type, task, entity, phenotype, significance,
-                   coefficient, standard_error, confidence_interval_min,
-                   confidence_interval_max):
-
-        if hasattr(phenotype, "name"):
-            phenotype = phenotype.name  # Variable object.
-
-        result = ExperimentResult(
-            tested_entity=entity_type,
-            task_name=task,
-            entity_name=entity,
-            phenotype=phenotype,
-
-            significance=significance,
-            coefficient=coefficient,
-            standard_error=standard_error,
-            confidence_interval_min=confidence_interval_min,
-            confidence_interval_max=confidence_interval_max,
-        )
+    def add_result(self, **kwargs):
+        result = ExperimentResult(**kwargs)
         self.session.add(result)
 
     @staticmethod

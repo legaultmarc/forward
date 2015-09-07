@@ -115,7 +115,7 @@ def get_class(name, class_type=None):
         pkg = __import__(package, globals(), locals(), [name], 1)
         if hasattr(pkg, name):
             return getattr(pkg, name)
-    except ImportError:
+    except Exception:
         pass
 
     # Try importing from user class.
@@ -127,4 +127,4 @@ def get_class(name, class_type=None):
     except ValueError, ImportError:
         pass
 
-    raise AttributeError("Could not find class '{}'.".format(name))
+    raise AttributeError("Could not find (or import) class '{}'.".format(name))

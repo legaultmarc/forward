@@ -18,6 +18,10 @@ fwdGLM.resultsProviderFactory = function(task, taskType) {
 
   if (taskType === "linear") {
     columns.push("Beta (95% CI)");
+
+    serverColumns.push("adjusted_r_squared");
+    columns.push(<span>R<sup>2</sup></span>);
+
   }
   else if (taskType === "logistic") {
     columns.push("OR (95% CI)");
@@ -77,6 +81,9 @@ fwdGLM.resultsProviderFactory = function(task, taskType) {
                 break;
               case "significance":
                 value = forward.formatPValue(value);
+                break;
+              case "adjusted_r_squared":
+                value = d3.format(".3f")(value);
                 break;
               case "variant":
                 value = value.name;

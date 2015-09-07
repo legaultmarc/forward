@@ -15,6 +15,7 @@ import logging
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
+from sqlalchemy import Column, Float, ForeignKey, String, Integer
 from six.moves import cPickle as pickle
 from six.moves import range
 import numpy as np
@@ -27,8 +28,10 @@ except ImportError:  # pragma: no cover
     STATSMODELS_AVAILABLE = False
 
 
+from . import SQLAlchemySession, SQLAlchemyBase
 from .phenotype.variables import DiscreteVariable, ContinuousVariable
 from .utils import abstract, Parallel
+from .experiment import ExperimentResult
 
 
 __all__ = ["LogisticTest", ]
@@ -121,13 +124,14 @@ class LogisticTest(AbstractTask):
         self.outcomes = [i for i in self.outcomes if
                          isinstance(i, DiscreteVariable)]
 
-    def log_task_start(self):
+    def prep_task(self, experiment, *args):
+        self._add_result = experiment.add_result
         logger.info("Running a logistic regression analysis.")
 
     def run_task(self, experiment, task_name, work_dir):
         """Run the logistic regression."""
         super(LogisticTest, self).run_task(experiment, task_name, work_dir)
-        self.log_task_start()
+        self.prep_task(experiment, task_name, work_dir)
 
         self.filter_variables()
 
@@ -175,7 +179,12 @@ class LogisticTest(AbstractTask):
         while num_tests > 0:
             results = self.parallel.get_result()
             # Process the result.
-            experiment.add_result("variant", task_name, *results)
+            self._add_result(
+                tested_entity="variant",
+                task_name=task_name,
+                **results
+            )
+
             num_tests -= 1
 
     def handle_sm_results(self, res, outcome_column):
@@ -188,7 +197,14 @@ class LogisticTest(AbstractTask):
             conf_int = conf_int.values
         ic95_min, ic95_max = conf_int[outcome_column, :]
 
-        return [p, beta, std_err, ic95_min, ic95_max]
+        return {
+            "results_type": "GenericResults",
+            "significance": p,
+            "coefficient": beta,
+            "standard_error": std_err,
+            "confidence_interval_min": ic95_min,
+            "confidence_interval_max": ic95_max
+        }
 
     def _work(self, variant, phenotype, x, y, outcome_column=1):
         """Run a logistic test using the y ~ x model."""
@@ -196,12 +212,38 @@ class LogisticTest(AbstractTask):
             glm = sm.GLM(y, x, family=sm.families.Binomial())
             res = glm.fit()
             res = self.handle_sm_results(res, outcome_column)
-            res = tuple([variant, phenotype] + res)
+            res["entity_name"] = variant
+            res["phenotype"] = phenotype.name
+
         except Exception:
-            logging.exception("")  # Log the exception and insert nulls in db.
-            res = tuple([None for _ in range(7)])
+            # Log the exception and insert nulls in db.
+            logging.exception("")
+            res = {}
 
         return res
+
+
+class LinearTestResults(ExperimentResult):
+    """Table for extra statistical reporting for linear regression.
+
+    It is interesting to report the standardized beta to easily compare the
+    effect size between different outcomes (that have different units). We
+    will also report the coefficient of determination (R^2) that reports the
+    fraction of explained variance.
+
+    """
+    __tablename__ = "linreg_results"
+
+    pk = Column(Integer(), ForeignKey("results.pk"), primary_key=True)
+
+    adjusted_r_squared = Column(Float())
+    std_beta = Column(Float())
+    std_beta_min = Column(Float())
+    std_beta_max = Column(Float())
+
+    __mapper_args__ = {
+        "polymorphic_identity": "LinearTest",
+    }
 
 
 class LinearTest(LogisticTest):
@@ -212,8 +254,21 @@ class LinearTest(LogisticTest):
                               "Install the package first (and patsy).")
         super(LinearTest, self).__init__(*args, **kwargs)
 
-    def log_task_start(self):
+        # Check if we need to report the standardized beta.
+        self._compute_std_beta = kwargs.get(
+            "compute_standardized_beta", True
+        )
+
+
+    def prep_task(self, experiment, task_name, work_dir):
         logger.info("Running a linear regression analysis.")
+        LinearTestResults.__table__.create(experiment.engine)
+
+        def _f(**params):
+            result = LinearTestResults(**params)
+            experiment.session.add(result)
+
+        self._add_result = _f
 
     def filter_variables(self):
         # Filter outcomes to remove non discrete variables.
@@ -224,10 +279,43 @@ class LinearTest(LogisticTest):
         try:
             ols = sm.OLS(y, x)
             res = ols.fit()
-            res = self.handle_sm_results(res, outcome_column)
-            res = tuple([variant, phenotype] + res)
-        except Exception:
-            logging.exception("")  # Log the exception and insert nulls in db.
-            res = tuple([None for _ in range(7)])
+            result = {
+                "entity_name": variant,
+                "phenotype": phenotype.name,
+                "significance": res.pvalues[outcome_column],
+                "coefficient": res.params[outcome_column],
+                "standard_error": res.bse[outcome_column],
+            }
 
-        return res
+            conf_int = res.conf_int()
+            if type(conf_int) is not np.ndarray:
+                conf_int = conf_int.values
+
+            ic95_min, ic95_max = conf_int[outcome_column, :]
+            result["confidence_interval_min"] = ic95_min
+            result["confidence_interval_max"] = ic95_max
+
+            # Linear specific.
+            result["adjusted_r_squared"] = res.rsquared_adj
+
+            if self._compute_std_beta:
+                # Recompute to get standardized coefficient.
+                std_x = (x - np.mean(x, axis=0)) / np.std(x, axis=0)
+                # Restore the intercept term.
+                std_x[:, 0] = 1
+
+                ols = sm.OLS((y - np.mean(y)) / np.std(y), std_x)
+                res = ols.fit()
+                result["std_beta"] = res.params[outcome_column]
+                conf_int = res.conf_int()
+                if type(conf_int) is not np.ndarray:
+                    conf_int = conf_int.values
+
+                result["std_beta_min"] = conf_int[outcome_column, 0]
+                result["std_beta_max"] = conf_int[outcome_column, 1]
+
+        except Exception:
+            logging.exception("")
+            result = tuple([None for _ in range(11)])
+
+        return result

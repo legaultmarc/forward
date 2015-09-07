@@ -38,7 +38,7 @@ from flask import (Flask, request, url_for, render_template, jsonify,
 app = Flask(__name__)
 
 from . import genotype, experiment
-from . import FORWARD_REPORT_ROOT, STATIC_ROOT, SQLAlchemySession
+from . import FORWARD_REPORT_ROOT, STATIC_ROOT, SQLAlchemySession, tasks
 from .phenotype.variables import Variable, DiscreteVariable, ContinuousVariable
 from .phenotype.db import apply_transformation
 from .utils import format_time_delta
@@ -217,11 +217,12 @@ class Backend(object):
 
 
     def get_results(self, task, filters=[], order_by=None, ascending=True):
-        results = self.session.query(experiment.ExperimentResult)\
-                    .filter(experiment.ExperimentResult.task_name.like(task))
+        cls = experiment.ExperimentResult
+
+        results = self.session.query(cls).filter(cls.task_name.like(task))
 
         if order_by is not None:
-            field = getattr(experiment.ExperimentResult, order_by)
+            field = getattr(cls, order_by, order_by)
             if not ascending:
                 field = sqlalchemy.desc(field)
 
