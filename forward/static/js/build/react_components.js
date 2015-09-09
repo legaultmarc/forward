@@ -296,7 +296,7 @@ var GenericTableHead = React.createClass({displayName: "GenericTableHead",
       var click = this.sort.bind(this, idx);
 
       var arrow;
-      arrow = this.state.sortAscending? "\u25BC": "\u25B2";
+      arrow = this.state.sortAscending? "\u25B2": "\u25BC";
       if (this.state.sortAscending === null) {
         arrow = "";
       }
