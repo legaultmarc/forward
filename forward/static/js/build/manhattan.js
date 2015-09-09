@@ -55,7 +55,6 @@ var manhattan = function(config, data, mountNodeId) {
   gy.selectAll("g").filter(function(d) { return d; })
     .classed("minor", true);
 
-
   // Add labels.
   var xAxisLabel = svg.append("text")
     .attr("class", "label xAxisLabel")
@@ -110,38 +109,44 @@ var bindControls = function(data, plotComponents, mountNodeId, effectLabel) {
 
   var _colorByPhen = function() {
     var points = d3.selectAll(sel + " .manhattan .point")
-    if (points.classed("colored")) {
+    if (points.classed("coloredByPhenotype")) {
       points.transition().duration(800)
         .attr("fill", "#555555")
-      points.classed({"colored": false});
+      points.classed({"coloredByPhenotype": false});
     }
     else {
       points.transition().duration(800)
         .attr("fill", function(data) {
           return plotComponents.phenotypeScale(data.outcome);
         })
-      points.classed({"colored": true})
+      points.classed({"coloredByPhenotype": true, "coloredByEffect": false})
     }
   };
   $(sel + " .colorByPhen").click(_colorByPhen);
 
+  var min_effect = d3.min(data, function(d) { return d.effect; });
+  var max_effect = d3.max(data, function(d) { return d.effect; });
+
   var effectScale = d3.scale.linear()
-    .domain([-5, 1, 6])
-    .range(["#3A92E8", "#DDDDDD", "#FA6052"]).clamp(true);
+    .domain([
+      (min_effect < 1)? min_effect: 0,
+      1,
+      (max_effect > 1)? max_effect: 2
+    ]).range(["#3A92E8", "#DDDDDD", "#FA6052"]).clamp(true);
 
   var _colorByEffect = function() {
     var points = d3.selectAll(sel + " .manhattan .point")
-    if (points.classed("colored")) {
+    if (points.classed("coloredByEffect")) {
       points.transition().duration(800)
         .attr("fill", "#555555")
-      points.classed({"colored": false});
+      points.classed({"coloredByEffect": false});
     }
     else {
       points.transition().duration(800)
         .attr("fill", function(data) {
           return effectScale(data.effect);
         })
-      points.classed({"colored": true})
+      points.classed({"coloredByEffect": true, "coloredByPhenotype": false})
     }
   };
   $(sel + " .colorByEffect").click(_colorByEffect);

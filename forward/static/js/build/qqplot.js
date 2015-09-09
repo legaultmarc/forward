@@ -44,7 +44,7 @@ var createQQ = function(config, data, mountNodeId) {
     .attr("class", "point")
     .attr("cx", function(d) { return xScale(d.expected); })
     .attr("cy", function(d) { return yScale(d.observed); })
-    .attr("r", 1)
+    .attr("r", 1.3)
     .attr("fill", function(d) {
       return config.phenotypeScale(d.phenotype);   
     })
