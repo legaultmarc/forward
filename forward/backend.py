@@ -201,6 +201,7 @@ class Backend(object):
         for i, res in enumerate(results):
             ppf = scipy.stats.beta.ppf
             d = {
+                "pk": res.pk,
                 "expected": -1 * np.log10((i + 1) / n),
                 "observed": -1 * np.log10(res.significance),
                 "ci": [

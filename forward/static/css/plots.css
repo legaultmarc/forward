@@ -59,3 +59,33 @@ svg.corrplot .xlabel { font-weight: 400; }
 .qqplot {
   text-align: center;
 }
+
+.tooltip {
+  position: absolute;
+  padding: 10px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  pointer-events: none;
+  border-radius: 4px;
+  box-shadow: 2px 2px 7px #aaa;
+}
+
+.tooltip:after {
+  border-left: solid transparent 5px;
+  border-right: solid transparent 5px;
+  border-top: solid #333 5px;
+  bottom: -5px;
+  content: " ";
+  height: 0;
+  left: 50%;
+  margin-left: -13px;
+  position: absolute;
+  width: 0;
+}
+  
+
+.tooltip p {
+  line-height: 18px;
+  margin: 0;
+  padding: 0;
+}

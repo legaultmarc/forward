@@ -239,13 +239,20 @@ fwdGLM.renderManhattan = function(config) {
     success: function(data) {
       // Format data.
       data = data["results"].map(function(d) {
-        return {
+        var res = {
+          "pk": d.pk,
           "outcome": d.phenotype,
           "variant": d.variant.name,
           "p": d.significance,
-          "effect": Math.exp(d.coefficient),
+          "effect": d.coefficient,
           "position": d.variant.pos
         };
+        if (config.modelType == "logistic") {
+          res.effect = Math.exp(res.effect);
+        }
+
+        return res;
+
       });
       manhattan(plot_config, data, config.nodeId);
     }
@@ -266,7 +273,8 @@ fwdGLM.renderQQPlot = function(config) {
   var plot_config = {
     width: 600,
     height: 400,
-    phenotypeScale: config.phenotypeScale
+    phenotypeScale: config.phenotypeScale,
+    modelType: config.modelType
   };
 
   // Get data.

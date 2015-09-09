@@ -75,9 +75,9 @@ var manhattan = function(config, data, mountNodeId) {
   var scatter = svg.append("g").attr("class", "dataPoints")
   var infoBox = infoBoxInit(mountNodeId);
 
-  scatter.selectAll(".point").data(data).enter()
+  scatter.selectAll(".mhpoint").data(data).enter()
     .append("circle")
-    .attr("class", "point")
+    .attr("class", function(d) { return "mhpoint pk" + d.pk; })
     .attr("cx", function(d) { return xScale(d.position); })
     .attr("cy", function(d) { return yScale(-1 * Math.log10(d.p)); })
     .attr("r", 3)
@@ -108,7 +108,7 @@ var bindControls = function(data, plotComponents, mountNodeId, effectLabel) {
   var sel = "#" + mountNodeId;
 
   var _colorByPhen = function() {
-    var points = d3.selectAll(sel + " .manhattan .point")
+    var points = d3.selectAll(sel + " .manhattan .mhpoint")
     if (points.classed("coloredByPhenotype")) {
       points.transition().duration(800)
         .attr("fill", "#555555")
@@ -127,15 +127,26 @@ var bindControls = function(data, plotComponents, mountNodeId, effectLabel) {
   var min_effect = d3.min(data, function(d) { return d.effect; });
   var max_effect = d3.max(data, function(d) { return d.effect; });
 
-  var effectScale = d3.scale.linear()
-    .domain([
-      (min_effect < 1)? min_effect: 0,
-      1,
-      (max_effect > 1)? max_effect: 2
-    ]).range(["#3A92E8", "#DDDDDD", "#FA6052"]).clamp(true);
+  var effectScale;
+  if (effectLabel == "OR") {
+    effectScale = d3.scale.linear()
+      .domain([
+        (min_effect < 1)? min_effect: 0,
+        1,
+        (max_effect > 1)? max_effect: 2
+      ]).range(["#3A92E8", "#DDDDDD", "#FA6052"]).clamp(true);
+  }
+  else {
+    effectScale = d3.scale.linear()
+      .domain([
+        (min_effect < 0)? min_effect: -0.1,
+        0,
+        (max_effect > 0)? max_effect: 0.1
+      ]).range(["#3A92E8", "#DDDDDD", "#FA6052"]).clamp(true);
+  }
 
   var _colorByEffect = function() {
-    var points = d3.selectAll(sel + " .manhattan .point")
+    var points = d3.selectAll(sel + " .manhattan .mhpoint")
     if (points.classed("coloredByEffect")) {
       points.transition().duration(800)
         .attr("fill", "#555555")
@@ -173,7 +184,7 @@ var bindControls = function(data, plotComponents, mountNodeId, effectLabel) {
       .transition().duration(1500).ease("sin")
       .call(plotComponents.xAxis);
 
-    d3.selectAll(sel + " .manhattan .point").transition().duration(1500)
+    d3.selectAll(sel + " .manhattan .mhpoint").transition().duration(1500)
       .attr("cx", function(d) {
         return plotComponents.xScale(d[x]);
       });

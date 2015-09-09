@@ -10,7 +10,7 @@ forward.variableNormalQQ = function(config) {
       plot(data)
     },
     error: function(error) {
-      console.log("Query for histogram information failed.");
+      throw "Query for histogram information failed.";
     }
   });
 
@@ -102,7 +102,7 @@ forward.variableHist = function(config) {
       plot(data)
     },
     error: function(error) {
-      console.log("Query for histogram information failed.");
+      throw "Query for histogram information failed.";
     }
   });
 
@@ -187,7 +187,7 @@ forward.phenotypeCorrelationPlot = function(config) {
       plot(config, data);
     },
     error: function(error) {
-      console.log("Query for corrplot failed.");
+      throw "Query for corrplot failed.";
     }
   });
 
@@ -396,5 +396,38 @@ forward.phenotypeCorrelationPlot = function(config) {
     }
 
   };
+
+}
+
+forward.Tooltip = function(mountNode, message, dx, dy) {
+  // Get the absolute position of the mountNode.
+  var body = document.getElementsByTagName("body")[0];
+
+  var mountRect = mountNode.getBoundingClientRect();
+  var bodyRect = body.getBoundingClientRect();
+
+  dx = dx || 0;
+  dy = dy || 0;
+
+  var x = mountRect.left - bodyRect.left + dx;
+  var y = mountRect.top - bodyRect.top + dy;
+
+  var node = document.createElement("div");
+  node.className = "tooltip";
+  node.innerHTML = message;
+
+  $(node).on("mouseover", function(e) { e.stopPropagation(); return false; });
+
+  body.appendChild(node);
+
+  $(node).css("left", x - Math.round($(node).width() / 2) + "px");
+  $(node).css("top", y - (Math.round($(node).height() + 25)) + "px");
+
+  var close = function() {
+    body.removeChild(node);
+  }
+
+  node.close = close;
+  return node;
 
 }
