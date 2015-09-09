@@ -81,6 +81,10 @@ p.caption {
     width: 20px;
 }
 
+tr th .sort {
+    cursor: pointer;
+}
+
 /* Bokeh tooltips */
 .bk-tooltip-custom {
     background-color: #eee !important;

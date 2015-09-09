@@ -304,13 +304,13 @@ var GenericTableHead = React.createClass({
       if (this.state.sortCol === idx) {
         return (
           <th key={idx} onClick={click}>
-            {col} <span className="caret">{arrow}</span>
+            <span className="sort">{col} <span className="caret">{arrow}</span></span>
           </th>
         );
       }
       return (
         <th key={idx} onClick={click}>
-          {col} <span className="caret"></span>
+          <span className="sort">{col} <span className="caret"></span></span>
         </th>
       );
 

@@ -17,10 +17,14 @@ fwdGLM.resultsProviderFactory = function(task, taskType) {
   var serverColumns = ["variant", "phenotype", "significance", "coefficient"];
 
   if (taskType === "linear") {
-    columns.push("Beta (95% CI)");
+    columns.push("\u03B2 (95% CI)");
+
+    serverColumns.push("std_beta");
+    columns.push(<span>{"\u03B2"}<sup>*</sup> (95% CI)</span>);
 
     serverColumns.push("adjusted_r_squared");
     columns.push(<span>R<sup>2</sup></span>);
+
 
   }
   else if (taskType === "logistic") {
@@ -79,6 +83,15 @@ fwdGLM.resultsProviderFactory = function(task, taskType) {
                 effectMax = d3.format(".3f")(effectMax);
                 value = value + " [" + effectMin + " - " + effectMax + "]"; 
                 break;
+              case "std_beta":
+                var low = datum["std_beta_min"];
+                var high = datum["std_beta_max"];
+
+                value = d3.format(".3f")(value);
+                low = d3.format(".3f")(low);
+                high = d3.format(".3f")(high);
+                value = value + " [" + low + " - " + high + "]";
+                break
               case "significance":
                 value = forward.formatPValue(value);
                 break;
