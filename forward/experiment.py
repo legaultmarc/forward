@@ -83,6 +83,7 @@ class ExperimentResult(SQLAlchemyBase):
     # Statistics
     significance = Column(Float())  # e.g. p-value
     coefficient = Column(Float())  # e.g. beta
+    test_statistic = Column(Float())  # e.g. the Beta = 0, t-test statistic.
     standard_error = Column(Float())
     confidence_interval_min = Column(Float())  # min of 95% CI on coefficient
     confidence_interval_max = Column(Float())  # max of 95% CI on coefficient

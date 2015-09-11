@@ -188,10 +188,6 @@ class LogisticTest(AbstractTask):
             num_tests -= 1
 
     def handle_sm_results(self, res, outcome_column):
-        p = res.pvalues[outcome_column]
-        beta = res.params[outcome_column]
-        std_err = res.bse[outcome_column]
-
         conf_int = res.conf_int()
         if type(conf_int) is not np.ndarray:
             conf_int = conf_int.values
@@ -199,11 +195,12 @@ class LogisticTest(AbstractTask):
 
         return {
             "results_type": "GenericResults",
-            "significance": p,
-            "coefficient": beta,
-            "standard_error": std_err,
+            "significance": res.pvalues[outcome_column],
+            "coefficient": res.params[outcome_column],
+            "standard_error": res.bse[outcome_column],
             "confidence_interval_min": ic95_min,
-            "confidence_interval_max": ic95_max
+            "confidence_interval_max": ic95_max,
+            "test_statistic": res.tvalues[outcome_column]
         }
 
     def _work(self, variant, phenotype, x, y, outcome_column=1):
@@ -279,21 +276,11 @@ class LinearTest(LogisticTest):
         try:
             ols = sm.OLS(y, x)
             res = ols.fit()
-            result = {
-                "entity_name": variant,
-                "phenotype": phenotype.name,
-                "significance": res.pvalues[outcome_column],
-                "coefficient": res.params[outcome_column],
-                "standard_error": res.bse[outcome_column],
-            }
 
-            conf_int = res.conf_int()
-            if type(conf_int) is not np.ndarray:
-                conf_int = conf_int.values
-
-            ic95_min, ic95_max = conf_int[outcome_column, :]
-            result["confidence_interval_min"] = ic95_min
-            result["confidence_interval_max"] = ic95_max
+            result = self.handle_sm_results(res, outcome_column)
+            result["results_type"] = "LinearTest"
+            result["entity_name"] = variant
+            result["phenotype"] = phenotype.name
 
             # Linear specific.
             result["adjusted_r_squared"] = res.rsquared_adj
