@@ -28,11 +28,11 @@ import scipy.stats
 import numpy as np
 import h5py
 import sqlalchemy
-import matplotlib.cm
-from six.moves import cPickle as pickle
+from sqlalchemy import func
 import pygments
 from pygments.lexers import YamlLexer
 from pygments.formatters import HtmlFormatter
+from six.moves import cPickle as pickle
 from flask import (Flask, request, url_for, render_template, jsonify,
                    render_template)
 app = Flask(__name__)
@@ -194,25 +194,56 @@ class Backend(object):
         # expected, observed, ci, phenotype, variant, effect.
         results = self.session.query(experiment.ExperimentResult)\
                     .filter(experiment.ExperimentResult.task_name.like(task))\
-                    .order_by(experiment.ExperimentResult.significance)
+                    .order_by(experiment.ExperimentResult.phenotype,
+                              experiment.ExperimentResult.significance)
 
-        n = results.count()
+        # Get the number of tests per phenotype.
+        test_by_phen = self.session.query(
+            func.count(experiment.ExperimentResult.phenotype),
+            experiment.ExperimentResult.phenotype
+        )\
+        .filter(experiment.ExperimentResult.task_name.like(task))\
+        .group_by(experiment.ExperimentResult.phenotype)
+
+        n = {i[0] for i in test_by_phen}
+        if len(n) != 1:
+            raise ValueError("Outcomes in this task have a different number "
+                             "of tests so that they can't (easily) be shown "
+                             "on the same QQ plot.")
+        n = n.pop()
+
+        ppf = scipy.stats.beta.ppf
+
+        phenotype = None
+        rank = 1
+
         out = []
-        for i, res in enumerate(results):
-            ppf = scipy.stats.beta.ppf
+
+        for res in results:
+            if phenotype is None:
+                # First phenotype.
+                phenotype = res.phenotype
+            elif phenotype != res.phenotype:
+                # We finished one outcome, we're doing another so we need to
+                # reset the rank and set this new phenotype as the current one.
+                rank = 1
+                phenotype = res.phenotype
+
             d = {
                 "pk": res.pk,
-                "expected": -1 * np.log10((i + 1) / n),
+                "expected": -1 * np.log10(rank / n),
                 "observed": -1 * np.log10(res.significance),
                 "ci": [
-                    -1 * np.log10(ppf(0.975, i + 1, n - i + 2)),
-                    -1 * np.log10(ppf(0.025, i + 1, n - i + 2))
+                    -1 * np.log10(ppf(0.975, rank, n - rank + 1)),
+                    -1 * np.log10(ppf(0.025, rank, n - rank + 1))
                 ],
-                "phenotype": res.phenotype,
+                "phenotype": phenotype,
                 "variant": res.entity_name,
                 "effect": res.coefficient
             }
             out.append(d)
+
+            rank += 1
 
         return out
 
