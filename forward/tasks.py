@@ -10,6 +10,7 @@ This module provides actual implementations of the genetic tests.
 """
 
 import os
+import collections
 import multiprocessing
 import logging
 logger = logging.getLogger()
@@ -133,6 +134,7 @@ class LogisticTest(AbstractTask):
         super(LogisticTest, self).run_task(experiment, task_name, work_dir)
         self.prep_task(experiment, task_name, work_dir)
 
+        # Keep only discrete or continuous variables.
         self.filter_variables()
 
         # Get a database session from the experiment.
@@ -146,30 +148,36 @@ class LogisticTest(AbstractTask):
         self.parallel = Parallel(experiment.cpu, self._work)
 
         num_tests = 0
-        for variant in variants:
-            # Get the genotype vector.
-            x = experiment.genotypes.get_genotypes(variant)
 
-            # Statsmodel does not automatically add an intercept term, so we
-            # need to do it manually here.
-            x = np.vstack((np.ones(x.shape[0]), x))
+        # Build the covariate matrix.
+        covar_matrix = np.vstack(tuple([
+            experiment.phenotypes.get_phenotype_vector(covar)
+            for covar in self.covariates
+        ]))
 
-            # Get the covariates and build the design matrix.
-            # We assume a design matrix with ones as a first column, and the
-            # outcome as the second column, with covariates after.
-            for covar in self.covariates:
-                covar = experiment.phenotypes.get_phenotype_vector(covar)
-                x = np.vstack((x, covar))
+        # Add the intercept because statsmodels does not add it automatically.
+        covar_matrix = np.vstack(
+            (np.ones(covar_matrix.shape[1]), covar_matrix)
+        )
+        covar_matrix = covar_matrix.T
+        missing_covar = np.isnan(covar_matrix).any(axis=1)
 
-            x = x.T  # Transpose to have variables as columns.
+        for phenotype in self.outcomes:
+            y = experiment.phenotypes.get_phenotype_vector(phenotype)
+            missing_outcome = np.isnan(y)
 
-            # Get the phenotypes and fill the job queue.
-            for phenotype in self.outcomes:
-                y = experiment.phenotypes.get_phenotype_vector(phenotype)
-                missing = np.isnan(x).any(axis=1) | np.isnan(y)
+            for variant in variants:
+                # Get the genotype vector.
+                x = experiment.genotypes.get_genotypes(variant)
+                missing_genotypes = np.isnan(x)
+
+                x.shape = (x.shape[0], 1)
+                x = np.hstack((x, covar_matrix))
+
+                missing = (missing_covar | missing_genotypes | missing_outcome)
 
                 self.parallel.push_work(
-                    (variant, phenotype, x[~missing, :], y[~missing])
+                    (variant, phenotype, x[~missing, :], y[~missing], 0)
                 )
                 num_tests += 1
 
@@ -187,35 +195,35 @@ class LogisticTest(AbstractTask):
 
             num_tests -= 1
 
-    def handle_sm_results(self, res, outcome_column):
+    def handle_sm_results(self, res, genetic_col):
         conf_int = res.conf_int()
         if type(conf_int) is not np.ndarray:
             conf_int = conf_int.values
-        ic95_min, ic95_max = conf_int[outcome_column, :]
+        ic95_min, ic95_max = conf_int[genetic_col, :]
 
         return {
             "results_type": "GenericResults",
-            "significance": res.pvalues[outcome_column],
-            "coefficient": res.params[outcome_column],
-            "standard_error": res.bse[outcome_column],
+            "significance": res.pvalues[genetic_col],
+            "coefficient": res.params[genetic_col],
+            "standard_error": res.bse[genetic_col],
             "confidence_interval_min": ic95_min,
             "confidence_interval_max": ic95_max,
-            "test_statistic": res.tvalues[outcome_column]
+            "test_statistic": res.tvalues[genetic_col]
         }
 
-    def _work(self, variant, phenotype, x, y, outcome_column=1):
+    def _work(self, variant, phenotype, x, y, genetic_col):
         """Run a logistic test using the y ~ x model."""
         try:
             glm = sm.GLM(y, x, family=sm.families.Binomial())
             res = glm.fit()
-            res = self.handle_sm_results(res, outcome_column)
+            res = self.handle_sm_results(res, genetic_col)
             res["entity_name"] = variant
             res["phenotype"] = phenotype.name
 
         except Exception:
             # Log the exception and insert nulls in db.
             logging.exception("")
-            res = {}
+            res = collections.defaultdict(lambda: None)
 
         return res
 
@@ -271,12 +279,12 @@ class LinearTest(LogisticTest):
         self.outcomes = [i for i in self.outcomes if
                          isinstance(i, ContinuousVariable)]
 
-    def _work(self, variant, phenotype, x, y, outcome_column=1):
+    def _work(self, variant, phenotype, x, y, genetic_col):
         try:
             ols = sm.OLS(y, x)
             res = ols.fit()
 
-            result = self.handle_sm_results(res, outcome_column)
+            result = self.handle_sm_results(res, genetic_col)
             result["results_type"] = "LinearTest"
             result["entity_name"] = variant
             result["phenotype"] = phenotype.name
@@ -288,20 +296,22 @@ class LinearTest(LogisticTest):
                 # Recompute to get standardized coefficient.
                 std_x = (x - np.mean(x, axis=0)) / np.std(x, axis=0)
                 # Restore the intercept term.
-                std_x[:, 0] = 1
+                # Be careful what column you use here if you change the
+                # design matrix.
+                std_x[:, 1] = 1
 
                 ols = sm.OLS((y - np.mean(y)) / np.std(y), std_x)
                 res = ols.fit()
-                result["std_beta"] = res.params[outcome_column]
+                result["std_beta"] = res.params[genetic_col]
                 conf_int = res.conf_int()
                 if type(conf_int) is not np.ndarray:
                     conf_int = conf_int.values
 
-                result["std_beta_min"] = conf_int[outcome_column, 0]
-                result["std_beta_max"] = conf_int[outcome_column, 1]
+                result["std_beta_min"] = conf_int[genetic_col, 0]
+                result["std_beta_max"] = conf_int[genetic_col, 1]
 
         except Exception:
             logging.exception("")
-            result = tuple([None for _ in range(11)])
+            result = collections.defaultdict(lambda: None)
 
         return result
