@@ -23,7 +23,7 @@ fwdGLM.resultsProviderFactory = function(task, taskType) {
     columns.push(React.createElement("span", null, "\u03B2", React.createElement("sup", null, "*"), " (95% CI)"));
 
     serverColumns.push("adjusted_r_squared");
-    columns.push(React.createElement("span", null, "R", React.createElement("sup", null, "2")));
+    columns.push(React.createElement("span", null, "ΔR", React.createElement("sub", null, "G"), React.createElement("sup", null, "2")));
 
 
   }

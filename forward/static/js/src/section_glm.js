@@ -23,7 +23,7 @@ fwdGLM.resultsProviderFactory = function(task, taskType) {
     columns.push(<span>{"\u03B2"}<sup>*</sup> (95% CI)</span>);
 
     serverColumns.push("adjusted_r_squared");
-    columns.push(<span>R<sup>2</sup></span>);
+    columns.push(<span>&Delta;R<sub>G</sub><sup>2</sup></span>);
 
 
   }

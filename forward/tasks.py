@@ -31,7 +31,7 @@ except ImportError:  # pragma: no cover
 from . import SQLAlchemySession, SQLAlchemyBase
 from .phenotype.variables import DiscreteVariable, ContinuousVariable
 from .utils import abstract, Parallel
-from .experiment import ExperimentResult
+from .experiment import ExperimentResult, result_table
 
 
 __all__ = ["LogisticTest", ]
@@ -220,6 +220,7 @@ class LogisticTest(AbstractTask):
         return res
 
 
+@result_table
 class LinearTestResults(ExperimentResult):
     """Table for extra statistical reporting for linear regression.
 
@@ -259,8 +260,6 @@ class LinearTest(LogisticTest):
 
     def prep_task(self, experiment, task_name, work_dir):
         logger.info("Running a linear regression analysis.")
-        LinearTestResults.__table__.create(experiment.engine)
-
         def _f(**params):
             result = LinearTestResults(**params)
             experiment.session.add(result)

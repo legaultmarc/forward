@@ -36,6 +36,20 @@ from .phenotype.variables import (Variable, DiscreteVariable,
                                   ContinuousVariable, TRANSFORMATIONS)
 
 
+result_tables = []
+
+
+def result_table(cls):
+    """Decorator to register result extensions.
+
+    These classes' tables will automatically be created.
+
+    """
+    global result_tables
+    result_tables.append(cls)
+    return cls
+
+
 class RelatedPhenotypesExclusions(SQLAlchemyBase):
     """Record of the related phenotypes when the user asked for correlation
     based exclusions.
@@ -56,6 +70,7 @@ class RelatedPhenotypesExclusions(SQLAlchemyBase):
     n_excluded = Column(Integer())
 
 
+@result_table
 class ExperimentResult(SQLAlchemyBase):
     """SQLAlchemy class to handle experimental results.
 
@@ -152,7 +167,8 @@ class Experiment(object):
 
     def results_init(self):
         """Initialize the results table."""
-        ExperimentResult.__table__.create(self.engine)
+        for cls in result_tables:
+            getattr(cls, "__table__").create(self.engine)
 
     def variables_init(self):
         """Initialize the variables table and computes some statistics."""
