@@ -12,6 +12,8 @@ var createQQ = function(config, data, mountNodeId) {
   var width = config.width - margin.left - margin.right,
       height = config.height - margin.top - margin.bottom;
 
+  var defaultOpacity = 0.3;
+
   var svg = d3.select("#" + mountNodeId).append("svg")
     .attr("width", config.width)
     .attr("height", config.height)
@@ -20,8 +22,8 @@ var createQQ = function(config, data, mountNodeId) {
 
   var scaleBuff = 0.2;
   var xScale = d3.scale.linear().domain([
-    d3.min(data, function(d) { return d.expected; }) - scaleBuff,
-    d3.max(data, function(d) { return d.expected; }) + scaleBuff,
+    0,
+    d3.max(data, function(d) { return d.expected; }) + scaleBuff
   ]).range([0, width]);
 
   var yScale = d3.scale.linear().domain([
@@ -43,13 +45,14 @@ var createQQ = function(config, data, mountNodeId) {
   var scatter = svg.append("g");
   scatter.selectAll(".qqpoint").data(data).enter()
     .append("circle")
-    .attr("class", function(d) { return "qqpoint pk" + d.pk; })
+    .attr("class", function(d) { return "qqpoint pk" + d.pk + " " + d.phenotype; })
     .attr("cx", function(d) { return xScale(d.expected); })
     .attr("cy", function(d) { return yScale(d.observed); })
     .attr("r", radius)
     .attr("fill", function(d) {
       return config.phenotypeScale(d.phenotype);   
-    });
+    })
+    .attr("opacity", defaultOpacity);
 
   var tooltip;
   var showTooltip = function(d) {
@@ -77,11 +80,15 @@ var createQQ = function(config, data, mountNodeId) {
       -1 * (radius + 1),
       -1
     );
+
+    // Make the dots less pale.
+    d3.selectAll(".qqpoint." + point_data.outcome).attr("opacity", 1);
   };
 
   var removeTooltip = function() {
     if (tooltip) tooltip.close();
     tooltip = undefined;
+    d3.selectAll(".qqpoint").attr("opacity", defaultOpacity);
   };
 
   var voronoi = d3.geom.voronoi()
