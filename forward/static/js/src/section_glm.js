@@ -22,7 +22,7 @@ fwdGLM.resultsProviderFactory = function(task, taskType) {
     serverColumns.push("std_beta");
     columns.push(<span>{"\u03B2"}<sup>*</sup> (95% CI)</span>);
 
-    serverColumns.push("adjusted_r_squared");
+    serverColumns.push("delta_rsquared");
     columns.push(<span>&Delta;R<sub>G</sub><sup>2</sup></span>);
 
 
@@ -95,8 +95,8 @@ fwdGLM.resultsProviderFactory = function(task, taskType) {
               case "significance":
                 value = forward.formatPValue(value);
                 break;
-              case "adjusted_r_squared":
-                value = d3.format(".3f")(value);
+              case "delta_rsquared":
+                value = d3.format(".2e")(value);
                 break;
               case "variant":
                 value = value.name;

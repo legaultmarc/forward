@@ -483,12 +483,36 @@ def api_task_results():
         order_by = None
         sort_by_variant = True
 
+    sort_by_delta_rsq = False
+    if order_by == "delta_rsquared":
+        order_by = None
+        sort_by_delta_rsq = True
+
     results = www_backend.get_results(task, filters, order_by, ascending)
+
+    # If the task is a linear regression, we also give the delta R^2.
+    info = www_backend.get_task_info(task[:-1] + "LinearTest")
+    if info and "null_model_rsquared" in info:
+        null_model_rsquared = info["null_model_rsquared"]
+        for d in results:
+            d["delta_rsquared"] = (
+                null_model_rsquared[d["phenotype"]] - d["adjusted_r_squared"]
+            )
+            if d["delta_rsquared"] < 0:
+                # We had no gain in variance explained.
+                d["delta_rsquared"] = 0
 
     if sort_by_variant:
         results = sorted(
             results,
             key=lambda x: x["variant"]["name"],
+            reverse=(not ascending)
+        )
+
+    if sort_by_delta_rsq:
+        results = sorted(
+            results,
+            key=lambda x: x["delta_rsquared"],
             reverse=(not ascending)
         )
 
