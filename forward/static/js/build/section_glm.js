@@ -129,6 +129,76 @@ fwdGLM.resultsProviderFactory = function(task, taskType) {
 
 }
 
+fwdGLM.renderNullModelRSquared = function(nodeId, taskName) {
+  var fullTaskName = taskName + "_LinearTest";
+
+  var provider = function(action, argList) {
+
+    var url = window.location.pathname + "/tasks/info.json";
+
+    var _init = function() {
+      $.ajax({
+        url: url,
+        dataType: "json",
+        data: {"task": fullTaskName},
+        success: function(data) {
+          var columns = ["Phenotype", React.createElement("span", null, "Null model R", React.createElement("sup", null, "2"))];
+          var serverColumns = ["phenotype", "rsquared"];
+          var _data = [];
+
+          for (var outcome in data.null_model_rsquared) {
+            _data.push([outcome, data.null_model_rsquared[outcome].toFixed(4)])
+          }
+
+          this.setState({
+            loading: false, serverColumns: serverColumns, columns: columns,
+            data: _data
+          });
+
+        }.bind(this),
+        error: function() {
+          throw ("AjaxError: Request to get task info for '" + fullTaskName +
+                 " failed.");
+        }
+      });
+    }.bind(this);
+
+    var _sort = function() {
+      var key = (argList[0] == "phenotype")? 0: 1;
+      var ascending = argList[1];
+
+      var data = this.state.data;
+      data.sort(function(a, b) {
+        if (ascending) return a[key] > b[key];
+        else return a[key] < b[key];
+      });
+      this.setState({"data": data, "loading": false});
+    }.bind(this);
+
+    switch(action.toLowerCase()) {
+      case "init":
+        _init();
+        break;
+      case "sort":
+        _sort();
+        break
+    };
+
+  };
+
+  var nullModelTable = document.getElementById(nodeId);
+  forward.xrefs.register(nullModelTable, "table");
+  React.render(
+    React.createElement(GenericTable, {provider: provider}, 
+      React.createElement("a", {name: nodeId}), 
+      React.createElement("strong", null, "Table ", forward.xrefs.getJSXXref(nodeId), ". "), 
+      "Variance explained by the null model (only the covariates)."
+    ),
+    nullModelTable
+  );
+
+};
+
 fwdGLM.renderResultsTable = function(nodeId, taskName, modelType) {
   var provider = fwdGLM.resultsProviderFactory(taskName, modelType);
   var bonferonni;
@@ -317,6 +387,11 @@ fwdGLM.renderSection = function(taskName, modelType) {
     phenotypeScale: phenotypeScale
   };
   fwdGLM.renderQQPlot(qq_config);
+
+  // For linear section, the variance explained by the null model.
+  if (modelType === "linear") {
+    fwdGLM.renderNullModelRSquared(taskName + "_null_model_rsquared", taskName)
+  }
 
   window.setTimeout(forward.xrefs.reNumber, 1500);
 

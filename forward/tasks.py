@@ -166,6 +166,13 @@ class LogisticTest(AbstractTask):
             y = experiment.phenotypes.get_phenotype_vector(phenotype)
             missing_outcome = np.isnan(y)
 
+            # For GLMs where we want to compare the variance explained by a
+            # null model of the covariates without the genetics effect to the
+            # genetic model, we can hookup this function.
+            # Note: This is used by the linear test.
+            if hasattr(self, "_compute_null_model"):
+                self._compute_null_model(phenotype.name, y, covar_matrix)
+
             for variant in variants:
                 # Get the genotype vector.
                 x = experiment.genotypes.get_genotypes(variant)
@@ -265,6 +272,7 @@ class LinearTest(LogisticTest):
             "compute_standardized_beta", True
         )
 
+        self.null_rsquared = {}
 
     def prep_task(self, experiment, task_name, work_dir):
         logger.info("Running a linear regression analysis.")
@@ -278,6 +286,13 @@ class LinearTest(LogisticTest):
         # Filter outcomes to remove non discrete variables.
         self.outcomes = [i for i in self.outcomes if
                          isinstance(i, ContinuousVariable)]
+
+    def _compute_null_model(self, phenotype, y, covar_matrix):
+        """Compute the regression for the null model of y ~ covariates."""
+        missing = np.isnan(y) | np.isnan(covar_matrix).any(axis=1)
+        ols = sm.OLS(y[~missing], covar_matrix[~missing, :])
+        fit = ols.fit()
+        self.null_rsquared[phenotype] = fit.rsquared_adj
 
     def _work(self, variant, phenotype, x, y, genetic_col):
         try:
@@ -315,3 +330,7 @@ class LinearTest(LogisticTest):
             result = collections.defaultdict(lambda: None)
 
         return result
+
+    def done(self, *args):
+        self.set_meta("null_model_rsquared", self.null_rsquared)
+        super(LinearTest, self).done(*args)

@@ -75,6 +75,15 @@ class Backend(object):
         with open(filename, "rb") as f:
             self.info = pickle.load(f)
 
+        # Task info.
+        self.task_info = {}
+        path = os.path.join(experiment_name, "tasks")
+        for task_dir in os.listdir(path):
+            info_path = os.path.join(path, task_dir, "task_info.pkl")
+            if os.path.isfile(info_path):
+                with open(info_path, "rb") as f:
+                    self.task_info[task_dir] = pickle.load(f)
+
         # Correlation matrix.
         filename = os.path.join(experiment_name, "phen_correlation_matrix.npy")
         self.correlation_matrix = np.load(filename)
@@ -182,6 +191,11 @@ class Backend(object):
             experiment.ExperimentResult.task_name
         ).distinct()
         return [tu[0] for tu in tasks]
+
+    def get_task_info(self, task):
+        if task not in self.task_info:
+            return None
+        return self.task_info[task]
 
     def p_value_qq_plot(self, task):
         """Return the scatter data and confidence bands.
@@ -489,6 +503,21 @@ def api_p_value_qqplot():
 
     task = "{}_%".format(task)  # Used to match without the type.
     return json.dumps(www_backend.p_value_qq_plot(task))
+
+
+@app.route(FORWARD_REPORT_ROOT + "/tasks/info.json")
+def api_task_info():
+    task = request.args.get("task")
+    if task is None:
+        raise InvalidAPIUsage("A 'task' parameter is expected.")
+
+    info = www_backend.get_task_info(task)
+    if info is None:
+        info = {
+            "success": False,
+            "message": "Could not find task '{}'.".format(task)
+        }
+    return json.dumps(info)
 
 
 @app.route(FORWARD_REPORT_ROOT + "/tasks/corrections/bonferonni.json")
