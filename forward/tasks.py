@@ -40,7 +40,40 @@ __all__ = ["LogisticTest", ]
 
 @abstract
 class AbstractTask(object):
-    """Class representing a task (genetic test)."""
+    """Abstract class for genetic tests.
+    
+    :param outcomes: (optional) List of Variable names to include as outcomes
+                     for this task. Alternatively, "all" can be passed.
+    :type outcomes: list or str
+
+    :param covariates: (optional) List of Variable names to include as
+                       covariates.
+    :type covariates: list or str
+
+    :param variants: List of variants. For now, we can't subset at the task
+                     level, so this should either not be passed or be "all".
+    :type variants: str
+
+    :param correction: The multiple hypothesis testing correction. This will be
+                       automatically serialized in the task metadata (if the
+                       parent's method is called).
+    :type correction: str
+
+    :param alpha: Significance threshold (default: 0.05). This will be
+                  automatically serialized it the parent's method is called.
+    :type alpha: float
+
+    Implementations of this class should either compute the statistics directly
+    or manage the execution of external statistical programs and parse the
+    results.
+
+    The ``run_task`` method will be called by the experiment and should result
+    in the statistical analysis.
+
+    When the task is done, the experiment will call the ``done`` method which
+    should take care of dumping metadata.
+
+    """
     def __init__(self, outcomes="all", covariates="all", variants="all",
                  correction=None, alpha=0.05):
         self.outcomes = outcomes
@@ -54,6 +87,27 @@ class AbstractTask(object):
         self.task_meta_path = None
 
     def run_task(self, experiment, task_name, work_dir):
+        """Method that triggers statistical computation.
+
+        :param experiment: The parent experiment which provides access to
+                           the whole experimental context.
+        :type experiment: :py:class:`forward.experiment.Experiment`
+
+        :param task_name: The name of the task. This is useful to fill the
+                          results table, because the task name is one of the
+                          columns.
+        :type task_name: str
+
+        :param work_dir: Path to the Task's work directory that was created by
+                         the experiment.
+        :type work_dir: str
+
+        For implementations of this abstract class, calling the parent method
+        will set the outcomes and covariates to filtered lists of Variable
+        objects. It will also make sure that the outcomes, covariates,
+        variants, alpha and correction are included as task metadata.
+
+        """
         self.work_dir = work_dir
 
         # Select the variables and covariates to analyse.
@@ -90,7 +144,12 @@ class AbstractTask(object):
             self.set_meta(meta_key, getattr(self, meta_key))
 
     def set_meta(self, key, value):
-        """Set meta information about this task."""
+        """Set meta information about this task.
+
+        This will be pickle serialzed to this Task's work directory. It can
+        subsequently be used by the backend and the dynamic report.
+
+        """
         self._info[key] = value
 
     def get_meta(self, key):
@@ -98,13 +157,9 @@ class AbstractTask(object):
         return self._info.get(key)
 
     def done(self):
-        """By default, this writes the content of the info attribute to disk.
+        """Cleanup signal from the Experiment.
 
-        This can be used to communicate with the report module or to store
-        meta information about this task's execution.
-
-        The pattern for storing task associated information is to use the
-        `set_meta` and `get_meta` methods.
+        The abstract method writes the content of the info attribute to disk.
 
         """
         self.task_meta_path = os.path.join(self.work_dir, "task_info.pkl")

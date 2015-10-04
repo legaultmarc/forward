@@ -259,10 +259,12 @@ easy access to experiment results, you can use the
 
 
 Contents
---------
+=========
 
 .. toctree::
    :maxdepth: 2
+
+   abstracts.rst
 
    api.rst
 
