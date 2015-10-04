@@ -1,12 +1,23 @@
+.pversion
+.module-cache
+
+# This file is created by forward when installing.
 forward/version.py
+
+# Created by coverage tool.
 .coverage
+
+# Automatically generated files by vim an python
 *.swp
 *.pyc
-*.egg-info
-*.egg/
-.eggs
+
+# Build related stuff
 htmlcov/
 /build
 /dist
-.module-cache
-.pversion
+.eggs
+*.egg-info
+*.egg/
+
+# Sphinx
+docs/build
