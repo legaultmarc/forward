@@ -1,0 +1,490 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>forward.tasks &mdash; Forward 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/bizstyle.js"></script>
+    <link rel="top" title="Forward 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Forward 0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for forward.tasks</h1><div class="highlight"><pre>
+<span class="c"># This file is part of forward.</span>
+<span class="c">#</span>
+<span class="c"># This work is licensed under the Creative Commons Attribution-NonCommercial</span>
+<span class="c"># 4.0 International License. To view a copy of this license, visit</span>
+<span class="c"># http://creativecommons.org/licenses/by-nc/4.0/ or send a letter to Creative</span>
+<span class="c"># Commons, PO Box 1866, Mountain View, CA 94042, USA.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module provides actual implementations of the genetic tests.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">Column</span><span class="p">,</span> <span class="n">Float</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">Integer</span>
+<span class="kn">from</span> <span class="nn">six.moves</span> <span class="kn">import</span> <span class="n">cPickle</span> <span class="k">as</span> <span class="n">pickle</span>
+<span class="kn">from</span> <span class="nn">six.moves</span> <span class="kn">import</span> <span class="nb">range</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+
+<span class="k">try</span><span class="p">:</span>  <span class="c"># pragma: no cover</span>
+    <span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="kn">as</span> <span class="nn">sm</span>
+    <span class="n">STATSMODELS_AVAILABLE</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c"># pragma: no cover</span>
+    <span class="n">STATSMODELS_AVAILABLE</span> <span class="o">=</span> <span class="bp">False</span>
+
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">SQLAlchemySession</span><span class="p">,</span> <span class="n">SQLAlchemyBase</span>
+<span class="kn">from</span> <span class="nn">.phenotype.variables</span> <span class="kn">import</span> <span class="n">DiscreteVariable</span><span class="p">,</span> <span class="n">ContinuousVariable</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">abstract</span><span class="p">,</span> <span class="n">Parallel</span>
+<span class="kn">from</span> <span class="nn">.experiment</span> <span class="kn">import</span> <span class="n">ExperimentResult</span><span class="p">,</span> <span class="n">result_table</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;LogisticTest&quot;</span><span class="p">,</span> <span class="p">]</span>
+
+
+<span class="nd">@abstract</span>
+<div class="viewcode-block" id="AbstractTask"><a class="viewcode-back" href="../../abstracts.html#forward.tasks.AbstractTask">[docs]</a><span class="k">class</span> <span class="nc">AbstractTask</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract class for genetic tests.</span>
+<span class="sd">    </span>
+<span class="sd">    :param outcomes: (optional) List of Variable names to include as outcomes</span>
+<span class="sd">                     for this task. Alternatively, &quot;all&quot; can be passed.</span>
+<span class="sd">    :type outcomes: list or str</span>
+
+<span class="sd">    :param covariates: (optional) List of Variable names to include as</span>
+<span class="sd">                       covariates.</span>
+<span class="sd">    :type covariates: list or str</span>
+
+<span class="sd">    :param variants: List of variants. For now, we can&#39;t subset at the task</span>
+<span class="sd">                     level, so this should either not be passed or be &quot;all&quot;.</span>
+<span class="sd">    :type variants: str</span>
+
+<span class="sd">    :param correction: The multiple hypothesis testing correction. This will be</span>
+<span class="sd">                       automatically serialized in the task metadata (if the</span>
+<span class="sd">                       parent&#39;s method is called).</span>
+<span class="sd">    :type correction: str</span>
+
+<span class="sd">    :param alpha: Significance threshold (default: 0.05). This will be</span>
+<span class="sd">                  automatically serialized it the parent&#39;s method is called.</span>
+<span class="sd">    :type alpha: float</span>
+
+<span class="sd">    Implementations of this class should either compute the statistics directly</span>
+<span class="sd">    or manage the execution of external statistical programs and parse the</span>
+<span class="sd">    results.</span>
+
+<span class="sd">    The ``run_task`` method will be called by the experiment and should result</span>
+<span class="sd">    in the statistical analysis.</span>
+
+<span class="sd">    When the task is done, the experiment will call the ``done`` method which</span>
+<span class="sd">    should take care of dumping metadata.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outcomes</span><span class="o">=</span><span class="s">&quot;all&quot;</span><span class="p">,</span> <span class="n">covariates</span><span class="o">=</span><span class="s">&quot;all&quot;</span><span class="p">,</span> <span class="n">variants</span><span class="o">=</span><span class="s">&quot;all&quot;</span><span class="p">,</span>
+                 <span class="n">correction</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span> <span class="o">=</span> <span class="n">outcomes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">covariates</span> <span class="o">=</span> <span class="n">covariates</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variants</span> <span class="o">=</span> <span class="n">variants</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">correction</span> <span class="o">=</span> <span class="n">correction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+
+        <span class="c"># This will be automatically serialized when the task finishes.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_info</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_meta_path</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="AbstractTask.run_task"><a class="viewcode-back" href="../../abstracts.html#forward.tasks.AbstractTask.run_task">[docs]</a>    <span class="k">def</span> <span class="nf">run_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">task_name</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method that triggers statistical computation.</span>
+
+<span class="sd">        :param experiment: The parent experiment which provides access to</span>
+<span class="sd">                           the whole experimental context.</span>
+<span class="sd">        :type experiment: :py:class:`forward.experiment.Experiment`</span>
+
+<span class="sd">        :param task_name: The name of the task. This is useful to fill the</span>
+<span class="sd">                          results table, because the task name is one of the</span>
+<span class="sd">                          columns.</span>
+<span class="sd">        :type task_name: str</span>
+
+<span class="sd">        :param work_dir: Path to the Task&#39;s work directory that was created by</span>
+<span class="sd">                         the experiment.</span>
+<span class="sd">        :type work_dir: str</span>
+
+<span class="sd">        For implementations of this abstract class, calling the parent method</span>
+<span class="sd">        will set the outcomes and covariates to filtered lists of Variable</span>
+<span class="sd">        objects. It will also make sure that the outcomes, covariates,</span>
+<span class="sd">        variants, alpha and correction are included as task metadata.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span> <span class="o">=</span> <span class="n">work_dir</span>
+
+        <span class="c"># Select the variables and covariates to analyse.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span> <span class="o">==</span> <span class="s">&quot;all&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">experiment</span><span class="o">.</span><span class="n">variables</span>
+                             <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span><span class="o">.</span><span class="n">is_covariate</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">experiment</span><span class="o">.</span><span class="n">variables</span>
+                             <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">covariates</span> <span class="o">==</span> <span class="s">&quot;all&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">covariates</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">experiment</span><span class="o">.</span><span class="n">variables</span>
+                               <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">is_covariate</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">covariates</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">experiment</span><span class="o">.</span><span class="n">variables</span>
+                               <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">covariates</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">variants</span> <span class="o">!=</span> <span class="s">&quot;all&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+        <span class="c"># Set meta information for serialization.</span>
+        <span class="k">for</span> <span class="n">meta_key</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&quot;outcomes&quot;</span><span class="p">,</span> <span class="s">&quot;covariates&quot;</span><span class="p">,</span> <span class="s">&quot;variants&quot;</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta_key</span><span class="p">)</span>
+            <span class="c"># List of variables.</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_meta</span><span class="p">(</span>
+                    <span class="n">meta_key</span><span class="p">,</span>
+                    <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta_key</span><span class="p">)]</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_meta</span><span class="p">(</span><span class="n">meta_key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">meta_key</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&quot;correction&quot;</span><span class="p">,</span> <span class="s">&quot;alpha&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_meta</span><span class="p">(</span><span class="n">meta_key</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta_key</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="AbstractTask.set_meta"><a class="viewcode-back" href="../../abstracts.html#forward.tasks.AbstractTask.set_meta">[docs]</a>    <span class="k">def</span> <span class="nf">set_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set meta information about this task.</span>
+
+<span class="sd">        This will be pickle serialzed to this Task&#39;s work directory. It can</span>
+<span class="sd">        subsequently be used by the backend and the dynamic report.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="AbstractTask.get_meta"><a class="viewcode-back" href="../../abstracts.html#forward.tasks.AbstractTask.get_meta">[docs]</a>    <span class="k">def</span> <span class="nf">get_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get meta information about this task.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AbstractTask.done"><a class="viewcode-back" href="../../abstracts.html#forward.tasks.AbstractTask.done">[docs]</a>    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Cleanup signal from the Experiment.</span>
+
+<span class="sd">        The abstract method writes the content of the info attribute to disk.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_meta_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span> <span class="s">&quot;task_info.pkl&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task_meta_path</span><span class="p">,</span> <span class="s">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+</div></div>
+<span class="k">class</span> <span class="nc">LogisticTest</span><span class="p">(</span><span class="n">AbstractTask</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Logistic regression genetic test.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">STATSMODELS_AVAILABLE</span><span class="p">:</span>  <span class="c"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&quot;LogisticTest class requires statsmodels. &quot;</span>
+                              <span class="s">&quot;Install the package first (and patsy).&quot;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LogisticTest</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">filter_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Filter outcomes to remove non discrete variables.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span> <span class="k">if</span>
+                         <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">DiscreteVariable</span><span class="p">)]</span>
+
+    <span class="k">def</span> <span class="nf">prep_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_result</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">add_result</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Running a logistic regression analysis.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">run_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">task_name</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the logistic regression.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LogisticTest</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">run_task</span><span class="p">(</span><span class="n">experiment</span><span class="p">,</span> <span class="n">task_name</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prep_task</span><span class="p">(</span><span class="n">experiment</span><span class="p">,</span> <span class="n">task_name</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">)</span>
+
+        <span class="c"># Keep only discrete or continuous variables.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_variables</span><span class="p">()</span>
+
+        <span class="c"># Get a database session from the experiment.</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">session</span>
+
+        <span class="c"># Get the list of variants to analyze.</span>
+        <span class="c"># No extra filtering for now (TODO).</span>
+        <span class="n">variants</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">genotypes</span><span class="o">.</span><span class="n">query_variants</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="s">&quot;name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="n">variants</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">variants</span><span class="p">]</span>  <span class="c"># Keep only the names.</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">parallel</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">cpu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_work</span><span class="p">)</span>
+
+        <span class="n">num_tests</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c"># Build the covariate matrix.</span>
+        <span class="n">covar_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="nb">tuple</span><span class="p">([</span>
+            <span class="n">experiment</span><span class="o">.</span><span class="n">phenotypes</span><span class="o">.</span><span class="n">get_phenotype_vector</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">covar</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">covariates</span>
+        <span class="p">]))</span>
+
+        <span class="c"># Add the intercept because statsmodels does not add it automatically.</span>
+        <span class="n">covar_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">covar_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">covar_matrix</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">covar_matrix</span> <span class="o">=</span> <span class="n">covar_matrix</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">missing_covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">covar_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">phenotype</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">phenotypes</span><span class="o">.</span><span class="n">get_phenotype_vector</span><span class="p">(</span><span class="n">phenotype</span><span class="p">)</span>
+            <span class="n">missing_outcome</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+            <span class="c"># For GLMs where we want to compare the variance explained by a</span>
+            <span class="c"># null model of the covariates without the genetics effect to the</span>
+            <span class="c"># genetic model, we can hookup this function.</span>
+            <span class="c"># Note: This is used by the linear test.</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;_compute_null_model&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_compute_null_model</span><span class="p">(</span><span class="n">phenotype</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">covar_matrix</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">variant</span> <span class="ow">in</span> <span class="n">variants</span><span class="p">:</span>
+                <span class="c"># Get the genotype vector.</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">genotypes</span><span class="o">.</span><span class="n">get_genotypes</span><span class="p">(</span><span class="n">variant</span><span class="p">)</span>
+                <span class="n">missing_genotypes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+                <span class="n">x</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">covar_matrix</span><span class="p">))</span>
+
+                <span class="n">missing</span> <span class="o">=</span> <span class="p">(</span><span class="n">missing_covar</span> <span class="o">|</span> <span class="n">missing_genotypes</span> <span class="o">|</span> <span class="n">missing_outcome</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">parallel</span><span class="o">.</span><span class="n">push_work</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">variant</span><span class="p">,</span> <span class="n">phenotype</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="o">~</span><span class="n">missing</span><span class="p">,</span> <span class="p">:],</span> <span class="n">y</span><span class="p">[</span><span class="o">~</span><span class="n">missing</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">num_tests</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">parallel</span><span class="o">.</span><span class="n">done_pushing</span><span class="p">()</span>
+
+        <span class="c"># We can start parsing the results.</span>
+        <span class="k">while</span> <span class="n">num_tests</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallel</span><span class="o">.</span><span class="n">get_result</span><span class="p">()</span>
+            <span class="c"># Process the result.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_result</span><span class="p">(</span>
+                <span class="n">tested_entity</span><span class="o">=</span><span class="s">&quot;variant&quot;</span><span class="p">,</span>
+                <span class="n">task_name</span><span class="o">=</span><span class="n">task_name</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">results</span>
+            <span class="p">)</span>
+
+            <span class="n">num_tests</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">handle_sm_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">genetic_col</span><span class="p">):</span>
+        <span class="n">conf_int</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">conf_int</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">conf_int</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+            <span class="n">conf_int</span> <span class="o">=</span> <span class="n">conf_int</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">ic95_min</span><span class="p">,</span> <span class="n">ic95_max</span> <span class="o">=</span> <span class="n">conf_int</span><span class="p">[</span><span class="n">genetic_col</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s">&quot;results_type&quot;</span><span class="p">:</span> <span class="s">&quot;GenericResults&quot;</span><span class="p">,</span>
+            <span class="s">&quot;significance&quot;</span><span class="p">:</span> <span class="n">res</span><span class="o">.</span><span class="n">pvalues</span><span class="p">[</span><span class="n">genetic_col</span><span class="p">],</span>
+            <span class="s">&quot;coefficient&quot;</span><span class="p">:</span> <span class="n">res</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">genetic_col</span><span class="p">],</span>
+            <span class="s">&quot;standard_error&quot;</span><span class="p">:</span> <span class="n">res</span><span class="o">.</span><span class="n">bse</span><span class="p">[</span><span class="n">genetic_col</span><span class="p">],</span>
+            <span class="s">&quot;confidence_interval_min&quot;</span><span class="p">:</span> <span class="n">ic95_min</span><span class="p">,</span>
+            <span class="s">&quot;confidence_interval_max&quot;</span><span class="p">:</span> <span class="n">ic95_max</span><span class="p">,</span>
+            <span class="s">&quot;test_statistic&quot;</span><span class="p">:</span> <span class="n">res</span><span class="o">.</span><span class="n">tvalues</span><span class="p">[</span><span class="n">genetic_col</span><span class="p">]</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_work</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">phenotype</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">genetic_col</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run a logistic test using the y ~ x model.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">glm</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">GLM</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="n">sm</span><span class="o">.</span><span class="n">families</span><span class="o">.</span><span class="n">Binomial</span><span class="p">())</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">glm</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_sm_results</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">genetic_col</span><span class="p">)</span>
+            <span class="n">res</span><span class="p">[</span><span class="s">&quot;entity_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">variant</span>
+            <span class="n">res</span><span class="p">[</span><span class="s">&quot;phenotype&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">phenotype</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="c"># Log the exception and insert nulls in db.</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">None</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">res</span>
+
+
+<span class="nd">@result_table</span>
+<span class="k">class</span> <span class="nc">LinearTestResults</span><span class="p">(</span><span class="n">ExperimentResult</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Table for extra statistical reporting for linear regression.</span>
+
+<span class="sd">    It is interesting to report the standardized beta to easily compare the</span>
+<span class="sd">    effect size between different outcomes (that have different units). We</span>
+<span class="sd">    will also report the coefficient of determination (R^2) that reports the</span>
+<span class="sd">    fraction of explained variance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&quot;linreg_results&quot;</span>
+
+    <span class="n">pk</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">(),</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&quot;results.pk&quot;</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">adjusted_r_squared</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Float</span><span class="p">())</span>
+    <span class="n">std_beta</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Float</span><span class="p">())</span>
+    <span class="n">std_beta_min</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Float</span><span class="p">())</span>
+    <span class="n">std_beta_max</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Float</span><span class="p">())</span>
+
+    <span class="n">__mapper_args__</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&quot;polymorphic_identity&quot;</span><span class="p">:</span> <span class="s">&quot;LinearTest&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">LinearTest</span><span class="p">(</span><span class="n">LogisticTest</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Linear regression genetic test.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">STATSMODELS_AVAILABLE</span><span class="p">:</span>  <span class="c"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&quot;LinearTest class requires statsmodels. &quot;</span>
+                              <span class="s">&quot;Install the package first (and patsy).&quot;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LinearTest</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c"># Check if we need to report the standardized beta.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_std_beta</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s">&quot;compute_standardized_beta&quot;</span><span class="p">,</span> <span class="bp">True</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">null_rsquared</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">prep_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">task_name</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Running a linear regression analysis.&quot;</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">_f</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">LinearTestResults</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+            <span class="n">experiment</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_result</span> <span class="o">=</span> <span class="n">_f</span>
+
+    <span class="k">def</span> <span class="nf">filter_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Filter outcomes to remove non discrete variables.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span> <span class="k">if</span>
+                         <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">ContinuousVariable</span><span class="p">)]</span>
+
+    <span class="k">def</span> <span class="nf">_compute_null_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phenotype</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">covar_matrix</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the regression for the null model of y ~ covariates.&quot;&quot;&quot;</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">covar_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">ols</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="o">~</span><span class="n">missing</span><span class="p">],</span> <span class="n">covar_matrix</span><span class="p">[</span><span class="o">~</span><span class="n">missing</span><span class="p">,</span> <span class="p">:])</span>
+        <span class="n">fit</span> <span class="o">=</span> <span class="n">ols</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">null_rsquared</span><span class="p">[</span><span class="n">phenotype</span><span class="p">]</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">rsquared_adj</span>
+
+    <span class="k">def</span> <span class="nf">_work</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">phenotype</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">genetic_col</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ols</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">ols</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_sm_results</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">genetic_col</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="s">&quot;results_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;LinearTest&quot;</span>
+            <span class="n">result</span><span class="p">[</span><span class="s">&quot;entity_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">variant</span>
+            <span class="n">result</span><span class="p">[</span><span class="s">&quot;phenotype&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">phenotype</span><span class="o">.</span><span class="n">name</span>
+
+            <span class="c"># Linear specific.</span>
+            <span class="n">result</span><span class="p">[</span><span class="s">&quot;adjusted_r_squared&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">rsquared_adj</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_std_beta</span><span class="p">:</span>
+                <span class="c"># Recompute to get standardized coefficient.</span>
+                <span class="n">std_x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="c"># Restore the intercept term.</span>
+                <span class="c"># Be careful what column you use here if you change the</span>
+                <span class="c"># design matrix.</span>
+                <span class="n">std_x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+                <span class="n">ols</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">((</span><span class="n">y</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">std_x</span><span class="p">)</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">ols</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+                <span class="n">result</span><span class="p">[</span><span class="s">&quot;std_beta&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">genetic_col</span><span class="p">]</span>
+                <span class="n">conf_int</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">conf_int</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">conf_int</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+                    <span class="n">conf_int</span> <span class="o">=</span> <span class="n">conf_int</span><span class="o">.</span><span class="n">values</span>
+
+                <span class="n">result</span><span class="p">[</span><span class="s">&quot;std_beta_min&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">conf_int</span><span class="p">[</span><span class="n">genetic_col</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="n">result</span><span class="p">[</span><span class="s">&quot;std_beta_max&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">conf_int</span><span class="p">[</span><span class="n">genetic_col</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">None</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_meta</span><span class="p">(</span><span class="s">&quot;null_model_rsquared&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_rsquared</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LinearTest</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">done</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Forward 0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Marc-André Legault.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

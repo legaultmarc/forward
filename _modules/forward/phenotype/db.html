@@ -1,0 +1,409 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>forward.phenotype.db &mdash; Forward 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../_static/bizstyle.js"></script>
+    <link rel="top" title="Forward 0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Forward 0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for forward.phenotype.db</h1><div class="highlight"><pre>
+<span class="c"># This file is part of forward.</span>
+<span class="c">#</span>
+<span class="c"># This work is licensed under the Creative Commons Attribution-NonCommercial</span>
+<span class="c"># 4.0 International License. To view a copy of this license, visit</span>
+<span class="c"># http://creativecommons.org/licenses/by-nc/4.0/ or send a letter to Creative</span>
+<span class="c"># Commons, PO Box 1866, Mountain View, CA 94042, USA.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module is used to formalize the expected phenotype structure for forward.</span>
+<span class="sd">It&#39;s role is to provide a reusable interface to feed phenotype (and covariate)</span>
+<span class="sd">data to the statistical engine.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">..statistics.utilities</span> <span class="kn">import</span> <span class="n">inverse_normal_transformation</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">abstract</span><span class="p">,</span> <span class="n">dispatch_methods</span><span class="p">,</span> <span class="n">expand</span>
+<span class="kn">from</span> <span class="nn">.variables</span> <span class="kn">import</span> <span class="n">ContinuousVariable</span><span class="p">,</span> <span class="n">DiscreteVariable</span><span class="p">,</span> <span class="n">Variable</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;ExcelPhenotypeDatabase&quot;</span><span class="p">]</span>
+
+
+<span class="nd">@abstract</span>
+<div class="viewcode-block" id="AbstractPhenotypeDatabase"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase">[docs]</a><span class="k">class</span> <span class="nc">AbstractPhenotypeDatabase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract class representing a collection of phenotypes.</span>
+
+<span class="sd">    It is the responsibility of the phenotype database to handle phenotype</span>
+<span class="sd">    based exclusions and transformations.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">dispatch_methods</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_phenotypes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+<div class="viewcode-block" id="AbstractPhenotypeDatabase.get_phenotype_vector"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_phenotype_vector">[docs]</a>    <span class="k">def</span> <span class="nf">get_phenotype_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a numpy array representing the selected outcome for all</span>
+<span class="sd">        samples.</span>
+
+<span class="sd">        :param name: The Variable object representing the phenotype to extract.</span>
+<span class="sd">        :type name: :py:class:`forward.phenotype.variables.Variable`</span>
+
+<span class="sd">        :returns: A vector representing the outcome.</span>
+<span class="sd">        :rtype: :py:class:`numpy.ndarray`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="AbstractPhenotypeDatabase.set_experiment_variables"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.set_experiment_variables">[docs]</a>    <span class="k">def</span> <span class="nf">set_experiment_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the variables attribute containing all the possible variables.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="AbstractPhenotypeDatabase.set_sample_order"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.set_sample_order">[docs]</a>    <span class="k">def</span> <span class="nf">set_sample_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">allow_subset</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the order of the samples.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="AbstractPhenotypeDatabase.get_sample_order"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_sample_order">[docs]</a>    <span class="k">def</span> <span class="nf">get_sample_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">allow_subset</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the order of the samples.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="AbstractPhenotypeDatabase.get_related_phenotype_exclusions"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_related_phenotype_exclusions">[docs]</a>    <span class="k">def</span> <span class="nf">get_related_phenotype_exclusions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the phenotypes for which there was an exclusion based on</span>
+<span class="sd">        correlation.</span>
+
+<span class="sd">        Using forward, it is possible to use the &quot;exclude_correlated&quot; function</span>
+<span class="sd">        to exclude from controls samples that are cases for a related</span>
+<span class="sd">        (correlated) phenotype.</span>
+<span class="sd">        In order to access this information in the report, it is necessary to</span>
+<span class="sd">        implement this function.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="AbstractPhenotypeDatabase.get_phenotype_relation_threshold"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_phenotype_relation_threshold">[docs]</a>    <span class="k">def</span> <span class="nf">get_phenotype_relation_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the threshold set by exclude_correlated.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="AbstractPhenotypeDatabase.exclude_correlated"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.exclude_correlated">[docs]</a>    <span class="k">def</span> <span class="nf">exclude_correlated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Exclude correlated samples from controls.</span>
+
+<span class="sd">        In phenomic studies, it is common to exclude samples from controls if</span>
+<span class="sd">        they are affected by a correlated phenotype.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AbstractPhenotypeDatabase.validate_sample_sequences"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.validate_sample_sequences">[docs]</a>    <span class="k">def</span> <span class="nf">validate_sample_sequences</span><span class="p">(</span><span class="n">old_seq</span><span class="p">,</span> <span class="n">new_seq</span><span class="p">,</span> <span class="n">allow_subset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compares sample sequences to validate the new sequence order.</span>
+
+<span class="sd">        This can optionally be used by subclasses when writing the</span>
+<span class="sd">        `set_sample_order` method. We recommend using to properly log relevant</span>
+<span class="sd">        information.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Make sure that all the elements are in the provided sequence.</span>
+        <span class="n">old_seq</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">old_seq</span><span class="p">)</span>
+        <span class="n">new_seq</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">new_seq</span><span class="p">)</span>
+
+        <span class="n">missing</span> <span class="o">=</span> <span class="n">old_seq</span> <span class="o">-</span> <span class="n">new_seq</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="n">new_seq</span> <span class="o">-</span> <span class="n">old_seq</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">allow_subset</span><span class="p">)</span> <span class="ow">and</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;Can&#39;t set the sequence because some entries are &quot;</span>
+                       <span class="s">&quot;missing resulting in ambiguous order.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;Some samples were discarded when reordering &quot;</span>
+                       <span class="s">&quot;phenotype information ({} samples discarded). This &quot;</span>
+                       <span class="s">&quot;could be because no genotype information is &quot;</span>
+                       <span class="s">&quot;available for these samples.&quot;</span><span class="p">)</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">extra</span><span class="p">:</span>
+            <span class="n">extra</span> <span class="o">=</span> <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">extra</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Some of the given samples are not in the &quot;</span>
+                             <span class="s">&quot;phenotype database ({}).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">extra</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="AbstractPhenotypeDatabase.get_correlation_matrix"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_correlation_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">get_correlation_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a correlation matrix for the specified names.</span>
+<span class="sd">        </span>
+<span class="sd">        :param names: A list of variable names.</span>
+<span class="sd">        :type names: list</span>
+
+<span class="sd">        :returns: A correlation matrix.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+
+<span class="sd">        This is useful to exclude correlated phenotypes as controls.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div></div>
+<span class="nd">@abstract</span>
+<span class="k">class</span> <span class="nc">PandasPhenotypeDatabase</span><span class="p">(</span><span class="n">AbstractPhenotypeDatabase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_column</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c"># Set the sample column as the index.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">sample_column</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">sample_column</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">sample_column</span><span class="p">,</span> <span class="n">verify_integrity</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="c"># User will be warned if the required sample order was not defined.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_order_is_set</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c"># Call parent to dispatch method calls.</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PandasPhenotypeDatabase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_phenotypes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">set_experiment_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="n">variables</span>
+        <span class="c"># Check if the user asked for exclusions.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;_exclusions_were_initialized&quot;</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="c"># Check if the exclusions were already initialized.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions_were_initialized</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Can&#39;t set the experiment variables after &quot;</span>
+                            <span class="s">&quot;exclusions were initialized.&quot;</span><span class="p">)</span>
+
+        <span class="c"># Compute the exclusions.</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">]</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_correlation_matrix</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">variable_type</span> <span class="o">!=</span> <span class="s">&quot;discrete&quot;</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">is_covariate</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_phenotype_vector</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+
+            <span class="c"># Check for correlated variables.</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="c"># FIXME This np.where is weird. where&#39;s the threshold.</span>
+            <span class="c"># Also add it to the mappings to account for the new database</span>
+            <span class="c"># structures.</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">mat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclusion_threshold</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="n">i</span><span class="p">:</span>
+                    <span class="c"># j is a candidate related outcome.</span>
+                    <span class="n">valid</span> <span class="o">=</span> <span class="p">(</span><span class="n">variables</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">variable_type</span> <span class="o">==</span> <span class="s">&quot;discrete&quot;</span> <span class="ow">and</span> 
+                             <span class="ow">not</span> <span class="n">variables</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">is_covariate</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">valid</span><span class="p">:</span>
+                        <span class="c"># Exclude and write down.</span>
+                        <span class="n">related_phenotype_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_phenotype_vector</span><span class="p">(</span>
+                            <span class="n">variables</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                        <span class="p">)</span>
+                        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">related_phenotype_y</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                        <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_exclusion_mappings</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                            <span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">mat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">n</span><span class="p">)</span>
+                        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">set_sample_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">allow_subset</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">ExcelPhenotypeDatabase</span><span class="o">.</span><span class="n">validate_sample_sequences</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_sample_order</span><span class="p">(</span><span class="n">warn</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span>
+            <span class="n">sequence</span><span class="p">,</span>
+            <span class="n">allow_subset</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">sequence</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_order_is_set</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">get_sample_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_order_is_set</span> <span class="ow">and</span> <span class="n">warn</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;No sample order was given for the phenotype &quot;</span>
+                           <span class="s">&quot;database.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_phenotype_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_order_is_set</span> <span class="ow">and</span> <span class="n">warn</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;The order of samples for the database has not &quot;</span>
+                           <span class="s">&quot;been set. Make sure that it is consistent with &quot;</span>
+                           <span class="s">&quot;the genetic database (consistent order).&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">variable</span><span class="o">.</span><span class="n">is_variable</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&quot;&#39;{}&#39; is not a Variable instance (type: {}).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">variable</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="n">variable</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;&#39;{}&#39; is not in the database.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="n">vect</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">variable_type</span> <span class="o">==</span> <span class="s">&quot;continuous&quot;</span> <span class="ow">and</span> <span class="n">variable</span><span class="o">.</span><span class="n">transformation</span><span class="p">:</span>
+            <span class="n">vect</span> <span class="o">=</span> <span class="n">apply_transformation</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">transformation</span><span class="p">,</span> <span class="n">vect</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">vect</span>
+
+    <span class="k">def</span> <span class="nf">get_related_phenotype_exclusions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;related_phenotypes&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">related_phenotypes</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">exclude_correlated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This is called if the user specified it in the configuration.</span>
+<span class="sd">        </span>
+<span class="sd">        Because we need the Variables to properly compute the exclusions, we</span>
+<span class="sd">        will just remember that the user wants exclusions and wait for the</span>
+<span class="sd">        experiment to pass the variables to define the exclusion mappings.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exclusion_threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exclusion_mappings</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions_were_initialized</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">get_phenotype_relation_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;_exclusion_threshold&quot;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_correlation_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">names</span><span class="p">]</span><span class="o">.</span><span class="n">corr</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+
+
+<span class="k">class</span> <span class="nc">CSVPhenotypeDatabase</span><span class="p">(</span><span class="n">PandasPhenotypeDatabase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Collection of phenotypes based on a CSV file.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">sample_column</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+        <span class="n">csv_allowed_kwargs</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;sep&quot;</span><span class="p">,</span> <span class="s">&quot;compression&quot;</span><span class="p">,</span> <span class="s">&quot;header&quot;</span><span class="p">,</span> <span class="s">&quot;skiprows&quot;</span><span class="p">,</span>
+                              <span class="s">&quot;names&quot;</span><span class="p">,</span> <span class="s">&quot;na_values&quot;</span><span class="p">,</span> <span class="s">&quot;decimal&quot;</span><span class="p">]</span>
+        <span class="n">csv_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">csv_allowed_kwargs</span><span class="p">:</span>
+                <span class="n">csv_kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="o">*</span><span class="n">csv_kwargs</span><span class="p">)</span>
+
+        <span class="c"># The arguments that are not feed to the pandas csv reader are assumed</span>
+        <span class="c"># to be method calls and will be dispatched by the parent.</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CSVPhenotypeDatabase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">sample_column</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ExcelPhenotypeDatabase</span><span class="p">(</span><span class="n">PandasPhenotypeDatabase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Collection of phenotypes based on an Excel file.</span>
+
+<span class="sd">    Only the first sheet is considered.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">sample_column</span><span class="p">,</span> <span class="n">missing_values</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">na_values</span><span class="o">=</span><span class="n">missing_values</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ExcelPhenotypeDatabase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">sample_column</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">apply_transformation</span><span class="p">(</span><span class="n">transformation</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Apply a transformation to a continuous variable.&quot;&quot;&quot;</span>
+    <span class="n">transformations</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&quot;log&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">,</span>
+        <span class="s">&quot;inverse-normal-transform&quot;</span><span class="p">:</span> <span class="n">inverse_normal_transformation</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">transformation</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">transformations</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Invalid transformation &#39;{}&#39;.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">transformation</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">transformations</span><span class="p">[</span><span class="n">transformation</span><span class="p">](</span><span class="n">vector</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Forward 0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Marc-André Legault.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

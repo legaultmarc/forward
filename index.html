@@ -1,0 +1,441 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Forward Documentation &mdash; Forward 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="top" title="Forward 0.1 documentation" href="#" />
+    <link rel="next" title="Extending Forward" href="abstracts.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="abstracts.html" title="Extending Forward"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Forward 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><cite>Forward</cite> Documentation</a></li>
+<li><a class="reference internal" href="#quick-start">Quick start</a><ul>
+<li><a class="reference internal" href="#configuration-files">Configuration files</a></li>
+<li><a class="reference internal" href="#running-an-experiment">Running an experiment</a></li>
+<li><a class="reference internal" href="#browsing-results">Browsing results</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="abstracts.html"
+                        title="next chapter">Extending <cite>Forward</cite></a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="forward-documentation">
+<h1><cite>Forward</cite> Documentation<a class="headerlink" href="#forward-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Forward is a bioinformatics utility to facilitate phenomic studies using
+genetic cohorts (<cite>i.e</cite> it was not designed for pheWAS studies based on
+electronic medical records). It was built with a strong emphasis on
+flexibility, performance and reproductibility. The documented interfaces make
+it easy for bioinformaticians to extend <cite>Forward</cite>&#8216;s capabilities by writing
+their own implementations (<cite>e.g.</cite> to add support for a new file format or to
+optimize computation for their dataset) and the automatic reporting and
+archiving functionality greatly facilitate the dissemination and reproduction
+of results.</p>
+</div>
+<div class="section" id="quick-start">
+<h1>Quick start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="configuration-files">
+<h2>Configuration files<a class="headerlink" href="#configuration-files" title="Permalink to this headline">¶</a></h2>
+<p>The easiest way to run a Forward experiment is to use the support for
+<a class="reference external" href="http://yaml.org/">YAML</a> configuration files. These files contain all the
+necessary information to define all the aspects of the experiment and serve
+as an archive to define what analysis was executed. They are automatically
+added to the interactive report.</p>
+<p>An example can be found here:</p>
+<div class="highlight-yaml"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53</pre></div></td><td class="code"><div class="highlight"><pre><span class="l-Scalar-Plain">Database</span><span class="p-Indicator">:</span>
+    <span class="l-Scalar-Plain">pyclass</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ExcelPhenotypeDatabase</span>
+    <span class="l-Scalar-Plain">missing_values</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="s">&quot;-9&quot;</span><span class="p-Indicator">,</span> <span class="s">&quot;-99&quot;</span><span class="p-Indicator">,</span> <span class="s">&quot;-88&quot;</span><span class="p-Indicator">,</span> <span class="s">&quot;-77&quot;</span><span class="p-Indicator">]</span>
+    <span class="l-Scalar-Plain">sample_column</span><span class="p-Indicator">:</span> <span class="s">&quot;Sample&quot;</span>
+    <span class="l-Scalar-Plain">filename</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/path/to/cohort_phenotypes.xlsx</span>
+    <span class="l-Scalar-Plain">exclude_correlated</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0.8</span>
+
+<span class="l-Scalar-Plain">Variables</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">MyocInfarction</span>
+      <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">discrete</span>
+
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">BMI</span>
+      <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">continuous</span>
+      <span class="l-Scalar-Plain">transformation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">log</span>
+
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">BPSystolic</span>
+      <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">continuous</span>
+
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">PC1</span>
+      <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">continuous</span>
+      <span class="l-Scalar-Plain">covariate</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Yes</span>
+
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">PC2</span>
+      <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">continuous</span>
+      <span class="l-Scalar-Plain">covariate</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Yes</span>
+
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">GenderFemale</span>
+      <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">discrete</span>
+      <span class="l-Scalar-Plain">covariate</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Yes</span>
+
+<span class="l-Scalar-Plain">Genotypes</span><span class="p-Indicator">:</span>
+    <span class="l-Scalar-Plain">pyclass</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">MemoryImpute2Geno</span>
+    <span class="l-Scalar-Plain">filename</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/path/to/data/impute2_extractor.impute2</span>
+    <span class="l-Scalar-Plain">samples</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/path/to/data/forward_samples.txt</span>
+    <span class="l-Scalar-Plain">filter_probability</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0.90</span>
+    <span class="l-Scalar-Plain">filter_completion</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0.95</span>
+    <span class="l-Scalar-Plain">filter_maf</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0.01</span>
+    <span class="l-Scalar-Plain">filter_name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/path/to/data/variants.good_sites</span>
+    <span class="l-Scalar-Plain">exclude_samples</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="s">&quot;9210&quot;</span><span class="p-Indicator">,</span> <span class="p-Indicator">]</span>
+
+<span class="l-Scalar-Plain">Experiment</span><span class="p-Indicator">:</span>
+    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;ADCY9_forward&quot;</span>
+    <span class="l-Scalar-Plain">cpu</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">4</span>
+    <span class="l-Scalar-Plain">build</span><span class="p-Indicator">:</span> <span class="s">&quot;GRCh37&quot;</span>
+
+    <span class="l-Scalar-Plain">tasks</span><span class="p-Indicator">:</span>
+        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">pyclass</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">LogisticTest</span>
+          <span class="l-Scalar-Plain">outcomes</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">all</span>
+          <span class="l-Scalar-Plain">covariates</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">all</span>
+
+        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">pyclass</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">LinearTest</span>
+          <span class="l-Scalar-Plain">outcomes</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">all</span>
+          <span class="l-Scalar-Plain">covariates</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">all</span>
+</pre></div>
+</td></tr></table></div>
+<p>The <cite>Database</cite> block (lines 1-6) represents the phenotype database that is used
+in the experiment. Multiple different <cite>pyclasses</cite> are availble to handle flat
+files or Excel files, but implementations of the phenotype database interface
+make it easy to extend this to other formats or databases. Some other options
+are also included in this example, such as the <code class="docutils literal"><span class="pre">missing_values</span></code> command that
+is passed to the underlying Python object to make sure that exclusions are
+properly represented. The <code class="docutils literal"><span class="pre">sample_column</span></code> directive which column contains
+sample IDs, <code class="docutils literal"><span class="pre">filename</span></code> is the path to the file containing phenotypes and
+<code class="docutils literal"><span class="pre">exclude_correlated</span></code> is used to mark the correlation threshold to exclude
+affected samples from the control groups of correlated outcomes. As an example
+of this last command, if angina and myocardial infarction are correlated at
+<code class="docutils literal"><span class="pre">0.8</span></code>, individuals with angina will be excluded from the control group for
+myocardial infarction and the other way around.</p>
+<p>The <cite>Variables</cite> block (lines 8-29) defines all the variables under study,
+including covariates. The <code class="docutils literal"><span class="pre">name</span></code> command should correspond to phenotype IDs
+from the Database section, the <code class="docutils literal"><span class="pre">type</span></code> command is used to identify continuous
+and discrete variables and the <code class="docutils literal"><span class="pre">transformation</span></code> command can be used to
+transform continuous traits (<cite>e.g.</cite> to achieve normality if the chosen
+statistical tests requires it).</p>
+<p>The <cite>Genotypes</cite> block (lines 31-40) is used to represent genotypic data. For
+now, the included implementations of the genotype database interface are for
+micrarray data in plink binary format or for imputed IMPUTE2 files. Basic
+filtering of variants by imputation probability (<code class="docutils literal"><span class="pre">filter_probability</span></code>), by
+completion rate (percentage of non-missing genotypes for a given marker,
+<code class="docutils literal"><span class="pre">filter_completion</span></code>), by minor allele frequency (<code class="docutils literal"><span class="pre">filter_maf</span></code>) and by
+variant name (using a file with a single columns, <code class="docutils literal"><span class="pre">filter_name</span></code>) is also
+built-in for the <code class="docutils literal"><span class="pre">MemoryImpute2Geno</span></code> class. Note that the <cite>Memory</cite> in the
+class name is because everything will be loaded in memory, which means that it
+will be fast for small genetic datasets, but it won&#8217;t be suitable for larger
+datasets. Users are encouraged to either extract their region of interest or to
+implement a version that does supports indexing on the hard disk.</p>
+<p>The <cite>Experiment</cite> block (lines 42-54) defines all the analyses that will be
+executed by <cite>Forward</cite>. The name is used as an identifier and the corresponding
+folder will be automatically created. If it already exists, <cite>Forward</cite> will
+refuse to run (because we don&#8217;t want to overwrite your data). The <code class="docutils literal"><span class="pre">cpu</span></code>
+instruction will be passed to the tasks and will determine how many parallel
+processes will be ran (if supported for the chosen tasks). The <code class="docutils literal"><span class="pre">build</span></code>
+(<cite>e.g.</cite> GRCh37) will be archived with other meta information to ensure
+reproductibility and could eventually be used in the interactive report.
+The <code class="docutils literal"><span class="pre">tasks</span></code> list is to tell <cite>Forward</cite> what statistical analyses are to be
+executed as part of this experiment. For now, only methods for common variant
+association testing are available (linear and logistic regression), but we
+are actively working on other statistical tests.</p>
+</div>
+<div class="section" id="running-an-experiment">
+<h2>Running an experiment<a class="headerlink" href="#running-an-experiment" title="Permalink to this headline">¶</a></h2>
+<p>To run the newly created configuration file, you can use the command line
+interface script (<code class="docutils literal"><span class="pre">forward/scripts/cli.py</span></code>). Eventually, this will be
+automatically installed. The usage is simple, just pass the path to the
+configuration file.</p>
+<div class="highlight-bash"><div class="highlight"><pre>./forward/scripts/cli.py my_configuration.yaml
+</pre></div>
+</div>
+<p>A sample outpout will then look like:</p>
+<div class="highlight-bash"><div class="highlight"><pre>INFO:forward.genotype:Loading samples from data/impute2/forward_samples.txt
+INFO:forward.genotype:Setting the MAF threshold to 0.01
+INFO:forward.genotype:Setting the completion threshold to 0.95
+INFO:forward.genotype:Keeping only variants with IDs in file: <span class="s1">&#39;/data/impute2/chr16.imputed.good_sites&#39;</span>
+INFO:forward.experiment:The build <span class="nb">set </span><span class="k">for</span> this experiment is GRCh37.
+WARNING:forward.phenotype.db:Some samples were discarded when reordering phenotype information <span class="o">(</span><span class="m">1343</span> samples discarded<span class="o">)</span>. This could be because no genotype information is available <span class="k">for</span> these samples.
+INFO:forward.genotype:Built the variant database <span class="o">(</span><span class="m">17</span> entries<span class="o">)</span>.
+INFO:root:Running a logistic regression analysis.
+INFO:root:Running a linear regression analysis.
+INFO:forward.experiment:Completed all tasks in 00:00:51.
+INFO:werkzeug: * Running on http://127.0.0.1:5000/ <span class="o">(</span>Press CTRL+C to quit<span class="o">)</span>
+INFO:werkzeug: * Restarting with stat
+</pre></div>
+</div>
+<p>To view the generated interactive report, you can then go to
+<code class="docutils literal"><span class="pre">http://127.0.0.1:5000/</span></code> with your favorite browser and look at the results.</p>
+<p>A sample report is available on <a class="reference external" href="http://www.statgen.org/forward/fto">StatGen&#8217;s website</a>.</p>
+<p>Also note that the interactive report is strictly optional and you can still
+browse the analyses results manually. See the next section for details.</p>
+</div>
+<div class="section" id="browsing-results">
+<h2>Browsing results<a class="headerlink" href="#browsing-results" title="Permalink to this headline">¶</a></h2>
+<p>After executing an experiment, the following directory structure will have
+been created:</p>
+<div class="highlight-python"><div class="highlight"><pre>└── My_Experiment
+    ├── configuration.yaml
+    ├── experiment_info.pkl
+    ├── forward_database.db
+    ├── phen_correlation_matrix.npy
+    ├── phenotypes.hdf5
+    └── tasks
+        ├── task0_LogisticTest
+        │   └── task_info.pkl
+        └── task1_LinearTest
+            └── task_info.pkl
+</pre></div>
+</div>
+<p>This contains all the results and information needed to describe the
+experiment. The only missing thing for perfect reproductibility is a copy of
+the input files. Eventually, an opt-out feature will allow users to have
+automatic archiving of the input files.</p>
+<p>Here is a description of all of the results files.</p>
+<ul>
+<li><p class="first"><code class="docutils literal"><span class="pre">configuration.yaml</span></code> The configuration file that was used to generate these
+results.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">experiment_info.pkl</span></code> A <a class="reference external" href="https://docs.python.org/3.5/library/pickle.html">Python pickle</a> file contining experiment meta-data. See the following example for details</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span><span class="s">&#39;build&#39;</span><span class="p">:</span> <span class="s">&#39;GRCh37&#39;</span><span class="p">,</span>
+<span class="s">&#39;configuration&#39;</span><span class="p">:</span> <span class="s">&#39;sample_experiment/experiment.yaml&#39;</span><span class="p">,</span>
+<span class="s">&#39;engine_url&#39;</span><span class="p">:</span> <span class="s">&#39;sqlite:///ADCY9_forward/forward_database.db&#39;</span><span class="p">,</span>
+<span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;ADCY9_forward&#39;</span><span class="p">,</span>
+<span class="s">&#39;outcomes&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">u&#39;Infarctus&#39;</span><span class="p">,</span>
+          <span class="s">u&#39;Valve&#39;</span><span class="p">,</span>
+          <span class="s">u&#39;Angine&#39;</span><span class="p">,</span>
+          <span class="s">u&#39;Diabete&#39;</span><span class="p">,</span>
+          <span class="s">u&#39;BMI&#39;</span><span class="p">,</span>
+          <span class="s">u&#39;BPSystolic&#39;</span><span class="p">,</span>
+          <span class="s">u&#39;BPDiastolic&#39;</span><span class="p">,</span>
+          <span class="s">u&#39;PC1&#39;</span><span class="p">,</span>
+          <span class="s">u&#39;PC2&#39;</span><span class="p">,</span>
+          <span class="s">u&#39;PC3&#39;</span><span class="p">,</span>
+          <span class="s">u&#39;GenderFemale&#39;</span><span class="p">,</span>
+          <span class="s">u&#39;Age&#39;</span><span class="p">],</span>
+<span class="s">&#39;phen_correlation&#39;</span><span class="p">:</span> <span class="s">&#39;My_Experiment/phen_correlation_matrix.npy&#39;</span><span class="p">,</span>
+<span class="s">&#39;phenotype_correlation_for_exclusion&#39;</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span>
+<span class="s">&#39;start_time&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">51</span><span class="p">,</span> <span class="mi">680559</span><span class="p">),</span>
+<span class="s">&#39;walltime&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">51</span><span class="p">,</span> <span class="mi">395957</span><span class="p">)}</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">forward_database.db</span></code> A <a class="reference external" href="https://www.sqlite.org/">sqlite3</a>  database
+containing all the results. Internally, <cite>Forward</cite> uses
+<a class="reference external" href="http://www.sqlalchemy.org/">SQL Alchemy</a> to create the database, this
+means that it will be easy to support more robust RDBMS without lots of
+changes to the codebase. A sample database will have the following tables:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">continuous_variables</span></code></li>
+<li><code class="docutils literal"><span class="pre">results</span></code></li>
+<li><code class="docutils literal"><span class="pre">discrete_variables</span></code></li>
+<li><code class="docutils literal"><span class="pre">variables</span></code></li>
+<li><code class="docutils literal"><span class="pre">linreg_results</span></code></li>
+<li><code class="docutils literal"><span class="pre">variants</span></code></li>
+<li><code class="docutils literal"><span class="pre">related_phenotypes_exclusions</span></code></li>
+</ul>
+</div></blockquote>
+<p>See the documentation of <a class="reference internal" href="api.html#forward.experiment.ExperimentResult" title="forward.experiment.ExperimentResult"><code class="xref py py-class docutils literal"><span class="pre">forward.experiment.ExperimentResult</span></code></a> for
+a full description of the schema for the results table.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">phen_correlation_matrix.npy</span></code> A <a class="reference external" href="http://www.numpy.org/">numpy</a> binary
+file containing a correlation matrix for the outcomes. This is used to
+compute the exclusions based on related outcome correlation.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">phenotypes.hdf5</span></code> A <a class="reference external" href="https://www.hdfgroup.org/HDF5/">HDF5</a> binary file
+containing all the data from the phenotype database. This is used by the
+report to create graphics on the fly, before and after transformations.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">tasks</span></code> This is a subdirectory containing task metadata in the Pickle
+format.</p>
+</li>
+</ul>
+<p>This is the &#8220;low-level&#8221; alternative for browsing results from <cite>Forward</cite>
+experiments. Alternatively, if you dislike the web-based report but still want
+easy access to experiment results, you can use the
+<a class="reference internal" href="api.html#forward.backend.Backend" title="forward.backend.Backend"><code class="xref py py-class docutils literal"><span class="pre">forward.backend.Backend</span></code></a> class directly from your own Python script.</p>
+</div>
+</div>
+<div class="section" id="contents">
+<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="abstracts.html">Extending <cite>Forward</cite></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="abstracts.html#phenotype-databases">Phenotype databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abstracts.html#genotype-databases">Genotype databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abstracts.html#tasks">Tasks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-forward.experiment">Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-forward.backend">Backend</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="abstracts.html" title="Extending Forward"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Forward 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Marc-André Legault.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

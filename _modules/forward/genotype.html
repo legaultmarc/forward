@@ -1,0 +1,534 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>forward.genotype &mdash; Forward 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/bizstyle.js"></script>
+    <link rel="top" title="Forward 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Forward 0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for forward.genotype</h1><div class="highlight"><pre>
+<span class="c"># This file is part of forward.</span>
+<span class="c">#</span>
+<span class="c"># This work is licensed under the Creative Commons Attribution-NonCommercial</span>
+<span class="c"># 4.0 International License. To view a copy of this license, visit</span>
+<span class="c"># http://creativecommons.org/licenses/by-nc/4.0/ or send a letter to Creative</span>
+<span class="c"># Commons, PO Box 1866, Mountain View, CA 94042, USA.</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module provides utilities to handle genotype data.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">gepyto.formats.impute2</span> <span class="kn">import</span> <span class="n">Impute2File</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">Column</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Float</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.ext.hybrid</span> <span class="kn">import</span> <span class="n">hybrid_property</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">SQLAlchemyBase</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">abstract</span><span class="p">,</span> <span class="n">dispatch_methods</span><span class="p">,</span> <span class="n">expand</span>
+
+<span class="k">try</span><span class="p">:</span>  <span class="c"># pragma: no cover</span>
+    <span class="kn">import</span> <span class="nn">pyplink</span>
+    <span class="n">HAS_PYPLINK</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">HAS_PYPLINK</span> <span class="o">=</span> <span class="bp">False</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;MemoryImpute2Geno&quot;</span><span class="p">,</span> <span class="s">&quot;PlinkGenotypeDatabase&quot;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">FrozenDatabaseError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&quot;Once initialized, genotype databases are immutable. Further &quot;</span>
+                <span class="s">&quot;filtering needs to be done at the Task level.&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Variant</span><span class="p">(</span><span class="n">SQLAlchemyBase</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&quot;variants&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">chrom</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">15</span><span class="p">))</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+    <span class="n">mac</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Float</span><span class="p">)</span>  <span class="c"># Minor allele count can be approximated using dosage.</span>
+    <span class="n">minor</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+    <span class="n">major</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+    <span class="n">n_missing</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+    <span class="n">n_non_missing</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+
+    <span class="c"># The maf = mac / (2 * n_non_missing)</span>
+    <span class="nd">@hybrid_property</span>
+    <span class="k">def</span> <span class="nf">maf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mac</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_non_missing</span><span class="p">)</span>
+
+    <span class="c"># The completion rate = n_non_missing / (n_non_missing + n_missing)</span>
+    <span class="nd">@hybrid_property</span>
+    <span class="k">def</span> <span class="nf">completion_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_non_missing</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_non_missing</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_missing</span><span class="p">)</span>
+
+
+<span class="nd">@abstract</span>
+<div class="viewcode-block" id="AbstractGenotypeDatabase"><a class="viewcode-back" href="../../abstracts.html#forward.genotype.AbstractGenotypeDatabase">[docs]</a><span class="k">class</span> <span class="nc">AbstractGenotypeDatabase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract class representing the genotypes for the study.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">dispatch_methods</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c"># Sample management interface.</span>
+<div class="viewcode-block" id="AbstractGenotypeDatabase.get_sample_order"><a class="viewcode-back" href="../../abstracts.html#forward.genotype.AbstractGenotypeDatabase.get_sample_order">[docs]</a>    <span class="k">def</span> <span class="nf">get_sample_order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of the (ordered) samples as represented in the</span>
+<span class="sd">           database.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span>
+
+    <span class="c"># Interrogate the variant database.</span></div>
+<div class="viewcode-block" id="AbstractGenotypeDatabase.query_variants"><a class="viewcode-back" href="../../abstracts.html#forward.genotype.AbstractGenotypeDatabase.query_variants">[docs]</a>    <span class="k">def</span> <span class="nf">query_variants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a query object for variants.</span>
+
+<span class="sd">        If fields are given, they are queried. Alternatively a query for the</span>
+<span class="sd">        Variant objects is returned.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">fields</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">fields</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">Variant</span><span class="p">,</span> <span class="n">field</span><span class="p">):</span>
+                    <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">Variant</span><span class="p">,</span> <span class="n">field</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s">&quot;No column {} for Variants.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+                    <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Variant</span><span class="p">)</span>
+
+    <span class="c"># Get a numpy vector of variants.</span></div>
+<div class="viewcode-block" id="AbstractGenotypeDatabase.get_genotypes"><a class="viewcode-back" href="../../abstracts.html#forward.genotype.AbstractGenotypeDatabase.get_genotypes">[docs]</a>    <span class="k">def</span> <span class="nf">get_genotypes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variant_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a vector of encoded genotypes for the variant.</span>
+
+<span class="sd">        This is the core functionality of the Genotype Databases. It should</span>
+<span class="sd">        be as fast as possible as it will be called repeatedly by the</span>
+<span class="sd">        tasks. If the structure is in memory, using a hashmap or a pandas</span>
+<span class="sd">        DataFrame is recommended. If the underlying structure is on disk,</span>
+<span class="sd">        this should use very good indexing and potentially caching.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="c"># Experiment initalization including filling up the database and filtering</span>
+    <span class="c"># variants.</span></div>
+<div class="viewcode-block" id="AbstractGenotypeDatabase.experiment_init"><a class="viewcode-back" href="../../abstracts.html#forward.genotype.AbstractGenotypeDatabase.experiment_init">[docs]</a>    <span class="k">def</span> <span class="nf">experiment_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Experiment specific initialization.</span>
+
+<span class="sd">        This method has two main roles. Building a database of</span>
+<span class="sd">        :py:class:`Variant` objects and doing the db-level filtering of the</span>
+<span class="sd">        variants. It should also take care of loading the file in memory or of</span>
+<span class="sd">        indexing if needed.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Create the tables corresponding to the SQLAlchemyBase subclasses.</span>
+        <span class="n">Variant</span><span class="o">.</span><span class="n">__table__</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="n">checkfirst</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c"># Filtering methods.</span></div>
+<div class="viewcode-block" id="AbstractGenotypeDatabase.filter_name"><a class="viewcode-back" href="../../abstracts.html#forward.genotype.AbstractGenotypeDatabase.filter_name">[docs]</a>    <span class="k">def</span> <span class="nf">filter_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variant_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Filtering by variant id.</span>
+
+<span class="sd">        The argument can be either a path to a file or a list of names.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">filter_maf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maf</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">filter_completion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rate</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="c"># Static utilities.</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AbstractGenotypeDatabase.load_samples"><a class="viewcode-back" href="../../abstracts.html#forward.genotype.AbstractGenotypeDatabase.load_samples">[docs]</a>    <span class="k">def</span> <span class="nf">load_samples</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read a list of samples from a single column file.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Loading samples from {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">f</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+
+</div></div>
+<span class="k">class</span> <span class="nc">MemoryImpute2Geno</span><span class="p">(</span><span class="n">AbstractGenotypeDatabase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">filter_probability</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_samples</span><span class="p">(</span><span class="n">expand</span><span class="p">(</span><span class="n">samples</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">impute2file</span> <span class="o">=</span> <span class="n">Impute2File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="s">&quot;dosage&quot;</span><span class="p">,</span>
+                                       <span class="n">prob_threshold</span><span class="o">=</span><span class="n">filter_probability</span><span class="p">)</span>
+
+        <span class="c"># Filters (init).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thresh_completion</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thresh_maf</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples_mask</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c"># The initial filtering is done when the file is parsed. We won&#39;t allow</span>
+        <span class="c"># the user to apply the filtering methods again.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">MemoryImpute2Geno</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">experiment_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">batch_insert_n</span><span class="o">=</span><span class="mi">100000</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Experiment specific initialization.</span>
+
+<span class="sd">        This takes care of initializing the database and filtering variants.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># Call the parent constructor (this will create the db).</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MemoryImpute2Geno</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">experiment_init</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
+
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c"># Used to set the index.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c"># The actual dosage vectors.</span>
+
+        <span class="n">db_buffer</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c"># List of dicts to bulk insert in the database.</span>
+        <span class="n">num_inserts</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">con</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>  <span class="c"># We also get a connection object.</span>
+
+        <span class="k">for</span> <span class="n">dosage</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">impute2file</span><span class="p">:</span>
+
+            <span class="n">name</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">]</span>
+
+            <span class="c"># Go through the filters.</span>
+            <span class="c"># Name</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c"># Completion</span>
+            <span class="n">n_missing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">dosage</span><span class="p">))</span>
+            <span class="n">n_non_missing</span> <span class="o">=</span> <span class="n">dosage</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">n_missing</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">thresh_completion</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">completion</span> <span class="o">=</span> <span class="n">n_non_missing</span> <span class="o">/</span> <span class="n">dosage</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">completion</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">thresh_completion</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+            <span class="c"># MAF</span>
+            <span class="k">if</span> <span class="n">info</span><span class="p">[</span><span class="s">&quot;maf&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">thresh_maf</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c"># Remove samples if needed.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">dosage</span> <span class="o">=</span> <span class="n">dosage</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_mask</span><span class="p">]</span>
+
+            <span class="c"># Note that probability is already filtered by gepyto.</span>
+
+            <span class="c"># Add to the matrix.</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dosage</span><span class="p">)</span>
+
+            <span class="c"># Add the variant information to the database.</span>
+            <span class="n">db_buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">chrom</span><span class="o">=</span><span class="n">info</span><span class="p">[</span><span class="s">&quot;chrom&quot;</span><span class="p">],</span> <span class="n">pos</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s">&quot;pos&quot;</span><span class="p">]),</span>
+                     <span class="n">mac</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s">&quot;minor_allele_count&quot;</span><span class="p">]),</span>
+                     <span class="n">minor</span><span class="o">=</span><span class="n">info</span><span class="p">[</span><span class="s">&quot;minor&quot;</span><span class="p">],</span> <span class="n">major</span><span class="o">=</span><span class="n">info</span><span class="p">[</span><span class="s">&quot;major&quot;</span><span class="p">],</span>
+                     <span class="n">n_missing</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_missing</span><span class="p">),</span>
+                     <span class="n">n_non_missing</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_non_missing</span><span class="p">))</span>
+            <span class="p">)</span>
+
+            <span class="c"># We use sqlalchemy core to insert faster.</span>
+            <span class="c"># When we have more than 100,000 variants, we bulk insert them.</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">db_buffer</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">batch_insert_n</span><span class="p">:</span>
+                <span class="n">con</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">Variant</span><span class="o">.</span><span class="n">__table__</span><span class="o">.</span><span class="n">insert</span><span class="p">(),</span> <span class="n">db_buffer</span><span class="p">)</span>
+                <span class="n">num_inserts</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">db_buffer</span><span class="p">)</span>
+                <span class="n">db_buffer</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c"># Bulk insert the remainder.</span>
+        <span class="k">if</span> <span class="n">db_buffer</span><span class="p">:</span>
+            <span class="n">con</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">Variant</span><span class="o">.</span><span class="n">__table__</span><span class="o">.</span><span class="n">insert</span><span class="p">(),</span> <span class="n">db_buffer</span><span class="p">)</span>
+            <span class="n">num_inserts</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">db_buffer</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">db_buffer</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Built the variant database ({} entries).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">num_inserts</span>
+        <span class="p">))</span>
+
+        <span class="c"># Set the names as the index for the variant dataframe.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">names</span>
+
+        <span class="c"># Close the connection.</span>
+        <span class="n">con</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c"># Freeze the database.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">get_genotypes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variant_name</span><span class="p">):</span>
+        <span class="c"># We want to be able to get genotypes event before experiment</span>
+        <span class="c"># initialization, mainly for testing. To support this, we will look for</span>
+        <span class="c"># the variant in the impute2 file and reset the file.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;_mat&quot;</span><span class="p">):</span>  <span class="c"># Check if it was init.</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;This should only be logged during testing. If you &quot;</span>
+                           <span class="s">&quot;see this during normal execution, please report &quot;</span>
+                           <span class="s">&quot;it on Github.&quot;</span><span class="p">)</span>
+            <span class="c"># Try to find the variant in the impute2file.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">impute2file</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">vect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">variant_name</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">values</span>
+            <span class="k">return</span> <span class="n">vect</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;Variant {} not found in genotype database.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">variant_name</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">filter_completion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rate</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FrozenDatabaseError</span><span class="p">()</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Setting the completion threshold to {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rate</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thresh_completion</span> <span class="o">=</span> <span class="n">rate</span>
+
+    <span class="k">def</span> <span class="nf">filter_maf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maf</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FrozenDatabaseError</span><span class="p">()</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Setting the MAF threshold to {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">maf</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thresh_maf</span> <span class="o">=</span> <span class="n">maf</span>
+
+    <span class="k">def</span> <span class="nf">filter_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names_list</span><span class="p">):</span>
+        <span class="c"># TODO. By modifying gepyto, we could to better filtering on variant</span>
+        <span class="c"># names. We would simply not compute the dosage vector for variants</span>
+        <span class="c"># we want to ignore.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FrozenDatabaseError</span><span class="p">()</span>
+
+        <span class="c"># A list of IDs.</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">names_list</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="n">names_list</span>
+
+        <span class="c"># A file of IDs.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Keeping only variants with IDs in file: &#39;{}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">names_list</span>
+            <span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">names_list</span><span class="p">):</span>
+                <span class="n">names_list</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">names_list</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">names_list</span><span class="p">,</span> <span class="s">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">exclude_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FrozenDatabaseError</span><span class="p">()</span>
+
+        <span class="c"># Build a mask.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+        <span class="c"># Find the index of the samples to mask.</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">samples_list</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">==</span> <span class="n">i</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Can&#39;t remove samples that are not in the &quot;</span>
+                                 <span class="s">&quot;genotype database (&#39;{}&#39;)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">idx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Samples are not unique (&#39;{}&#39;).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="c"># Also remove from the list of samples.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_mask</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">impute2file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">PlinkGenotypeDatabase</span><span class="p">(</span><span class="n">AbstractGenotypeDatabase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing genotypes from binary plink files.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">HAS_PYPLINK</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Install pyplink to use the &#39;{}&#39; class.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+            <span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ped</span> <span class="o">=</span> <span class="n">pyplink</span><span class="o">.</span><span class="n">PyPlink</span><span class="p">(</span><span class="n">expand</span><span class="p">(</span><span class="n">prefix</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fam</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ped</span><span class="o">.</span><span class="n">get_fam</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ped</span><span class="o">.</span><span class="n">get_bim</span><span class="p">()</span>
+
+        <span class="c"># Filters.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_maf</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_completion</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">good_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">PlinkGenotypeDatabase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_sample_order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fam</span><span class="p">[</span><span class="s">&quot;iid&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_genotypes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variant_name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ped</span><span class="o">.</span><span class="n">get_geno_marker</span><span class="p">(</span><span class="n">variant_name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">experiment_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">):</span>
+        <span class="c"># Create the table.</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PlinkGenotypeDatabase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">experiment_init</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
+
+        <span class="c"># Filter and fill the database.</span>
+        <span class="n">con</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+        <span class="n">db_variants</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">geno</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ped</span><span class="p">:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bim</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">name</span><span class="p">,</span> <span class="p">:]</span>
+
+            <span class="c"># Name filtering.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">good_names</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">good_names</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+            <span class="c"># maf filtering.</span>
+            <span class="n">mac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">geno</span><span class="p">)</span>
+            <span class="n">maf</span> <span class="o">=</span> <span class="n">mac</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">geno</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">maf</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_maf</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c"># completion filtering.</span>
+            <span class="n">n_missing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">geno</span><span class="p">))</span>
+            <span class="n">n_non_missing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">geno</span><span class="p">))</span>
+
+            <span class="n">completion</span> <span class="o">=</span> <span class="n">n_non_missing</span> <span class="o">/</span> <span class="n">geno</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">completion</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_completion</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c"># Everything passed, we can add to the db.</span>
+            <span class="n">db_variants</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">chrom</span><span class="o">=</span><span class="n">info</span><span class="o">.</span><span class="n">chrom</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">pos</span><span class="p">),</span>
+                     <span class="n">mac</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">mac</span><span class="p">),</span> <span class="n">n_missing</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_missing</span><span class="p">),</span>
+                     <span class="n">n_non_missing</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_non_missing</span><span class="p">))</span>
+            <span class="p">)</span>
+
+        <span class="n">con</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">Variant</span><span class="o">.</span><span class="n">__table__</span><span class="o">.</span><span class="n">insert</span><span class="p">(),</span> <span class="n">db_variants</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Built the variant database ({} entries).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">db_variants</span><span class="p">)</span>
+        <span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="c"># Filtering methods.</span>
+    <span class="k">def</span> <span class="nf">filter_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variant_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FrozenDatabaseError</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">variant_list</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">good_names</span> <span class="o">=</span> <span class="n">variant_list</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">variant_list</span><span class="p">,</span> <span class="s">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">good_names</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">filter_maf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maf</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FrozenDatabaseError</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_maf</span> <span class="o">=</span> <span class="n">maf</span>
+
+    <span class="k">def</span> <span class="nf">filter_completion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rate</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FrozenDatabaseError</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_rate</span> <span class="o">=</span> <span class="n">rate</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Forward 0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Marc-André Legault.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

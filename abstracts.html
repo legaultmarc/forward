@@ -1,0 +1,392 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Extending Forward &mdash; Forward 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="top" title="Forward 0.1 documentation" href="index.html" />
+    <link rel="next" title="API Documentation" href="api.html" />
+    <link rel="prev" title="Forward Documentation" href="index.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API Documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Forward Documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Forward 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Extending <cite>Forward</cite></a><ul>
+<li><a class="reference internal" href="#phenotype-databases">Phenotype databases</a></li>
+<li><a class="reference internal" href="#genotype-databases">Genotype databases</a></li>
+<li><a class="reference internal" href="#tasks">Tasks</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter"><cite>Forward</cite> Documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="next chapter">API Documentation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/abstracts.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="extending-forward">
+<h1>Extending <cite>Forward</cite><a class="headerlink" href="#extending-forward" title="Permalink to this headline">¶</a></h1>
+<p><cite>Forward</cite> was designed to be easily extensible. To achieve this, we have
+adopted a modular structure and have developed abstract classes that serve as
+template for the different components. Bioinformaticians can implement their
+own versions of the phenotype and genotypes databases if they want to do
+specific optimizations. They can also add new statistical tests by implementing
+new Tasks.</p>
+<p>This section describes what is expected of the implementations of abstract
+classes.</p>
+<div class="section" id="phenotype-databases">
+<h2>Phenotype databases<a class="headerlink" href="#phenotype-databases" title="Permalink to this headline">¶</a></h2>
+<p>Phenotype databases should inherit <a class="reference internal" href="#forward.phenotype.db.AbstractPhenotypeDatabase" title="forward.phenotype.db.AbstractPhenotypeDatabase"><code class="xref py py-class docutils literal"><span class="pre">forward.phenotype.db.AbstractPhenotypeDatabase</span></code></a></p>
+<dl class="class">
+<dt id="forward.phenotype.db.AbstractPhenotypeDatabase">
+<em class="property">class </em><code class="descclassname">forward.phenotype.db.</code><code class="descname">AbstractPhenotypeDatabase</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract class representing a collection of phenotypes.</p>
+<p>It is the responsibility of the phenotype database to handle phenotype
+based exclusions and transformations.</p>
+<dl class="method">
+<dt id="forward.phenotype.db.AbstractPhenotypeDatabase.exclude_correlated">
+<code class="descname">exclude_correlated</code><span class="sig-paren">(</span><em>threshold</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.exclude_correlated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.exclude_correlated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exclude correlated samples from controls.</p>
+<p>In phenomic studies, it is common to exclude samples from controls if
+they are affected by a correlated phenotype.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.phenotype.db.AbstractPhenotypeDatabase.get_correlation_matrix">
+<code class="descname">get_correlation_matrix</code><span class="sig-paren">(</span><em>names</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.get_correlation_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.get_correlation_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a correlation matrix for the specified names.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>names</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; A list of variable names.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A correlation matrix.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">numpy.ndarray</td>
+</tr>
+</tbody>
+</table>
+<p>This is useful to exclude correlated phenotypes as controls.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.phenotype.db.AbstractPhenotypeDatabase.get_phenotype_relation_threshold">
+<code class="descname">get_phenotype_relation_threshold</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.get_phenotype_relation_threshold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.get_phenotype_relation_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the threshold set by exclude_correlated.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.phenotype.db.AbstractPhenotypeDatabase.get_phenotype_vector">
+<code class="descname">get_phenotype_vector</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.get_phenotype_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.get_phenotype_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a numpy array representing the selected outcome for all
+samples.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<code class="xref py py-class docutils literal"><span class="pre">forward.phenotype.variables.Variable</span></code>) &#8211; The Variable object representing the phenotype to extract.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A vector representing the outcome.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.phenotype.db.AbstractPhenotypeDatabase.get_related_phenotype_exclusions">
+<code class="descname">get_related_phenotype_exclusions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.get_related_phenotype_exclusions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.get_related_phenotype_exclusions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the phenotypes for which there was an exclusion based on
+correlation.</p>
+<p>Using forward, it is possible to use the &#8220;exclude_correlated&#8221; function
+to exclude from controls samples that are cases for a related
+(correlated) phenotype.
+In order to access this information in the report, it is necessary to
+implement this function.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.phenotype.db.AbstractPhenotypeDatabase.get_sample_order">
+<code class="descname">get_sample_order</code><span class="sig-paren">(</span><em>allow_subset=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.get_sample_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.get_sample_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the order of the samples.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.phenotype.db.AbstractPhenotypeDatabase.set_experiment_variables">
+<code class="descname">set_experiment_variables</code><span class="sig-paren">(</span><em>variables</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.set_experiment_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.set_experiment_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the variables attribute containing all the possible variables.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.phenotype.db.AbstractPhenotypeDatabase.set_sample_order">
+<code class="descname">set_sample_order</code><span class="sig-paren">(</span><em>sequence</em>, <em>allow_subset=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.set_sample_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.set_sample_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the order of the samples.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="forward.phenotype.db.AbstractPhenotypeDatabase.validate_sample_sequences">
+<em class="property">static </em><code class="descname">validate_sample_sequences</code><span class="sig-paren">(</span><em>old_seq</em>, <em>new_seq</em>, <em>allow_subset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.validate_sample_sequences"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.validate_sample_sequences" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compares sample sequences to validate the new sequence order.</p>
+<p>This can optionally be used by subclasses when writing the
+<cite>set_sample_order</cite> method. We recommend using to properly log relevant
+information.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="genotype-databases">
+<h2>Genotype databases<a class="headerlink" href="#genotype-databases" title="Permalink to this headline">¶</a></h2>
+<p>Genotype databases should inherit <a class="reference internal" href="#forward.genotype.AbstractGenotypeDatabase" title="forward.genotype.AbstractGenotypeDatabase"><code class="xref py py-class docutils literal"><span class="pre">forward.genotype.AbstractGenotypeDatabase</span></code></a></p>
+<dl class="class">
+<dt id="forward.genotype.AbstractGenotypeDatabase">
+<em class="property">class </em><code class="descclassname">forward.genotype.</code><code class="descname">AbstractGenotypeDatabase</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#AbstractGenotypeDatabase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.AbstractGenotypeDatabase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract class representing the genotypes for the study.</p>
+<dl class="method">
+<dt id="forward.genotype.AbstractGenotypeDatabase.experiment_init">
+<code class="descname">experiment_init</code><span class="sig-paren">(</span><em>experiment</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#AbstractGenotypeDatabase.experiment_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.AbstractGenotypeDatabase.experiment_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Experiment specific initialization.</p>
+<p>This method has two main roles. Building a database of
+<code class="xref py py-class docutils literal"><span class="pre">Variant</span></code> objects and doing the db-level filtering of the
+variants. It should also take care of loading the file in memory or of
+indexing if needed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.genotype.AbstractGenotypeDatabase.filter_name">
+<code class="descname">filter_name</code><span class="sig-paren">(</span><em>variant_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#AbstractGenotypeDatabase.filter_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.AbstractGenotypeDatabase.filter_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filtering by variant id.</p>
+<p>The argument can be either a path to a file or a list of names.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.genotype.AbstractGenotypeDatabase.get_genotypes">
+<code class="descname">get_genotypes</code><span class="sig-paren">(</span><em>variant_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#AbstractGenotypeDatabase.get_genotypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.AbstractGenotypeDatabase.get_genotypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a vector of encoded genotypes for the variant.</p>
+<p>This is the core functionality of the Genotype Databases. It should
+be as fast as possible as it will be called repeatedly by the
+tasks. If the structure is in memory, using a hashmap or a pandas
+DataFrame is recommended. If the underlying structure is on disk,
+this should use very good indexing and potentially caching.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.genotype.AbstractGenotypeDatabase.get_sample_order">
+<code class="descname">get_sample_order</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#AbstractGenotypeDatabase.get_sample_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.AbstractGenotypeDatabase.get_sample_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of the (ordered) samples as represented in the
+database.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="forward.genotype.AbstractGenotypeDatabase.load_samples">
+<em class="property">static </em><code class="descname">load_samples</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#AbstractGenotypeDatabase.load_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.AbstractGenotypeDatabase.load_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a list of samples from a single column file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.genotype.AbstractGenotypeDatabase.query_variants">
+<code class="descname">query_variants</code><span class="sig-paren">(</span><em>session</em>, <em>fields=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#AbstractGenotypeDatabase.query_variants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.AbstractGenotypeDatabase.query_variants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a query object for variants.</p>
+<p>If fields are given, they are queried. Alternatively a query for the
+Variant objects is returned.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="tasks">
+<h2>Tasks<a class="headerlink" href="#tasks" title="Permalink to this headline">¶</a></h2>
+<p>Tasks are classes that take care of statistical testing. Their <code class="docutils literal"><span class="pre">run_task</span></code>
+method will sequentially be called by the experiment.</p>
+<dl class="class">
+<dt id="forward.tasks.AbstractTask">
+<em class="property">class </em><code class="descclassname">forward.tasks.</code><code class="descname">AbstractTask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/tasks.html#AbstractTask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.tasks.AbstractTask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract class for genetic tests.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>outcomes</strong> (<em>list or str</em>) &#8211; (optional) List of Variable names to include as outcomes
+for this task. Alternatively, &#8220;all&#8221; can be passed.</li>
+<li><strong>covariates</strong> (<em>list or str</em>) &#8211; (optional) List of Variable names to include as
+covariates.</li>
+<li><strong>variants</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; List of variants. For now, we can&#8217;t subset at the task
+level, so this should either not be passed or be &#8220;all&#8221;.</li>
+<li><strong>correction</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The multiple hypothesis testing correction. This will be
+automatically serialized in the task metadata (if the
+parent&#8217;s method is called).</li>
+<li><strong>alpha</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Significance threshold (default: 0.05). This will be
+automatically serialized it the parent&#8217;s method is called.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Implementations of this class should either compute the statistics directly
+or manage the execution of external statistical programs and parse the
+results.</p>
+<p>The <code class="docutils literal"><span class="pre">run_task</span></code> method will be called by the experiment and should result
+in the statistical analysis.</p>
+<p>When the task is done, the experiment will call the <code class="docutils literal"><span class="pre">done</span></code> method which
+should take care of dumping metadata.</p>
+<dl class="method">
+<dt id="forward.tasks.AbstractTask.done">
+<code class="descname">done</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/tasks.html#AbstractTask.done"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.tasks.AbstractTask.done" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cleanup signal from the Experiment.</p>
+<p>The abstract method writes the content of the info attribute to disk.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.tasks.AbstractTask.get_meta">
+<code class="descname">get_meta</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/tasks.html#AbstractTask.get_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.tasks.AbstractTask.get_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get meta information about this task.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.tasks.AbstractTask.run_task">
+<code class="descname">run_task</code><span class="sig-paren">(</span><em>experiment</em>, <em>task_name</em>, <em>work_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/tasks.html#AbstractTask.run_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.tasks.AbstractTask.run_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method that triggers statistical computation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>experiment</strong> (<a class="reference internal" href="api.html#forward.experiment.Experiment" title="forward.experiment.Experiment"><code class="xref py py-class docutils literal"><span class="pre">forward.experiment.Experiment</span></code></a>) &#8211; The parent experiment which provides access to
+the whole experimental context.</li>
+<li><strong>task_name</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the task. This is useful to fill the
+results table, because the task name is one of the
+columns.</li>
+<li><strong>work_dir</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Path to the Task&#8217;s work directory that was created by
+the experiment.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>For implementations of this abstract class, calling the parent method
+will set the outcomes and covariates to filtered lists of Variable
+objects. It will also make sure that the outcomes, covariates,
+variants, alpha and correction are included as task metadata.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.tasks.AbstractTask.set_meta">
+<code class="descname">set_meta</code><span class="sig-paren">(</span><em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/tasks.html#AbstractTask.set_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.tasks.AbstractTask.set_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set meta information about this task.</p>
+<p>This will be pickle serialzed to this Task&#8217;s work directory. It can
+subsequently be used by the backend and the dynamic report.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API Documentation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Forward Documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Forward 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Marc-André Legault.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

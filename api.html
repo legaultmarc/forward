@@ -1,0 +1,254 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>API Documentation &mdash; Forward 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="top" title="Forward 0.1 documentation" href="index.html" />
+    <link rel="prev" title="Extending Forward" href="abstracts.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="abstracts.html" title="Extending Forward"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Forward 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">API Documentation</a><ul>
+<li><a class="reference internal" href="#module-forward.experiment">Experiment</a></li>
+<li><a class="reference internal" href="#module-forward.backend">Backend</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="abstracts.html"
+                        title="previous chapter">Extending <cite>Forward</cite></a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/api.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="api-documentation">
+<h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-forward.experiment">
+<span id="experiment"></span><h2>Experiment<a class="headerlink" href="#module-forward.experiment" title="Permalink to this headline">¶</a></h2>
+<p>This module provides ways to manage experiments. The experiment objects can
+be parsed from the CLI, a yaml configuration file or, eventually, a web
+interface.</p>
+<p>Overall goals for this module will be to provide:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Good organization of experiments aiming at a better reproductibility.</li>
+<li>Aggregating and writing analysis meta data, results files and databases.</li>
+</ul>
+</div></blockquote>
+<dl class="class">
+<dt id="forward.experiment.Experiment">
+<em class="property">class </em><code class="descclassname">forward.experiment.</code><code class="descname">Experiment</code><span class="sig-paren">(</span><em>name</em>, <em>phenotype_container</em>, <em>genotype_container</em>, <em>variables</em>, <em>tasks</em>, <em>build</em>, <em>cpu=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#Experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class representing an experiment.</p>
+<dl class="method">
+<dt id="forward.experiment.Experiment.experiment_info_init">
+<code class="descname">experiment_info_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#Experiment.experiment_info_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.Experiment.experiment_info_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a dict containing experiment metadata.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="forward.experiment.Experiment.get_engine">
+<em class="property">static </em><code class="descname">get_engine</code><span class="sig-paren">(</span><em>experiment_name</em>, <em>engine_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#Experiment.get_engine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.Experiment.get_engine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an SQLAlchemy engine for a given experiment.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.experiment.Experiment.results_init">
+<code class="descname">results_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#Experiment.results_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.Experiment.results_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the results table.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.experiment.Experiment.run_tasks">
+<code class="descname">run_tasks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#Experiment.run_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.Experiment.run_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the tasks registered for this experiment.</p>
+<p>This method takes care of the following:</p>
+<ul class="simple">
+<li>Create a task-specific work directory.</li>
+<li>Call the task&#8217;s <cite>done()</cite> method to insure clean up code is executed.</li>
+<li>Commit the database (after all tasks are executed).</li>
+<li>Set the walltime for the experiment.</li>
+<li>Write the experiment metadata to disk in the experiment folder when
+everything is over.</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.experiment.Experiment.variables_init">
+<code class="descname">variables_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#Experiment.variables_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.Experiment.variables_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the variables table and computes some statistics.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forward.experiment.ExperimentResult">
+<em class="property">class </em><code class="descclassname">forward.experiment.</code><code class="descname">ExperimentResult</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#ExperimentResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.ExperimentResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>SQLAlchemy class to handle experimental results.</p>
+<p>TODO. This could potentially be refactored so that tested_entity is a
+foreign key to the forward.genotype.Variant class. This would require
+using concrete table inheritance.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="forward.experiment.RelatedPhenotypesExclusions">
+<em class="property">class </em><code class="descclassname">forward.experiment.</code><code class="descname">RelatedPhenotypesExclusions</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#RelatedPhenotypesExclusions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.RelatedPhenotypesExclusions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record of the related phenotypes when the user asked for correlation
+based exclusions.</p>
+<p>When phenotypes are related (correlated), it is common practice in pheWAS
+to exclude samples that are unaffected for the considered outcome but
+affected for a correlated outcome. This keeps track of such exclusions.</p>
+<p>An important remark is that the sum of exclusions does not make up the
+total number of NAs, as we also need to count actual missing values.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forward.experiment.result_table">
+<code class="descclassname">forward.experiment.</code><code class="descname">result_table</code><span class="sig-paren">(</span><em>cls</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#result_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.result_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator to register result extensions.</p>
+<p>These classes&#8217; tables will automatically be created.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-forward.backend">
+<span id="backend"></span><h2>Backend<a class="headerlink" href="#module-forward.backend" title="Permalink to this headline">¶</a></h2>
+<p>This module is a flask backend providing a REST api to add interactivity
+to the report.</p>
+<p>The backend needs to be able to restore the phenotype database functionality
+and be able to generate plots.</p>
+<p>These methods will return json to the report. Alternatively, they will return
+the native python objects. This way, the functionality will all be here and
+everything that&#8217;s related to the report&#8217;s content and formatting will be in the
+report module.</p>
+<dl class="class">
+<dt id="forward.backend.Backend">
+<em class="property">class </em><code class="descclassname">forward.backend.</code><code class="descname">Backend</code><span class="sig-paren">(</span><em>experiment_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#Backend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.Backend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class that provides all api functionality to be used for both report
+creation and the rest api.</p>
+<dl class="method">
+<dt id="forward.backend.Backend.get_bonferonni">
+<code class="descname">get_bonferonni</code><span class="sig-paren">(</span><em>task_name</em>, <em>alpha</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#Backend.get_bonferonni"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.Backend.get_bonferonni" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Bonferonni adjusted alpha for a given task.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.backend.Backend.p_value_qq_plot">
+<code class="descname">p_value_qq_plot</code><span class="sig-paren">(</span><em>task</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#Backend.p_value_qq_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.Backend.p_value_qq_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the scatter data and confidence bands.</p>
+<p>This is assuming we&#8217;re expecting a uniform distribution. We also take
+a log transform to accentuate small differences.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="forward.backend.api_get_yaml_configuration">
+<code class="descclassname">forward.backend.</code><code class="descname">api_get_yaml_configuration</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#api_get_yaml_configuration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.api_get_yaml_configuration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a pygmentized version of the configuration file.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forward.backend.initialize_application">
+<code class="descclassname">forward.backend.</code><code class="descname">initialize_application</code><span class="sig-paren">(</span><em>experiment_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#initialize_application"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.initialize_application" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize database connection and bind to the application context.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="abstracts.html" title="Extending Forward"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Forward 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Marc-André Legault.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>
