@@ -294,6 +294,24 @@ class LogisticTest(AbstractTask):
 class LinearTestResults(ExperimentResult):
     """Table for extra statistical reporting for linear regression.
 
+    +--------------------+------------------------------------------+---------+
+    | Column             | Description                              | Type    |
+    +====================+==========================================+=========+
+    | pk                 | The primary key, the same as the         | Integer |
+    |                    | :py:class:`experiment.ExperimentResult`  |         |
+    +--------------------+------------------------------------------+---------+
+    | adjusted_r_squared | The adjusted R squared as reported by    | Float   |
+    |                    | statsmodels                              |         |
+    +--------------------+------------------------------------------+---------+
+    | std_beta           | The standardized effect size. This is    | Float   |
+    |                    | for :math:`x, y \sim \mathcal{N}(0,1)`   |         |
+    +--------------------+------------------------------------------+---------+
+    | std_beta_min       | Lower bound of the 95% CI for the        | Float   |
+    |                    | standardized :math:`\\beta`               |         |
+    +--------------------+------------------------------------------+---------+
+    | std_beta_max       | Higher bound of the 95% CI               | Float   |
+    +--------------------+------------------------------------------+---------+
+
     It is interesting to report the standardized beta to easily compare the
     effect size between different outcomes (that have different units). We
     will also report the coefficient of determination (R^2) that reports the

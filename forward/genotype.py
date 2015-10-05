@@ -41,6 +41,38 @@ class FrozenDatabaseError(Exception):
 
 
 class Variant(SQLAlchemyBase):
+    """ORM Variant object.
+
+    +----------------+------------------------------------------+------------+
+    | Column         | Description                              | Type       |
+    +================+==========================================+============+
+    | name           | The variant's name (`e.g.` rs12356)      | String(25) |
+    +----------------+------------------------------------------+------------+
+    | chrom          | The chromosome (`e.g.` '3' or 'X')       | String(15) |
+    +----------------+------------------------------------------+------------+
+    | pos            | The variant's position on the chromosome | Integer    |
+    +----------------+------------------------------------------+------------+
+    | mac            | Minor allele count (`e.g.` 125)          | Integer    |
+    +----------------+------------------------------------------+------------+
+    | minor          | Least common allele (`e.g.` 'T')         | String(10) |
+    +----------------+------------------------------------------+------------+
+    | major          | Most common allele (`e.g.` 'C')          | String(10) |
+    +----------------+------------------------------------------+------------+
+    | n_missing      | Number of missing genotypes for this     | Integer    |
+    |                | variant                                  |            |
+    +----------------+------------------------------------------+------------+
+    | n_non_missing  | Number of non-missing genotypes for this | Integer    |
+    |                | variant                                  |            |
+    +----------------+------------------------------------------+------------+
+
+    Computed fields:
+
+        - ``maf``: :math:`mac / (2 \cdot n non missing)`
+        - ``completion_rate``:
+          :math:`n non missing / (n non missing + n missing)`
+
+    """
+
     __tablename__ = "variants"
 
     name = Column(String(25), primary_key=True)
@@ -65,7 +97,12 @@ class Variant(SQLAlchemyBase):
 
 @abstract
 class AbstractGenotypeDatabase(object):
-    """Abstract class representing the genotypes for the study."""
+    """Abstract genotype container.
+    
+    This class defines the standardized methods to organize the genotype access
+    procedures used by Forward.
+
+    """
     def __init__(self, **kwargs):
         dispatch_methods(self, kwargs)
 
@@ -74,15 +111,27 @@ class AbstractGenotypeDatabase(object):
         """Return a list of the (ordered) samples as represented in the
            database.
 
+        The experiment will pass the results of this method to the phenotype
+        container's ``set_sample_order`` method.
+
         """
         return self.samples
 
-    # Interrogate the variant database.
     def query_variants(self, session, fields=None):
         """Return a query object for variants.
 
+        :param session: A session object to interface with the Variant table.
+        :type session: :py:class:`sqlalchemy.orm.session.Session`
+
+        :param fields: A list of attributes to query. They should correspond
+                       to columns of the :py:class:`Variant` table.
+        :type fields: list
+
         If fields are given, they are queried. Alternatively a query for the
         Variant objects is returned.
+
+        Variant data is stored in a SQLAlchemy database. This method provides
+        a shortcut to query it in a more pythonic way.
 
         """
         if fields:

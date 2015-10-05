@@ -74,9 +74,43 @@ class RelatedPhenotypesExclusions(SQLAlchemyBase):
 class ExperimentResult(SQLAlchemyBase):
     """SQLAlchemy class to handle experimental results.
 
-    TODO. This could potentially be refactored so that tested_entity is a
-    foreign key to the forward.genotype.Variant class. This would require
-    using concrete table inheritance.
+    +-------------------------+----------------------------------+------------+
+    | Column                  | Description                      | Type       |
+    +=========================+==================================+============+
+    | pk                      | The primary key (autoincrement)  | Integer    |
+    +-------------------------+----------------------------------+------------+
+    | tested_entity           | Either 'variant' or 'snp-set'    | Enum       |
+    |                         | depending on the test.           |            |
+    +-------------------------+----------------------------------+------------+
+    | results_type            | Polymorphic identity to identify | String(25) |
+    |                         | (default: 'GenericResults')      |            |
+    +-------------------------+----------------------------------+------------+
+    | entity_name             | Variant or snp set identifier    | String(25) |
+    +-------------------------+----------------------------------+------------+
+    | phenotype               | Tested outcome                   | String(30) |
+    +-------------------------+----------------------------------+------------+
+    | significance            | Significance value (`e.g.`       | Float      |
+    |                         | p-value)                         |            |
+    +-------------------------+----------------------------------+------------+
+    | coefficient             | Effect coefficient (`e.g.` beta) | Float      |
+    +-------------------------+----------------------------------+------------+
+    | test_statistic          | Statistical test statistic       | Float      |
+    |                         | (`e.g.` t-test statistic)        |            |
+    +-------------------------+----------------------------------+------------+
+    | standard_error          | Standard error of the coefficient| Float      |
+    +-------------------------+----------------------------------+------------+
+    | confidence_interval_min | Lower bound of the 95% CI on the | Float      |
+    |                         | coefficient                      |            |
+    +-------------------------+----------------------------------+------------+
+    | confidence_interval_max | Higher bound of the 95% CI on    | Float      |
+    |                         | the coefficient                  |            |
+    +-------------------------+----------------------------------+------------+
+
+    .. todo::
+
+        This could potentially be refactored so that tested_entity is a
+        foreign key to the forward.genotype.Variant class. This would require
+        using concrete table inheritance.
 
     """
     __tablename__ = "results"

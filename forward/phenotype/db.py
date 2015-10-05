@@ -29,6 +29,9 @@ __all__ = ["ExcelPhenotypeDatabase"]
 class AbstractPhenotypeDatabase(object):
     """Abstract class representing a collection of phenotypes.
 
+    This class parses the phenotype information source (e.g. flat files, excel
+    files, relational database or anything else).
+
     It is the responsibility of the phenotype database to handle phenotype
     based exclusions and transformations.
 
@@ -38,6 +41,12 @@ class AbstractPhenotypeDatabase(object):
         dispatch_methods(self, kwargs)
 
     def get_phenotypes(self):
+        """Returns a list of phenotypes available in this database.
+        
+        :returns: List of available phenotype names.
+        :rtype: str
+
+        """
         raise NotImplementedError()
 
     def get_phenotype_vector(self, name):
@@ -50,30 +59,68 @@ class AbstractPhenotypeDatabase(object):
         :returns: A vector representing the outcome.
         :rtype: :py:class:`numpy.ndarray`
 
+        This is one of the most important methods as it is Forward's way of
+        accessing all phenotypic information (it should be as efficient as
+        possible). Missing values should be represented using Numpy NaNs.
+
+        .. note::
+
+            Experiment objects will call :py:func:`set_sample_order` with
+            the results from the genotype container's
+            :py:func:`get_sample_order` to ensure consistency. This means that
+            the order of the samples in this vector should be the same as the
+            sample order for the genotype container.
+
         """
         raise NotImplementedError()
 
     def set_experiment_variables(self, variables):
-        """Set the variables attribute containing all the possible variables.
+        """Signal by the experiment describing the subset of variables that
+        will be analyzed.
+
+        :param variables: List of
+                          :py:class:`forward.phenotype.variables.Variable`
+        :type variables: list
+
+        This method can be used to compute the exclusions for discrete
+        variables based on correlation.
 
         """
         raise NotImplementedError()
 
     def set_sample_order(self, sequence, allow_subset=False):
-        """Set the order of the samples."""
+        """Set the order of the samples.
+
+        :param sequence: List of sample IDs.
+        :type sequence: list
+
+        :param allow_subset: If true, the provided sequence is allowed to
+                             contain only some of the IDs from the initial
+                             list.
+        :type allow_subset: bool
+
+        """
         raise NotImplementedError()
 
-    def get_sample_order(self, allow_subset=False):
-        """Get the order of the samples."""
+    def get_sample_order(self):
+        """Get the order of the samples.
+
+        :returns: A list of samples in the same order as the phenotype vector.
+        :rtype: list
+
+        """
         raise NotImplementedError()
 
     def get_related_phenotype_exclusions(self):
         """Get the phenotypes for which there was an exclusion based on
         correlation.
 
-        Using forward, it is possible to use the "exclude_correlated" function
+        Using Forward, it is possible to use the "exclude_correlated" function
         to exclude from controls samples that are cases for a related
         (correlated) phenotype.
+
+        Implementations often rely on simple attributes for this functionality.
+
         In order to access this information in the report, it is necessary to
         implement this function.
 
@@ -87,8 +134,16 @@ class AbstractPhenotypeDatabase(object):
     def exclude_correlated(self, threshold):
         """Exclude correlated samples from controls.
 
+        :param threshold: A correlation coefficien threshold for exclusions.
+        :type threshold: float
+
         In phenomic studies, it is common to exclude samples from controls if
-        they are affected by a correlated phenotype.
+        they are affected by a correlated phenotype. This is often described
+        through the concept of "disease groups".
+
+        A threshold of 0.8 means that if two discrete phenotypes A and B have
+        a correlation coefficient >= 0.8, samples that are cases for A will
+        be excluded from the control group of B and vice versa.
 
         """
         raise NotImplementedError()
@@ -97,9 +152,22 @@ class AbstractPhenotypeDatabase(object):
     def validate_sample_sequences(old_seq, new_seq, allow_subset):
         """Compares sample sequences to validate the new sequence order.
 
+        :param old_seq: The initial order of samples.
+        :type old_seq: iterable
+
+        :param new_seq: The new order of samples.
+        :type new_seq: iterable
+
+        :param allow_subset: If False, this method will raise ValueErrors if
+                             the new sequence is a subset of the old sequence.
+        :type allow_subset: bool
+
         This can optionally be used by subclasses when writing the
-        `set_sample_order` method. We recommend using to properly log relevant
-        information.
+        `set_sample_order` method. We recommend using this method to properly
+        log relevant information.
+
+        If samples are missing from the new seq, a warning will be displayed.
+        If new samples are added, a ValueError will be raised.
 
         """
         # Make sure that all the elements are in the provided sequence.
@@ -173,6 +241,7 @@ class PandasPhenotypeDatabase(AbstractPhenotypeDatabase):
         names = [v.name for v in variables]
         mat = self.get_correlation_matrix(names)
         for var in variables:
+            # Exclusions are irrelevant for quantitative traits.
             if var.variable_type != "discrete":
                 continue
             if var.is_covariate:
@@ -182,9 +251,6 @@ class PandasPhenotypeDatabase(AbstractPhenotypeDatabase):
 
             # Check for correlated variables.
             i = names.index(var.name)
-            # FIXME This np.where is weird. where's the threshold.
-            # Also add it to the mappings to account for the new database
-            # structures.
             for j in np.where(abs(mat[i, :]) >= self._exclusion_threshold)[0]:
                 if j != i:
                     # j is a candidate related outcome.
