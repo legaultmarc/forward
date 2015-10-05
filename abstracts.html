@@ -116,14 +116,28 @@ classes.</p>
 <dt id="forward.phenotype.db.AbstractPhenotypeDatabase">
 <em class="property">class </em><code class="descclassname">forward.phenotype.db.</code><code class="descname">AbstractPhenotypeDatabase</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class representing a collection of phenotypes.</p>
+<p>This class parses the phenotype information source (e.g. flat files, excel
+files, relational database or anything else).</p>
 <p>It is the responsibility of the phenotype database to handle phenotype
 based exclusions and transformations.</p>
 <dl class="method">
 <dt id="forward.phenotype.db.AbstractPhenotypeDatabase.exclude_correlated">
 <code class="descname">exclude_correlated</code><span class="sig-paren">(</span><em>threshold</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.exclude_correlated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.exclude_correlated" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exclude correlated samples from controls.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>threshold</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; A correlation coefficien threshold for exclusions.</td>
+</tr>
+</tbody>
+</table>
 <p>In phenomic studies, it is common to exclude samples from controls if
-they are affected by a correlated phenotype.</p>
+they are affected by a correlated phenotype. This is often described
+through the concept of &#8220;disease groups&#8221;.</p>
+<p>A threshold of 0.8 means that if two discrete phenotypes A and B have
+a correlation coefficient &gt;= 0.8, samples that are cases for A will
+be excluded from the control group of B and vice versa.</p>
 </dd></dl>
 
 <dl class="method">
@@ -168,6 +182,33 @@ samples.</p>
 </tr>
 </tbody>
 </table>
+<p>This is one of the most important methods as it is Forward&#8217;s way of
+accessing all phenotypic information (it should be as efficient as
+possible). Missing values should be represented using Numpy NaNs.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Experiment objects will call <code class="xref py py-func docutils literal"><span class="pre">set_sample_order()</span></code> with
+the results from the genotype container&#8217;s
+<code class="xref py py-func docutils literal"><span class="pre">get_sample_order()</span></code> to ensure consistency. This means that
+the order of the samples in this vector should be the same as the
+sample order for the genotype container.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.phenotype.db.AbstractPhenotypeDatabase.get_phenotypes">
+<code class="descname">get_phenotypes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.get_phenotypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.get_phenotypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of phenotypes available in this database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of available phenotype names.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -175,38 +216,91 @@ samples.</p>
 <code class="descname">get_related_phenotype_exclusions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.get_related_phenotype_exclusions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.get_related_phenotype_exclusions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the phenotypes for which there was an exclusion based on
 correlation.</p>
-<p>Using forward, it is possible to use the &#8220;exclude_correlated&#8221; function
+<p>Using Forward, it is possible to use the &#8220;exclude_correlated&#8221; function
 to exclude from controls samples that are cases for a related
-(correlated) phenotype.
-In order to access this information in the report, it is necessary to
+(correlated) phenotype.</p>
+<p>Implementations often rely on simple attributes for this functionality.</p>
+<p>In order to access this information in the report, it is necessary to
 implement this function.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="forward.phenotype.db.AbstractPhenotypeDatabase.get_sample_order">
-<code class="descname">get_sample_order</code><span class="sig-paren">(</span><em>allow_subset=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.get_sample_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.get_sample_order" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_sample_order</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.get_sample_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.get_sample_order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the order of the samples.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list of samples in the same order as the phenotype vector.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/library/functions.html#list" title="(in Python v2.7)">list</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="forward.phenotype.db.AbstractPhenotypeDatabase.set_experiment_variables">
 <code class="descname">set_experiment_variables</code><span class="sig-paren">(</span><em>variables</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.set_experiment_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.set_experiment_variables" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the variables attribute containing all the possible variables.</p>
+<dd><p>Signal by the experiment describing the subset of variables that
+will be analyzed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>variables</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; List of
+<code class="xref py py-class docutils literal"><span class="pre">forward.phenotype.variables.Variable</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>This method can be used to compute the exclusions for discrete
+variables based on correlation.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="forward.phenotype.db.AbstractPhenotypeDatabase.set_sample_order">
 <code class="descname">set_sample_order</code><span class="sig-paren">(</span><em>sequence</em>, <em>allow_subset=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.set_sample_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.set_sample_order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the order of the samples.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sequence</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; List of sample IDs.</li>
+<li><strong>allow_subset</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If true, the provided sequence is allowed to
+contain only some of the IDs from the initial
+list.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="staticmethod">
 <dt id="forward.phenotype.db.AbstractPhenotypeDatabase.validate_sample_sequences">
 <em class="property">static </em><code class="descname">validate_sample_sequences</code><span class="sig-paren">(</span><em>old_seq</em>, <em>new_seq</em>, <em>allow_subset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#AbstractPhenotypeDatabase.validate_sample_sequences"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.AbstractPhenotypeDatabase.validate_sample_sequences" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compares sample sequences to validate the new sequence order.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>old_seq</strong> (<em>iterable</em>) &#8211; The initial order of samples.</li>
+<li><strong>new_seq</strong> (<em>iterable</em>) &#8211; The new order of samples.</li>
+<li><strong>allow_subset</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If False, this method will raise ValueErrors if
+the new sequence is a subset of the old sequence.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <p>This can optionally be used by subclasses when writing the
-<cite>set_sample_order</cite> method. We recommend using to properly log relevant
-information.</p>
+<cite>set_sample_order</cite> method. We recommend using this method to properly
+log relevant information.</p>
+<p>If samples are missing from the new seq, a warning will be displayed.
+If new samples are added, a ValueError will be raised.</p>
 </dd></dl>
 
 </dd></dl>

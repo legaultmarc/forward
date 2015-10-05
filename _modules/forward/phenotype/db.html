@@ -102,6 +102,9 @@
 <div class="viewcode-block" id="AbstractPhenotypeDatabase"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase">[docs]</a><span class="k">class</span> <span class="nc">AbstractPhenotypeDatabase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract class representing a collection of phenotypes.</span>
 
+<span class="sd">    This class parses the phenotype information source (e.g. flat files, excel</span>
+<span class="sd">    files, relational database or anything else).</span>
+
 <span class="sd">    It is the responsibility of the phenotype database to handle phenotype</span>
 <span class="sd">    based exclusions and transformations.</span>
 
@@ -110,9 +113,15 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">dispatch_methods</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_phenotypes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+<div class="viewcode-block" id="AbstractPhenotypeDatabase.get_phenotypes"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_phenotypes">[docs]</a>    <span class="k">def</span> <span class="nf">get_phenotypes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a list of phenotypes available in this database.</span>
+<span class="sd">        </span>
+<span class="sd">        :returns: List of available phenotype names.</span>
+<span class="sd">        :rtype: str</span>
 
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div>
 <div class="viewcode-block" id="AbstractPhenotypeDatabase.get_phenotype_vector"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_phenotype_vector">[docs]</a>    <span class="k">def</span> <span class="nf">get_phenotype_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns a numpy array representing the selected outcome for all</span>
 <span class="sd">        samples.</span>
@@ -123,30 +132,68 @@
 <span class="sd">        :returns: A vector representing the outcome.</span>
 <span class="sd">        :rtype: :py:class:`numpy.ndarray`</span>
 
+<span class="sd">        This is one of the most important methods as it is Forward&#39;s way of</span>
+<span class="sd">        accessing all phenotypic information (it should be as efficient as</span>
+<span class="sd">        possible). Missing values should be represented using Numpy NaNs.</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            Experiment objects will call :py:func:`set_sample_order` with</span>
+<span class="sd">            the results from the genotype container&#39;s</span>
+<span class="sd">            :py:func:`get_sample_order` to ensure consistency. This means that</span>
+<span class="sd">            the order of the samples in this vector should be the same as the</span>
+<span class="sd">            sample order for the genotype container.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 </div>
 <div class="viewcode-block" id="AbstractPhenotypeDatabase.set_experiment_variables"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.set_experiment_variables">[docs]</a>    <span class="k">def</span> <span class="nf">set_experiment_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set the variables attribute containing all the possible variables.</span>
+        <span class="sd">&quot;&quot;&quot;Signal by the experiment describing the subset of variables that</span>
+<span class="sd">        will be analyzed.</span>
+
+<span class="sd">        :param variables: List of</span>
+<span class="sd">                          :py:class:`forward.phenotype.variables.Variable`</span>
+<span class="sd">        :type variables: list</span>
+
+<span class="sd">        This method can be used to compute the exclusions for discrete</span>
+<span class="sd">        variables based on correlation.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 </div>
 <div class="viewcode-block" id="AbstractPhenotypeDatabase.set_sample_order"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.set_sample_order">[docs]</a>    <span class="k">def</span> <span class="nf">set_sample_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">allow_subset</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set the order of the samples.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Set the order of the samples.</span>
+
+<span class="sd">        :param sequence: List of sample IDs.</span>
+<span class="sd">        :type sequence: list</span>
+
+<span class="sd">        :param allow_subset: If true, the provided sequence is allowed to</span>
+<span class="sd">                             contain only some of the IDs from the initial</span>
+<span class="sd">                             list.</span>
+<span class="sd">        :type allow_subset: bool</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 </div>
-<div class="viewcode-block" id="AbstractPhenotypeDatabase.get_sample_order"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_sample_order">[docs]</a>    <span class="k">def</span> <span class="nf">get_sample_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">allow_subset</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the order of the samples.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="AbstractPhenotypeDatabase.get_sample_order"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_sample_order">[docs]</a>    <span class="k">def</span> <span class="nf">get_sample_order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the order of the samples.</span>
+
+<span class="sd">        :returns: A list of samples in the same order as the phenotype vector.</span>
+<span class="sd">        :rtype: list</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 </div>
 <div class="viewcode-block" id="AbstractPhenotypeDatabase.get_related_phenotype_exclusions"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_related_phenotype_exclusions">[docs]</a>    <span class="k">def</span> <span class="nf">get_related_phenotype_exclusions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the phenotypes for which there was an exclusion based on</span>
 <span class="sd">        correlation.</span>
 
-<span class="sd">        Using forward, it is possible to use the &quot;exclude_correlated&quot; function</span>
+<span class="sd">        Using Forward, it is possible to use the &quot;exclude_correlated&quot; function</span>
 <span class="sd">        to exclude from controls samples that are cases for a related</span>
 <span class="sd">        (correlated) phenotype.</span>
+
+<span class="sd">        Implementations often rely on simple attributes for this functionality.</span>
+
 <span class="sd">        In order to access this information in the report, it is necessary to</span>
 <span class="sd">        implement this function.</span>
 
@@ -160,8 +207,16 @@
 <div class="viewcode-block" id="AbstractPhenotypeDatabase.exclude_correlated"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.exclude_correlated">[docs]</a>    <span class="k">def</span> <span class="nf">exclude_correlated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Exclude correlated samples from controls.</span>
 
+<span class="sd">        :param threshold: A correlation coefficien threshold for exclusions.</span>
+<span class="sd">        :type threshold: float</span>
+
 <span class="sd">        In phenomic studies, it is common to exclude samples from controls if</span>
-<span class="sd">        they are affected by a correlated phenotype.</span>
+<span class="sd">        they are affected by a correlated phenotype. This is often described</span>
+<span class="sd">        through the concept of &quot;disease groups&quot;.</span>
+
+<span class="sd">        A threshold of 0.8 means that if two discrete phenotypes A and B have</span>
+<span class="sd">        a correlation coefficient &gt;= 0.8, samples that are cases for A will</span>
+<span class="sd">        be excluded from the control group of B and vice versa.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
@@ -170,9 +225,22 @@
 <div class="viewcode-block" id="AbstractPhenotypeDatabase.validate_sample_sequences"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.validate_sample_sequences">[docs]</a>    <span class="k">def</span> <span class="nf">validate_sample_sequences</span><span class="p">(</span><span class="n">old_seq</span><span class="p">,</span> <span class="n">new_seq</span><span class="p">,</span> <span class="n">allow_subset</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Compares sample sequences to validate the new sequence order.</span>
 
+<span class="sd">        :param old_seq: The initial order of samples.</span>
+<span class="sd">        :type old_seq: iterable</span>
+
+<span class="sd">        :param new_seq: The new order of samples.</span>
+<span class="sd">        :type new_seq: iterable</span>
+
+<span class="sd">        :param allow_subset: If False, this method will raise ValueErrors if</span>
+<span class="sd">                             the new sequence is a subset of the old sequence.</span>
+<span class="sd">        :type allow_subset: bool</span>
+
 <span class="sd">        This can optionally be used by subclasses when writing the</span>
-<span class="sd">        `set_sample_order` method. We recommend using to properly log relevant</span>
-<span class="sd">        information.</span>
+<span class="sd">        `set_sample_order` method. We recommend using this method to properly</span>
+<span class="sd">        log relevant information.</span>
+
+<span class="sd">        If samples are missing from the new seq, a warning will be displayed.</span>
+<span class="sd">        If new samples are added, a ValueError will be raised.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c"># Make sure that all the elements are in the provided sequence.</span>
@@ -246,6 +314,7 @@
         <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">]</span>
         <span class="n">mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_correlation_matrix</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+            <span class="c"># Exclusions are irrelevant for quantitative traits.</span>
             <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">variable_type</span> <span class="o">!=</span> <span class="s">&quot;discrete&quot;</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">is_covariate</span><span class="p">:</span>
@@ -255,9 +324,6 @@
 
             <span class="c"># Check for correlated variables.</span>
             <span class="n">i</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-            <span class="c"># FIXME This np.where is weird. where&#39;s the threshold.</span>
-            <span class="c"># Also add it to the mappings to account for the new database</span>
-            <span class="c"># structures.</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">mat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclusion_threshold</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="n">i</span><span class="p">:</span>
                     <span class="c"># j is a candidate related outcome.</span>
