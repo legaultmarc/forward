@@ -144,12 +144,46 @@
 
 </div>
 <span class="nd">@result_table</span>
-<div class="viewcode-block" id="ExperimentResult"><a class="viewcode-back" href="../../api.html#forward.experiment.ExperimentResult">[docs]</a><span class="k">class</span> <span class="nc">ExperimentResult</span><span class="p">(</span><span class="n">SQLAlchemyBase</span><span class="p">):</span>
+<div class="viewcode-block" id="ExperimentResult"><a class="viewcode-back" href="../../database.html#forward.experiment.ExperimentResult">[docs]</a><span class="k">class</span> <span class="nc">ExperimentResult</span><span class="p">(</span><span class="n">SQLAlchemyBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;SQLAlchemy class to handle experimental results.</span>
 
-<span class="sd">    TODO. This could potentially be refactored so that tested_entity is a</span>
-<span class="sd">    foreign key to the forward.genotype.Variant class. This would require</span>
-<span class="sd">    using concrete table inheritance.</span>
+<span class="sd">    +-------------------------+----------------------------------+------------+</span>
+<span class="sd">    | Column                  | Description                      | Type       |</span>
+<span class="sd">    +=========================+==================================+============+</span>
+<span class="sd">    | pk                      | The primary key (autoincrement)  | Integer    |</span>
+<span class="sd">    +-------------------------+----------------------------------+------------+</span>
+<span class="sd">    | tested_entity           | Either &#39;variant&#39; or &#39;snp-set&#39;    | Enum       |</span>
+<span class="sd">    |                         | depending on the test.           |            |</span>
+<span class="sd">    +-------------------------+----------------------------------+------------+</span>
+<span class="sd">    | results_type            | Polymorphic identity to identify | String(25) |</span>
+<span class="sd">    |                         | (default: &#39;GenericResults&#39;)      |            |</span>
+<span class="sd">    +-------------------------+----------------------------------+------------+</span>
+<span class="sd">    | entity_name             | Variant or snp set identifier    | String(25) |</span>
+<span class="sd">    +-------------------------+----------------------------------+------------+</span>
+<span class="sd">    | phenotype               | Tested outcome                   | String(30) |</span>
+<span class="sd">    +-------------------------+----------------------------------+------------+</span>
+<span class="sd">    | significance            | Significance value (`e.g.`       | Float      |</span>
+<span class="sd">    |                         | p-value)                         |            |</span>
+<span class="sd">    +-------------------------+----------------------------------+------------+</span>
+<span class="sd">    | coefficient             | Effect coefficient (`e.g.` beta) | Float      |</span>
+<span class="sd">    +-------------------------+----------------------------------+------------+</span>
+<span class="sd">    | test_statistic          | Statistical test statistic       | Float      |</span>
+<span class="sd">    |                         | (`e.g.` t-test statistic)        |            |</span>
+<span class="sd">    +-------------------------+----------------------------------+------------+</span>
+<span class="sd">    | standard_error          | Standard error of the coefficient| Float      |</span>
+<span class="sd">    +-------------------------+----------------------------------+------------+</span>
+<span class="sd">    | confidence_interval_min | Lower bound of the 95% CI on the | Float      |</span>
+<span class="sd">    |                         | coefficient                      |            |</span>
+<span class="sd">    +-------------------------+----------------------------------+------------+</span>
+<span class="sd">    | confidence_interval_max | Higher bound of the 95% CI on    | Float      |</span>
+<span class="sd">    |                         | the coefficient                  |            |</span>
+<span class="sd">    +-------------------------+----------------------------------+------------+</span>
+
+<span class="sd">    .. todo::</span>
+
+<span class="sd">        This could potentially be refactored so that tested_entity is a</span>
+<span class="sd">        foreign key to the forward.genotype.Variant class. This would require</span>
+<span class="sd">        using concrete table inheritance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&quot;results&quot;</span>

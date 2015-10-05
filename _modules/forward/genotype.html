@@ -113,7 +113,39 @@
                 <span class="s">&quot;filtering needs to be done at the Task level.&quot;</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">Variant</span><span class="p">(</span><span class="n">SQLAlchemyBase</span><span class="p">):</span>
+<div class="viewcode-block" id="Variant"><a class="viewcode-back" href="../../database.html#forward.genotype.Variant">[docs]</a><span class="k">class</span> <span class="nc">Variant</span><span class="p">(</span><span class="n">SQLAlchemyBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;ORM Variant object.</span>
+
+<span class="sd">    +----------------+------------------------------------------+------------+</span>
+<span class="sd">    | Column         | Description                              | Type       |</span>
+<span class="sd">    +================+==========================================+============+</span>
+<span class="sd">    | name           | The variant&#39;s name (`e.g.` rs12356)      | String(25) |</span>
+<span class="sd">    +----------------+------------------------------------------+------------+</span>
+<span class="sd">    | chrom          | The chromosome (`e.g.` &#39;3&#39; or &#39;X&#39;)       | String(15) |</span>
+<span class="sd">    +----------------+------------------------------------------+------------+</span>
+<span class="sd">    | pos            | The variant&#39;s position on the chromosome | Integer    |</span>
+<span class="sd">    +----------------+------------------------------------------+------------+</span>
+<span class="sd">    | mac            | Minor allele count (`e.g.` 125)          | Integer    |</span>
+<span class="sd">    +----------------+------------------------------------------+------------+</span>
+<span class="sd">    | minor          | Least common allele (`e.g.` &#39;T&#39;)         | String(10) |</span>
+<span class="sd">    +----------------+------------------------------------------+------------+</span>
+<span class="sd">    | major          | Most common allele (`e.g.` &#39;C&#39;)          | String(10) |</span>
+<span class="sd">    +----------------+------------------------------------------+------------+</span>
+<span class="sd">    | n_missing      | Number of missing genotypes for this     | Integer    |</span>
+<span class="sd">    |                | variant                                  |            |</span>
+<span class="sd">    +----------------+------------------------------------------+------------+</span>
+<span class="sd">    | n_non_missing  | Number of non-missing genotypes for this | Integer    |</span>
+<span class="sd">    |                | variant                                  |            |</span>
+<span class="sd">    +----------------+------------------------------------------+------------+</span>
+
+<span class="sd">    Computed fields:</span>
+
+<span class="sd">        - ``maf``: :math:`mac / (2 \cdot n non missing)`</span>
+<span class="sd">        - ``completion_rate``:</span>
+<span class="sd">          :math:`n non missing / (n non missing + n missing)`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&quot;variants&quot;</span>
 
     <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
@@ -135,10 +167,15 @@
     <span class="k">def</span> <span class="nf">completion_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_non_missing</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_non_missing</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_missing</span><span class="p">)</span>
 
-
+</div>
 <span class="nd">@abstract</span>
 <div class="viewcode-block" id="AbstractGenotypeDatabase"><a class="viewcode-back" href="../../abstracts.html#forward.genotype.AbstractGenotypeDatabase">[docs]</a><span class="k">class</span> <span class="nc">AbstractGenotypeDatabase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Abstract class representing the genotypes for the study.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Abstract genotype container.</span>
+<span class="sd">    </span>
+<span class="sd">    This class defines the standardized methods to organize the genotype access</span>
+<span class="sd">    procedures used by Forward.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">dispatch_methods</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
 
@@ -147,15 +184,27 @@
         <span class="sd">&quot;&quot;&quot;Return a list of the (ordered) samples as represented in the</span>
 <span class="sd">           database.</span>
 
+<span class="sd">        The experiment will pass the results of this method to the phenotype</span>
+<span class="sd">        container&#39;s ``set_sample_order`` method.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span>
-
-    <span class="c"># Interrogate the variant database.</span></div>
+</div>
 <div class="viewcode-block" id="AbstractGenotypeDatabase.query_variants"><a class="viewcode-back" href="../../abstracts.html#forward.genotype.AbstractGenotypeDatabase.query_variants">[docs]</a>    <span class="k">def</span> <span class="nf">query_variants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a query object for variants.</span>
 
+<span class="sd">        :param session: A session object to interface with the Variant table.</span>
+<span class="sd">        :type session: :py:class:`sqlalchemy.orm.session.Session`</span>
+
+<span class="sd">        :param fields: A list of attributes to query. They should correspond</span>
+<span class="sd">                       to columns of the :py:class:`Variant` table.</span>
+<span class="sd">        :type fields: list</span>
+
 <span class="sd">        If fields are given, they are queried. Alternatively a query for the</span>
 <span class="sd">        Variant objects is returned.</span>
+
+<span class="sd">        Variant data is stored in a SQLAlchemy database. This method provides</span>
+<span class="sd">        a shortcut to query it in a more pythonic way.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">fields</span><span class="p">:</span>

@@ -27,6 +27,7 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/bizstyle.js"></script>
     <link rel="top" title="Forward 0.1 documentation" href="index.html" />
+    <link rel="next" title="Forward’s database" href="database.html" />
     <link rel="prev" title="Extending Forward" href="abstracts.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <!--[if lt IE 9]>
@@ -43,6 +44,9 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="database.html" title="Forward’s database"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="abstracts.html" title="Extending Forward"
              accesskey="P">previous</a> |</li>
@@ -63,6 +67,9 @@
   <h4>Previous topic</h4>
   <p class="topless"><a href="abstracts.html"
                         title="previous chapter">Extending <cite>Forward</cite></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="database.html"
+                        title="next chapter">Forward&#8217;s database</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -154,9 +161,77 @@ everything is over.</li>
 <dt id="forward.experiment.ExperimentResult">
 <em class="property">class </em><code class="descclassname">forward.experiment.</code><code class="descname">ExperimentResult</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#ExperimentResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.ExperimentResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>SQLAlchemy class to handle experimental results.</p>
-<p>TODO. This could potentially be refactored so that tested_entity is a
+<table border="1" class="docutils">
+<colgroup>
+<col width="35%" />
+<col width="48%" />
+<col width="17%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Column</th>
+<th class="head">Description</th>
+<th class="head">Type</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>pk</td>
+<td>The primary key (autoincrement)</td>
+<td>Integer</td>
+</tr>
+<tr class="row-odd"><td>tested_entity</td>
+<td>Either &#8216;variant&#8217; or &#8216;snp-set&#8217;
+depending on the test.</td>
+<td>Enum</td>
+</tr>
+<tr class="row-even"><td>results_type</td>
+<td>Polymorphic identity to identify
+(default: &#8216;GenericResults&#8217;)</td>
+<td>String(25)</td>
+</tr>
+<tr class="row-odd"><td>entity_name</td>
+<td>Variant or snp set identifier</td>
+<td>String(25)</td>
+</tr>
+<tr class="row-even"><td>phenotype</td>
+<td>Tested outcome</td>
+<td>String(30)</td>
+</tr>
+<tr class="row-odd"><td>significance</td>
+<td>Significance value (<cite>e.g.</cite>
+p-value)</td>
+<td>Float</td>
+</tr>
+<tr class="row-even"><td>coefficient</td>
+<td>Effect coefficient (<cite>e.g.</cite> beta)</td>
+<td>Float</td>
+</tr>
+<tr class="row-odd"><td>test_statistic</td>
+<td>Statistical test statistic
+(<cite>e.g.</cite> t-test statistic)</td>
+<td>Float</td>
+</tr>
+<tr class="row-even"><td>standard_error</td>
+<td>Standard error of the coefficient</td>
+<td>Float</td>
+</tr>
+<tr class="row-odd"><td>confidence_interval_min</td>
+<td>Lower bound of the 95% CI on the
+coefficient</td>
+<td>Float</td>
+</tr>
+<tr class="row-even"><td>confidence_interval_max</td>
+<td>Higher bound of the 95% CI on
+the coefficient</td>
+<td>Float</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">This could potentially be refactored so that tested_entity is a
 foreign key to the forward.genotype.Variant class. This would require
 using concrete table inheritance.</p>
+</div>
 </dd></dl>
 
 <dl class="class">
@@ -240,6 +315,9 @@ a log transform to accentuate small differences.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="database.html" title="Forward’s database"
+             >next</a> |</li>
         <li class="right" >
           <a href="abstracts.html" title="Extending Forward"
              >previous</a> |</li>

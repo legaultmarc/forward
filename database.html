@@ -1,0 +1,327 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Forward’s database &mdash; Forward 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="top" title="Forward 0.1 documentation" href="index.html" />
+    <link rel="prev" title="API Documentation" href="api.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API Documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Forward 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Forward&#8217;s database</a><ul>
+<li><a class="reference internal" href="#variant-table">Variant table</a></li>
+<li><a class="reference internal" href="#results-tables">Results tables</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="previous chapter">API Documentation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/database.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="forward-s-database">
+<h1>Forward&#8217;s database<a class="headerlink" href="#forward-s-database" title="Permalink to this headline">¶</a></h1>
+<p>Relational databases are automatically built to hold analysis results for any
+experiment. This is done using <a class="reference external" href="http://www.sqlalchemy.org/">SQLAlchemy</a> an
+<cite>Object Relational Mapper</cite> for Python. This package makes it easy to use one
+of the many supported RDBMS backends while writing technology agnostic code. It
+also maps database entries to Python objects which makes the integration
+seamless and facilitates some technical aspects.</p>
+<p>This section describes the different Python classes that will get translated to
+database tables.</p>
+<div class="section" id="variant-table">
+<h2>Variant table<a class="headerlink" href="#variant-table" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="forward.genotype.Variant">
+<em class="property">class </em><code class="descclassname">forward.genotype.</code><code class="descname">Variant</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#Variant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.Variant" title="Permalink to this definition">¶</a></dt>
+<dd><p>ORM Variant object.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="60%" />
+<col width="17%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Column</th>
+<th class="head">Description</th>
+<th class="head">Type</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>name</td>
+<td>The variant&#8217;s name (<cite>e.g.</cite> rs12356)</td>
+<td>String(25)</td>
+</tr>
+<tr class="row-odd"><td>chrom</td>
+<td>The chromosome (<cite>e.g.</cite> &#8216;3&#8217; or &#8216;X&#8217;)</td>
+<td>String(15)</td>
+</tr>
+<tr class="row-even"><td>pos</td>
+<td>The variant&#8217;s position on the chromosome</td>
+<td>Integer</td>
+</tr>
+<tr class="row-odd"><td>mac</td>
+<td>Minor allele count (<cite>e.g.</cite> 125)</td>
+<td>Integer</td>
+</tr>
+<tr class="row-even"><td>minor</td>
+<td>Least common allele (<cite>e.g.</cite> &#8216;T&#8217;)</td>
+<td>String(10)</td>
+</tr>
+<tr class="row-odd"><td>major</td>
+<td>Most common allele (<cite>e.g.</cite> &#8216;C&#8217;)</td>
+<td>String(10)</td>
+</tr>
+<tr class="row-even"><td>n_missing</td>
+<td>Number of missing genotypes for this
+variant</td>
+<td>Integer</td>
+</tr>
+<tr class="row-odd"><td>n_non_missing</td>
+<td>Number of non-missing genotypes for this
+variant</td>
+<td>Integer</td>
+</tr>
+</tbody>
+</table>
+<p>Computed fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">maf</span></code>: <span class="math">\(mac / (2 \cdot n non missing)\)</span></li>
+<li><code class="docutils literal"><span class="pre">completion_rate</span></code>:
+<span class="math">\(n non missing / (n non missing + n missing)\)</span></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="results-tables">
+<h2>Results tables<a class="headerlink" href="#results-tables" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="forward.experiment.ExperimentResult">
+<em class="property">class </em><code class="descclassname">forward.experiment.</code><code class="descname">ExperimentResult</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#ExperimentResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.ExperimentResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>SQLAlchemy class to handle experimental results.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="35%" />
+<col width="48%" />
+<col width="17%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Column</th>
+<th class="head">Description</th>
+<th class="head">Type</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>pk</td>
+<td>The primary key (autoincrement)</td>
+<td>Integer</td>
+</tr>
+<tr class="row-odd"><td>tested_entity</td>
+<td>Either &#8216;variant&#8217; or &#8216;snp-set&#8217;
+depending on the test.</td>
+<td>Enum</td>
+</tr>
+<tr class="row-even"><td>results_type</td>
+<td>Polymorphic identity to identify
+(default: &#8216;GenericResults&#8217;)</td>
+<td>String(25)</td>
+</tr>
+<tr class="row-odd"><td>entity_name</td>
+<td>Variant or snp set identifier</td>
+<td>String(25)</td>
+</tr>
+<tr class="row-even"><td>phenotype</td>
+<td>Tested outcome</td>
+<td>String(30)</td>
+</tr>
+<tr class="row-odd"><td>significance</td>
+<td>Significance value (<cite>e.g.</cite>
+p-value)</td>
+<td>Float</td>
+</tr>
+<tr class="row-even"><td>coefficient</td>
+<td>Effect coefficient (<cite>e.g.</cite> beta)</td>
+<td>Float</td>
+</tr>
+<tr class="row-odd"><td>test_statistic</td>
+<td>Statistical test statistic
+(<cite>e.g.</cite> t-test statistic)</td>
+<td>Float</td>
+</tr>
+<tr class="row-even"><td>standard_error</td>
+<td>Standard error of the coefficient</td>
+<td>Float</td>
+</tr>
+<tr class="row-odd"><td>confidence_interval_min</td>
+<td>Lower bound of the 95% CI on the
+coefficient</td>
+<td>Float</td>
+</tr>
+<tr class="row-even"><td>confidence_interval_max</td>
+<td>Higher bound of the 95% CI on
+the coefficient</td>
+<td>Float</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">This could potentially be refactored so that tested_entity is a
+foreign key to the forward.genotype.Variant class. This would require
+using concrete table inheritance.</p>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="forward.tasks.LinearTestResults">
+<em class="property">class </em><code class="descclassname">forward.tasks.</code><code class="descname">LinearTestResults</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/tasks.html#LinearTestResults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.tasks.LinearTestResults" title="Permalink to this definition">¶</a></dt>
+<dd><p>Table for extra statistical reporting for linear regression.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="59%" />
+<col width="13%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Column</th>
+<th class="head">Description</th>
+<th class="head">Type</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>pk</td>
+<td>The primary key, the same as the
+<code class="xref py py-class docutils literal"><span class="pre">experiment.ExperimentResult</span></code></td>
+<td>Integer</td>
+</tr>
+<tr class="row-odd"><td>adjusted_r_squared</td>
+<td>The adjusted R squared as reported by
+statsmodels</td>
+<td>Float</td>
+</tr>
+<tr class="row-even"><td>std_beta</td>
+<td>The standardized effect size. This is
+for <span class="math">\(x, y \sim \mathcal{N}(0,1)\)</span></td>
+<td>Float</td>
+</tr>
+<tr class="row-odd"><td>std_beta_min</td>
+<td>Lower bound of the 95% CI for the
+standardized <span class="math">\(\beta\)</span></td>
+<td>Float</td>
+</tr>
+<tr class="row-even"><td>std_beta_max</td>
+<td>Higher bound of the 95% CI</td>
+<td>Float</td>
+</tr>
+</tbody>
+</table>
+<p>It is interesting to report the standardized beta to easily compare the
+effect size between different outcomes (that have different units). We
+will also report the coefficient of determination (R^2) that reports the
+fraction of explained variance.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API Documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Forward 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Marc-André Legault.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

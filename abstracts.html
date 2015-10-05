@@ -312,7 +312,9 @@ If new samples are added, a ValueError will be raised.</p>
 <dl class="class">
 <dt id="forward.genotype.AbstractGenotypeDatabase">
 <em class="property">class </em><code class="descclassname">forward.genotype.</code><code class="descname">AbstractGenotypeDatabase</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#AbstractGenotypeDatabase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.AbstractGenotypeDatabase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Abstract class representing the genotypes for the study.</p>
+<dd><p>Abstract genotype container.</p>
+<p>This class defines the standardized methods to organize the genotype access
+procedures used by Forward.</p>
 <dl class="method">
 <dt id="forward.genotype.AbstractGenotypeDatabase.experiment_init">
 <code class="descname">experiment_init</code><span class="sig-paren">(</span><em>experiment</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#AbstractGenotypeDatabase.experiment_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.AbstractGenotypeDatabase.experiment_init" title="Permalink to this definition">¶</a></dt>
@@ -344,8 +346,12 @@ this should use very good indexing and potentially caching.</p>
 <dl class="method">
 <dt id="forward.genotype.AbstractGenotypeDatabase.get_sample_order">
 <code class="descname">get_sample_order</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#AbstractGenotypeDatabase.get_sample_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.AbstractGenotypeDatabase.get_sample_order" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a list of the (ordered) samples as represented in the
-database.</p>
+<dd><dl class="docutils">
+<dt>Return a list of the (ordered) samples as represented in the</dt>
+<dd>database.</dd>
+</dl>
+<p>The experiment will pass the results of this method to the phenotype
+container&#8217;s <code class="docutils literal"><span class="pre">set_sample_order</span></code> method.</p>
 </dd></dl>
 
 <dl class="staticmethod">
@@ -358,8 +364,23 @@ database.</p>
 <dt id="forward.genotype.AbstractGenotypeDatabase.query_variants">
 <code class="descname">query_variants</code><span class="sig-paren">(</span><em>session</em>, <em>fields=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#AbstractGenotypeDatabase.query_variants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.AbstractGenotypeDatabase.query_variants" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a query object for variants.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>session</strong> (<code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.orm.session.Session</span></code>) &#8211; A session object to interface with the Variant table.</li>
+<li><strong>fields</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; A list of attributes to query. They should correspond
+to columns of the <code class="xref py py-class docutils literal"><span class="pre">Variant</span></code> table.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <p>If fields are given, they are queried. Alternatively a query for the
 Variant objects is returned.</p>
+<p>Variant data is stored in a SQLAlchemy database. This method provides
+a shortcut to query it in a more pythonic way.</p>
 </dd></dl>
 
 </dd></dl>

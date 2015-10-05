@@ -268,6 +268,7 @@ Contents
 
    api.rst
 
+   database.rst
 
 
 Indices and tables

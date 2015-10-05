@@ -364,8 +364,26 @@
 
 
 <span class="nd">@result_table</span>
-<span class="k">class</span> <span class="nc">LinearTestResults</span><span class="p">(</span><span class="n">ExperimentResult</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearTestResults"><a class="viewcode-back" href="../../database.html#forward.tasks.LinearTestResults">[docs]</a><span class="k">class</span> <span class="nc">LinearTestResults</span><span class="p">(</span><span class="n">ExperimentResult</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Table for extra statistical reporting for linear regression.</span>
+
+<span class="sd">    +--------------------+------------------------------------------+---------+</span>
+<span class="sd">    | Column             | Description                              | Type    |</span>
+<span class="sd">    +====================+==========================================+=========+</span>
+<span class="sd">    | pk                 | The primary key, the same as the         | Integer |</span>
+<span class="sd">    |                    | :py:class:`experiment.ExperimentResult`  |         |</span>
+<span class="sd">    +--------------------+------------------------------------------+---------+</span>
+<span class="sd">    | adjusted_r_squared | The adjusted R squared as reported by    | Float   |</span>
+<span class="sd">    |                    | statsmodels                              |         |</span>
+<span class="sd">    +--------------------+------------------------------------------+---------+</span>
+<span class="sd">    | std_beta           | The standardized effect size. This is    | Float   |</span>
+<span class="sd">    |                    | for :math:`x, y \sim \mathcal{N}(0,1)`   |         |</span>
+<span class="sd">    +--------------------+------------------------------------------+---------+</span>
+<span class="sd">    | std_beta_min       | Lower bound of the 95% CI for the        | Float   |</span>
+<span class="sd">    |                    | standardized :math:`\\beta`               |         |</span>
+<span class="sd">    +--------------------+------------------------------------------+---------+</span>
+<span class="sd">    | std_beta_max       | Higher bound of the 95% CI               | Float   |</span>
+<span class="sd">    +--------------------+------------------------------------------+---------+</span>
 
 <span class="sd">    It is interesting to report the standardized beta to easily compare the</span>
 <span class="sd">    effect size between different outcomes (that have different units). We</span>
@@ -386,7 +404,7 @@
         <span class="s">&quot;polymorphic_identity&quot;</span><span class="p">:</span> <span class="s">&quot;LinearTest&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
-
+</div>
 <span class="k">class</span> <span class="nc">LinearTest</span><span class="p">(</span><span class="n">LogisticTest</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Linear regression genetic test.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
