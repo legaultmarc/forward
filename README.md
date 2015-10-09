@@ -3,40 +3,38 @@
 `Forward` is a python package that provides tools and utilities for _foward
 genetics_ studies. It is currently under the very early stages of development.
 
-# Architecture
+# Documentation
 
-The important concept and modules are as follows:
+Documentation can be created from the sphinx docs (run ``make html`` from the
+``forward/docs`` directory.
 
-- genotype: Those are wrappers over sources of genetic data (_e.g._ IMPUTE2
-            files or VCFs). They will implement some data cleanup functionality
-            like filtering based on the MAF, Hardy Weinberg equilibrium,
-            completion rate, region, etc.
-            When asked for it, they should create a numpy array of genetic
-            variants encoding using the additive (0, 1, 2) model. The order
-            should be consistent with the samples defined for the phenotypes.
+Alternatively, a rendered version can be found 
+__[here](http://legaultmarc.github.io/forward)__.
 
-- phenotype databases: These objects wrap around different source of phenotypic
-                       information like CSV files, Excel files or SQL
-                       databases. They will contain both covariates and the
-                       main outcomes. Eventually, they will allow the reports
-                       to include data on trait distribution and disease
-                       incidence in the database. The order can be modified
-                       and should be consistent with the genotype database.
+# Report
 
-- variables: Variables are small objects corresponding to entries in the
-             phenotype database. They will eventually support different
-             transforms. For now, they are useful for specifying the outcomes
-             of interest and their data type (discrete vs. continuous).
+An demo of the interactive report can be
+[found here](http://www.statgen.org/forward/fto). If you want to deploy your
+own version to share results with collaborators, follow the instructions from
+[the docs](http://legaultmarc.github.io/forward).
 
-- tasks: Tasks implement the actual statistical testing or genetic analysis.
+The quick and easy way to serve an experiment is to run this script:
 
-- experiment: An experiment wraps all the different components of forward. It
-              is used to make sure that everything is clean and will be
-              extended to to experiment-based stuff like creating reports and
-              aggregating result files. All of the different ways of
-              interacting with `foward` (_e.g._ a CLI, a web based interface,
-              or the YAML configuration files) should all converge into
-              `Experiment` objects.
+```python
+#!/usr/bin/env python
+
+from tornado.wsgi import WSGIContainer
+from tornado.httpserver import HTTPServer
+from tornado.ioloop import IOLoop
+
+import forward.backend
+
+forward.backend.initialize_application("EXPERIMENT_NAME")
+
+http_server = HTTPServer(WSGIContainer(forward.backend.app))
+http_server.listen(5000)  # Set the port here
+IOLoop.instance().start()
+```
 
 # Installation
 
