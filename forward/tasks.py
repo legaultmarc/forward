@@ -11,14 +11,12 @@ This module provides actual implementations of the genetic tests.
 
 import os
 import collections
-import multiprocessing
 import logging
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
-from sqlalchemy import Column, Float, ForeignKey, String, Integer
+from sqlalchemy import Column, Float, ForeignKey, Integer
 from six.moves import cPickle as pickle
-from six.moves import range
 import numpy as np
 
 
@@ -29,9 +27,8 @@ except ImportError:  # pragma: no cover
     STATSMODELS_AVAILABLE = False
 
 
-from . import SQLAlchemySession, SQLAlchemyBase
 from .phenotype.variables import DiscreteVariable, ContinuousVariable
-from .utils import abstract, Parallel
+from .utils import abstract, Parallel, check_rpy2
 from .experiment import ExperimentResult, result_table
 
 
@@ -41,7 +38,7 @@ __all__ = ["LogisticTest", ]
 @abstract
 class AbstractTask(object):
     """Abstract class for genetic tests.
-    
+
     :param outcomes: (optional) List of Variable names to include as outcomes
                      for this task. Alternatively, "all" can be passed.
     :type outcomes: list or str
@@ -165,6 +162,84 @@ class AbstractTask(object):
         self.task_meta_path = os.path.join(self.work_dir, "task_info.pkl")
         with open(self.task_meta_path, "wb") as f:
             pickle.dump(self._info, f)
+
+
+class _SKATTest(AbstractTask):
+    """Binding to SKAT (using rpy2)."""
+    def __init__(self, *args, **kwargs):
+
+        # Task specific arguments.
+        self.snp_set = kwargs.pop("snp_set_file", None)
+        if self.snp_set:
+            self.snp_set = self._parse_snp_set(self.snp_set)
+
+        # Task initalization using the abstract implementation.
+        super(_SKATTest, self).__init__(*args, **kwargs)
+
+        # Check installation.
+        _SKATTest.check_skat()
+
+        # Import rpy2.
+        from rpy2.robjects import numpy2ri
+        numpy2ri.activate()  # Support for numpy arrays.
+
+        import rpy2.robjects
+        self.robjects = rpy2.robjects
+        self.r = rpy2.robjects.r
+
+        from rpy2.robjects.packages import importr
+
+        # Load the SKAT package.
+        try:
+            self.skat = importr("SKAT")
+        except Exception:
+            raise EnvironmentError(
+                1,
+                "SKAT needs to be installed in your R environment to use "
+                "SKATTest."
+            )
+
+    def run_task(self, experiment, task_name, work_dir):
+        """Run the SKAT analysis."""
+        super(_SKATTest, self).run_task(experiment, task_name, work_dir)
+        logger.info("Running the SKAT analysis.")
+
+        # Build the covariate matrix.
+        covar_matrix = np.vstack(tuple([
+            experiment.phenotypes.get_phenotype_vector(covar)
+            for covar in self.covariates
+        ]))
+
+        for phenotype in self.outcomes:
+            y = experiment.phenotypes.get_phenotype_vector(phenotype)
+            missing_outcome = np.isnan(y)
+
+            # TODO
+            # Get variants by set.
+            # Build the genotype matrix.
+            # Run the skat
+            # fill the results.
+
+        # TODO Run the SKAT analysis.
+        # obj = self.skat.SKAT_Null_Model(
+        #     self.robjects.Formula("y.b ~ X"), out_type="D"
+        # )
+        # results = self.r.SKAT(z, obj)
+        # TODO Parse the results object and fill the database.
+
+    @staticmethod
+    def check_skat():
+        """Check if SKAT is installed."""
+        if not check_rpy2:
+            raise ImportError("rpy2 is required to run SKAT analyses.")
+
+        from rpy2.robjects.packages import importr
+        try:
+            importr("SKAT")
+        except Exception:
+            raise EnvironmentError(1, "Couldn't find SKAT in R environment.")
+
+        return True
 
 
 class LogisticTest(AbstractTask):
@@ -307,7 +382,7 @@ class LinearTestResults(ExperimentResult):
     |                    | for :math:`x, y \sim \mathcal{N}(0,1)`   |         |
     +--------------------+------------------------------------------+---------+
     | std_beta_min       | Lower bound of the 95% CI for the        | Float   |
-    |                    | standardized :math:`\\beta`               |         |
+    |                    | standardized :math:`\\beta`              |         |
     +--------------------+------------------------------------------+---------+
     | std_beta_max       | Higher bound of the 95% CI               | Float   |
     +--------------------+------------------------------------------+---------+
@@ -349,6 +424,7 @@ class LinearTest(LogisticTest):
 
     def prep_task(self, experiment, task_name, work_dir):
         logger.info("Running a linear regression analysis.")
+
         def _f(**params):
             result = LinearTestResults(**params)
             experiment.session.add(result)

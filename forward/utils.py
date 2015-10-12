@@ -95,6 +95,15 @@ def dispatch_methods(self, kwargs):
         raise ValueError(message)
 
 
+def check_rpy2():
+    """Check if rpy2 is currently installed."""
+    try:
+        import rpy2
+        return True
+    except ImportError:
+        return False
+
+
 class Parallel(object):
     """Class used to parallelize computation.
 
