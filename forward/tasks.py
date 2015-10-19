@@ -18,6 +18,7 @@ logger.setLevel(logging.DEBUG)
 from sqlalchemy import Column, Float, ForeignKey, Integer
 from six.moves import cPickle as pickle
 import numpy as np
+import pandas as pd
 
 
 try:  # pragma: no cover
@@ -28,6 +29,7 @@ except ImportError:  # pragma: no cover
 
 
 from .phenotype.variables import DiscreteVariable, ContinuousVariable
+from .genotype import MemoryImpute2Geno
 from .utils import abstract, Parallel, check_rpy2
 from .experiment import ExperimentResult, result_table
 
@@ -164,20 +166,43 @@ class AbstractTask(object):
             pickle.dump(self._info, f)
 
 
-class _SKATTest(AbstractTask):
+class InvalidSNPSet(Exception):
+    def __init__(self, value=None):
+        self.value = value
+        if self.value is None:
+            self.value = ("The SNP Set file needs to have a header line with "
+                          "a 'variant' and a 'set' column. These indicate the "
+                          "variant IDs and their respective user-defined set "
+                          "for the agregate analysis, repsectively. "
+                          "The file needs to be *whitespace* delimited.")
+
+
+
+class SKATTest(AbstractTask):
     """Binding to SKAT (using rpy2)."""
     def __init__(self, *args, **kwargs):
 
         # Task specific arguments.
         self.snp_set = kwargs.pop("snp_set_file", None)
         if self.snp_set:
+            filename = self.snp_set
             self.snp_set = self._parse_snp_set(self.snp_set)
 
+            m = ("Using SNP sets from '{}'. Found a total of {} variants in {}"
+                 " different SNP sets.")
+            m = m.format(filename, self.snp_set.shape[0],
+                         self.snp_set["set"].nunique())
+            logger.info(m)
+
+        self.skat_o = kwargs.pop("SKAT-O", False)
+        if self.skat_o:
+            logger.info("Using the SKAT-O test.")
+
         # Task initalization using the abstract implementation.
-        super(_SKATTest, self).__init__(*args, **kwargs)
+        super(SKATTest, self).__init__(*args, **kwargs)
 
         # Check installation.
-        _SKATTest.check_skat()
+        SKATTest.check_skat()
 
         # Import rpy2.
         from rpy2.robjects import numpy2ri
@@ -199,33 +224,105 @@ class _SKATTest(AbstractTask):
                 "SKATTest."
             )
 
+    def _parse_snp_set(self, filename):
+        """Parse a SNP set file with a `variant` and a `set` column."""
+        data = pd.read_csv(filename, delim_whitespace=True, header=0)
+        data.columns = [i.lower() for i in data.columns]
+        if {"variant", "set"} - set(data.columns):
+            raise InvalidSNPSet()
+
+        data = data[["variant", "set"]]
+        if data.shape[1] != 2:
+            raise InvalidSNPSet("Duplicate columns in SNP set file. Note that "
+                                "columns names are case insensitive.")
+
+        data["set"] = data["set"].astype("category")
+
+        return data
+
     def run_task(self, experiment, task_name, work_dir):
         """Run the SKAT analysis."""
-        super(_SKATTest, self).run_task(experiment, task_name, work_dir)
+        super(SKATTest, self).run_task(experiment, task_name, work_dir)
         logger.info("Running the SKAT analysis.")
 
+        # Check if the snp set was correctly initialized.
+        if getattr(self, "snp_set") is None:
+            raise InvalidSNPSet("You need to provide a snp set for SKAT "
+                                "analyses. Use the `snp_set_file` command "
+                                "in the SKATTest definition.")
+
+        set_names = set(self.snp_set["set"].unique())
+
+        # Check if we have dosage or genotypes.
+        is_dosage = isinstance(experiment.genotypes, MemoryImpute2Geno)
+
         # Build the covariate matrix.
-        covar_matrix = np.vstack(tuple([
+        covar_matrix = np.array([
             experiment.phenotypes.get_phenotype_vector(covar)
             for covar in self.covariates
-        ]))
+        ]).T
+        missing_covar = np.isnan(covar_matrix).any(axis=1)
 
         for phenotype in self.outcomes:
             y = experiment.phenotypes.get_phenotype_vector(phenotype)
             missing_outcome = np.isnan(y)
 
-            # TODO
-            # Get variants by set.
-            # Build the genotype matrix.
-            # Run the skat
-            # fill the results.
+            outcome_type = ("D" if isinstance(phenotype, DiscreteVariable)
+                            else "C")
 
-        # TODO Run the SKAT analysis.
-        # obj = self.skat.SKAT_Null_Model(
-        #     self.robjects.Formula("y.b ~ X"), out_type="D"
-        # )
-        # results = self.r.SKAT(z, obj)
-        # TODO Parse the results object and fill the database.
+            for set_name in set_names:
+                # Get the variants in the current set.
+                variants = self.snp_set.loc[
+                    self.snp_set["set"] == set_name, "variant"
+                ]
+
+                # x is the genotype matrix
+                x = np.array([
+                    experiment.genotypes.get_genotypes(variant)
+                    for variant
+                    in variants
+                ]).T
+                missing_geno = np.isnan(x).any(axis=1)
+
+                # Handle missing values on the Python side (to be safe).
+                missing = (missing_covar | missing_outcome | missing_geno)
+                not_missing = ~missing
+
+                # Pass stuff to the R global environment.
+                self.robjects.globalenv["y"] = y[not_missing]
+                self.robjects.globalenv["covar"] = covar_matrix[not_missing, :]
+
+                # For now, we build a null model for every set because we
+                # might have to exclude extra samples (because of genotype
+                # NAs).
+                null_model = self.skat.SKAT_Null_Model(
+                    self.robjects.Formula("y ~ covar"), out_type=outcome_type
+                )
+
+                db_results = {
+                    "tested_entity": "snp-set",
+                    "results_type": "GenericResults",
+                    "entity_name": set_name,
+                    "phenotype": phenotype.name,
+                    "coefficient": None,
+                    "task_name": task_name,
+                }
+
+                if not self.skat_o:
+                    results = self.r.SKAT(
+                        x[not_missing, :], null_model, is_dosage=is_dosage
+                    )
+                    db_results["test_statistic"] = results.rx("Q")[0][0]
+                else:
+                    results = self.r.SKAT(
+                        x[not_missing, :], null_model, is_dosage=is_dosage,
+                        method="optimal.adj"
+                    )
+
+                db_results["significance"] = results.rx("p.value")[0][0]
+
+                experiment.add_result(**db_results)
+
 
     @staticmethod
     def check_skat():

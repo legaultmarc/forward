@@ -1,0 +1,75 @@
+# Other fields include: skip_lines, skip_startswith
+Database:
+    pyclass: ExcelPhenotypeDatabase
+    missing_values: ["-9", "-99", "-88", "-77"]
+    sample_column: "Sample"
+    filename: ~/projects/StatGen/adcy9/data/phenotypes/cohort_phenotypes.xlsx
+    exclude_correlated: 0.8
+
+Variables:
+    - name: Infarctus
+      type: discrete
+
+    - name: Valve
+      type: discrete
+
+    - name: Angine
+      type: discrete
+
+    - name: Diabete
+      type: discrete
+
+    - name: BMI
+      type: continuous
+      exclude_outliers: 3  # Samples that are |z| > 3sigma will be exluded.
+      transformation: log
+
+    - name: BPSystolic
+      type: continuous
+
+    - name: BPDiastolic
+      type: continuous
+      transformation: inverse-normal-transform
+
+    - name: PC1
+      type: continuous
+      covariate: Yes
+
+    - name: PC2
+      type: continuous
+      covariate: Yes
+
+    - name: PC3
+      type: continuous
+      covariate: Yes
+
+    - name: GenderFemale
+      type: discrete
+      covariate: Yes
+
+    - name: Age
+      type: continuous
+      covariate: Yes
+
+# Variants can be filtered in the genotype db or on a task specific basis.
+Genotypes:
+    pyclass: MemoryImpute2Geno
+    filename: ~/projects/StatGen/adcy9/data/impute2/impute2_extractor.impute2
+    samples: ~/projects/StatGen/adcy9/data/impute2/forward_samples.txt
+    filter_probability: 0.90
+    filter_completion: 0.95
+    filter_maf: 0.01
+    filter_name: ~/projects/StatGen/adcy9/data/impute2/chr16.imputed.good_sites
+    exclude_samples: ["9210", ]
+
+Experiment:
+    name: "skat_test_experiment"
+    cpu: 4
+    build: "GRCh37"
+
+    tasks:
+        - pyclass: SKATTest
+          outcomes: all
+          covariates: all # [PC1, PC2, PC3]
+          alpha: 0.05
+          snp_set_file: ~/projects/StatGen/adcy9/data/skat/snp_set.txt
