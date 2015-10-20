@@ -89,6 +89,7 @@ class Backend(object):
         self.correlation_matrix = np.load(filename)
 
     def get_variants(self, add_maf=False):
+        """Get a list of variants and related fields."""
         variants = self.session.query(genotype.Variant).all()
         if not add_maf:
             return [v.to_json() for v in variants]
@@ -102,6 +103,19 @@ class Backend(object):
         return response
 
     def get_variables(self, var_type=None, order_by=None, ascending=True):
+        """Get the variables that were analysed in the experiment.
+
+        :param var_type: Restrict to "discrete" or "continuous" variables
+                         (optional, default is None).
+        :type var_type: str
+
+        :param order_by: Key of the Variable instance for results ordering.
+        :type ordering: str
+
+        :param ascending: Flag to determine sorting order.
+        :type ascending: bool
+
+        """
         if var_type is None:
             variable_class = Variable
         elif var_type == "discrete":
@@ -124,6 +138,23 @@ class Backend(object):
 
 
     def get_outcome_vector(self, variable, transformation=None, nan=True):
+        """Get an outcome vector (y).
+
+        :param variable: The variable to query.
+        :type variable: Numpy-like array
+
+        :param transformation: The name of the transformation to apply (e.g.
+                               log)
+        :type transformation: str
+
+        :param nan: If False, the returned vector will be stripped of NaN
+                    values.
+        :type nan: bool
+
+        .. note::
+            This is parsed from the hdf5 file that is automatically created.
+
+        """
         try:
             y = self.hdf5_file[variable]
         except KeyError:
@@ -137,10 +168,18 @@ class Backend(object):
         return y
 
     def get_variable_histogram(self, variable, transformation=None, **kwargs):
+        """Get the bin counts for a given variable.
+
+        This returns the numpy histogram's function values.
+
+        """
         y = self.get_outcome_vector(variable, transformation, nan=False)
         return np.histogram(y, **kwargs)
 
     def get_variable_normal_qqplot(self, variable, transformation=None):
+        """Get scatter values for a normal QQ plot associated with a variable.
+
+        """
         obs = self.get_outcome_vector(variable, transformation, nan=False)
         obs = sorted(obs)
 
@@ -163,11 +202,13 @@ class Backend(object):
         return exp, obs, m, b
 
     def get_variable_corrplot(self):
+        """Get the correlation matrix and the row/column names."""
         names = self.info["outcomes"]
         corr_mat = self.correlation_matrix
         return corr_mat, names
 
     def get_related_phenotypes_exclusions(self):
+        """Get information on the exclusions based on phenotype correlation."""
         exclusions = self.session.query(
             experiment.RelatedPhenotypesExclusions
         )
@@ -187,12 +228,14 @@ class Backend(object):
         return counts
 
     def get_tasks(self):
+        """Get a list of task names that were conducted in this experiment."""
         tasks = self.session.query(
             experiment.ExperimentResult.task_name
         ).distinct()
         return [tu[0] for tu in tasks]
 
     def get_task_info(self, task):
+        """Get the serialized information associated with a task."""
         if task not in self.task_info:
             return None
         return self.task_info[task]
@@ -263,6 +306,7 @@ class Backend(object):
 
 
     def get_results(self, task, filters=[], order_by=None, ascending=True):
+        """Get the results for a specific analysis."""
         cls = experiment.ExperimentResult
 
         results = self.session.query(cls).filter(cls.task_name.like(task))
@@ -319,6 +363,7 @@ class Backend(object):
         return alpha / n_tests
 
     def get_configuration(self):
+        """Return the YAML configuration file."""
         if self.config is not None:
             with open(self.config, "r") as f:
                 return f.read()
