@@ -60,6 +60,15 @@ svg.corrplot .xlabel { font-weight: 400; }
   text-align: center;
 }
 
+.qqplot .outcome-group path {
+  opacity: 0.3;
+}
+
+.qqplot .group-selected path {
+  opacity: 1;
+  stroke-width: 2px;
+}
+
 .tooltip {
   position: absolute;
   padding: 10px;

@@ -23,6 +23,7 @@ from __future__ import division
 
 import json
 import os
+import collections
 
 import scipy.stats
 import numpy as np
@@ -33,8 +34,7 @@ import pygments
 from pygments.lexers import YamlLexer
 from pygments.formatters import HtmlFormatter
 from six.moves import cPickle as pickle
-from flask import (Flask, request, url_for, render_template, jsonify,
-                   render_template)
+from flask import Flask, request, render_template, jsonify
 app = Flask(__name__)
 
 from . import genotype, experiment
@@ -135,7 +135,6 @@ class Backend(object):
             variables = variables.order_by(key)
 
         return [variable.to_json() for variable in variables.all()]
-
 
     def get_outcome_vector(self, variable, transformation=None, nan=True):
         """Get an outcome vector (y).
@@ -263,6 +262,10 @@ class Backend(object):
         .group_by(experiment.ExperimentResult.phenotype)
 
         n = {i[0] for i in test_by_phen}
+        if len(n) == 0:
+            raise ValueError(
+                "Could not find results for task LIKE '{}'.".format(task)
+            )
         if len(n) != 1:
             raise ValueError("Outcomes in this task have a different number "
                              "of tests so that they can't (easily) be shown "
@@ -274,36 +277,59 @@ class Backend(object):
         phenotype = None
         rank = 1
 
-        out = []
+        # out = {
+        #     "ci": [(ci_low, ci_high)],
+        #     "outcomes": ["phen1", "phen2", ...],
+        #     "expected": [exp1, exp2, ...],
+        #     "lines": {
+        #         "phen1": [obs1, obs2, ...],
+        #         "phen2": [obs1, obs2, ...],
+        #         ...
+        #     }
+        # }
+        ranks = np.arange(1, n + 1)
+        out = {
+            "n": n,
+            "ci": zip(
+                -1 * np.log10(ppf(0.975, ranks, n - ranks + 1)),
+                -1 * np.log10(ppf(0.025, ranks, n - ranks + 1)),
+            ),
+            "outcomes": [],
+            "lines": collections.defaultdict(list),
+        }
+        out["expected"] = -1 * np.log10(ranks / n)
+        out["bounds_expected"] = (
+            np.min(out["expected"]),
+            np.max(out["expected"])
+        )
+        out["expected"] = list(out["expected"])
+
+        out["bounds_observed"] = [float("+infinity"), float("-infinity")]
 
         for res in results:
             if phenotype is None:
                 # First phenotype.
                 phenotype = res.phenotype
+                out["outcomes"].append(phenotype)
             elif phenotype != res.phenotype:
                 # We finished one outcome, we're doing another so we need to
                 # reset the rank and set this new phenotype as the current one.
                 rank = 1
                 phenotype = res.phenotype
+                out["outcomes"].append(phenotype)
 
-            d = {
-                "pk": res.pk,
-                "expected": -1 * np.log10(rank / n),
-                "observed": -1 * np.log10(res.significance),
-                "ci": [
-                    -1 * np.log10(ppf(0.975, rank, n - rank + 1)),
-                    -1 * np.log10(ppf(0.025, rank, n - rank + 1))
-                ],
-                "phenotype": phenotype,
-                "variant": res.entity_name,
-                "effect": res.coefficient
-            }
-            out.append(d)
+            observed = -1 * np.log10(res.significance)
+            out["bounds_observed"][0] = min(
+                observed, out["bounds_observed"][0]
+            )
+            out["bounds_observed"][1] = max(
+                observed, out["bounds_observed"][1]
+            )
+            out["lines"][phenotype].append(observed)
 
             rank += 1
 
         return out
-
 
     def get_results(self, task, filters=[], order_by=None, ascending=True):
         """Get the results for a specific analysis."""
@@ -355,7 +381,7 @@ class Backend(object):
                     experiment.ExperimentResult.task_name
                 ), experiment.ExperimentResult.task_name
             ).filter(
-                experiment.ExperimentResult.task_name.like(task_name)       
+                experiment.ExperimentResult.task_name.like(task_name)
             ).group_by(experiment.ExperimentResult.task_name).one()
         except Exception:
             return None

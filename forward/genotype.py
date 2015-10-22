@@ -98,7 +98,7 @@ class Variant(SQLAlchemyBase):
 @abstract
 class AbstractGenotypeDatabase(object):
     """Abstract genotype container.
-    
+
     This class defines the standardized methods to organize the genotype access
     procedures used by Forward.
 
@@ -453,7 +453,8 @@ class PlinkGenotypeDatabase(AbstractGenotypeDatabase):
             db_variants.append(
                 dict(name=name, chrom=info.chrom, pos=int(info.pos),
                      mac=float(mac), n_missing=int(n_missing),
-                     n_non_missing=int(n_non_missing))
+                     n_non_missing=int(n_non_missing),
+                     minor=info["a1"], major=info["a2"])
             )
 
         con.execute(Variant.__table__.insert(), db_variants)
