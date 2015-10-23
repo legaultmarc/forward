@@ -405,7 +405,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">names</span><span class="p">]</span><span class="o">.</span><span class="n">corr</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
 
 
-<span class="k">class</span> <span class="nc">CSVPhenotypeDatabase</span><span class="p">(</span><span class="n">PandasPhenotypeDatabase</span><span class="p">):</span>
+<div class="viewcode-block" id="CSVPhenotypeDatabase"><a class="viewcode-back" href="../../../available_implementations.html#forward.phenotype.db.CSVPhenotypeDatabase">[docs]</a><span class="k">class</span> <span class="nc">CSVPhenotypeDatabase</span><span class="p">(</span><span class="n">PandasPhenotypeDatabase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Collection of phenotypes based on a CSV file.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">sample_column</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
@@ -423,8 +423,8 @@
         <span class="c"># to be method calls and will be dispatched by the parent.</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">CSVPhenotypeDatabase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">sample_column</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-
-<span class="k">class</span> <span class="nc">ExcelPhenotypeDatabase</span><span class="p">(</span><span class="n">PandasPhenotypeDatabase</span><span class="p">):</span>
+</div>
+<div class="viewcode-block" id="ExcelPhenotypeDatabase"><a class="viewcode-back" href="../../../available_implementations.html#forward.phenotype.db.ExcelPhenotypeDatabase">[docs]</a><span class="k">class</span> <span class="nc">ExcelPhenotypeDatabase</span><span class="p">(</span><span class="n">PandasPhenotypeDatabase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Collection of phenotypes based on an Excel file.</span>
 
 <span class="sd">    Only the first sheet is considered.</span>
@@ -435,7 +435,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">na_values</span><span class="o">=</span><span class="n">missing_values</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">ExcelPhenotypeDatabase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">sample_column</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-
+</div>
 <span class="k">def</span> <span class="nf">apply_transformation</span><span class="p">(</span><span class="n">transformation</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Apply a transformation to a continuous variable.&quot;&quot;&quot;</span>
     <span class="n">transformations</span> <span class="o">=</span> <span class="p">{</span>

@@ -58,7 +58,6 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">API Documentation</a><ul>
-<li><a class="reference internal" href="#module-forward.experiment">Experiment</a></li>
 <li><a class="reference internal" href="#module-forward.backend">Backend</a></li>
 </ul>
 </li>
@@ -100,160 +99,6 @@
             
   <div class="section" id="api-documentation">
 <h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="module-forward.experiment">
-<span id="experiment"></span><h2>Experiment<a class="headerlink" href="#module-forward.experiment" title="Permalink to this headline">¶</a></h2>
-<p>This module provides ways to manage experiments. The experiment objects can
-be parsed from the CLI, a yaml configuration file or, eventually, a web
-interface.</p>
-<p>Overall goals for this module will be to provide:</p>
-<blockquote>
-<div><ul class="simple">
-<li>Good organization of experiments aiming at a better reproductibility.</li>
-<li>Aggregating and writing analysis meta data, results files and databases.</li>
-</ul>
-</div></blockquote>
-<dl class="class">
-<dt id="forward.experiment.Experiment">
-<em class="property">class </em><code class="descclassname">forward.experiment.</code><code class="descname">Experiment</code><span class="sig-paren">(</span><em>name</em>, <em>phenotype_container</em>, <em>genotype_container</em>, <em>variables</em>, <em>tasks</em>, <em>build</em>, <em>cpu=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#Experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class representing an experiment.</p>
-<dl class="method">
-<dt id="forward.experiment.Experiment.experiment_info_init">
-<code class="descname">experiment_info_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#Experiment.experiment_info_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.Experiment.experiment_info_init" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize a dict containing experiment metadata.</p>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="forward.experiment.Experiment.get_engine">
-<em class="property">static </em><code class="descname">get_engine</code><span class="sig-paren">(</span><em>experiment_name</em>, <em>engine_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#Experiment.get_engine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.Experiment.get_engine" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get an SQLAlchemy engine for a given experiment.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="forward.experiment.Experiment.results_init">
-<code class="descname">results_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#Experiment.results_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.Experiment.results_init" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize the results table.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="forward.experiment.Experiment.run_tasks">
-<code class="descname">run_tasks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#Experiment.run_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.Experiment.run_tasks" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run the tasks registered for this experiment.</p>
-<p>This method takes care of the following:</p>
-<ul class="simple">
-<li>Create a task-specific work directory.</li>
-<li>Call the task&#8217;s <cite>done()</cite> method to insure clean up code is executed.</li>
-<li>Commit the database (after all tasks are executed).</li>
-<li>Set the walltime for the experiment.</li>
-<li>Write the experiment metadata to disk in the experiment folder when
-everything is over.</li>
-</ul>
-</dd></dl>
-
-<dl class="method">
-<dt id="forward.experiment.Experiment.variables_init">
-<code class="descname">variables_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#Experiment.variables_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.Experiment.variables_init" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize the variables table and computes some statistics.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="forward.experiment.ExperimentResult">
-<em class="property">class </em><code class="descclassname">forward.experiment.</code><code class="descname">ExperimentResult</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#ExperimentResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.ExperimentResult" title="Permalink to this definition">¶</a></dt>
-<dd><p>SQLAlchemy class to handle experimental results.</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="35%" />
-<col width="48%" />
-<col width="17%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Column</th>
-<th class="head">Description</th>
-<th class="head">Type</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>pk</td>
-<td>The primary key (autoincrement)</td>
-<td>Integer</td>
-</tr>
-<tr class="row-odd"><td>tested_entity</td>
-<td>Either &#8216;variant&#8217; or &#8216;snp-set&#8217;
-depending on the test.</td>
-<td>Enum</td>
-</tr>
-<tr class="row-even"><td>results_type</td>
-<td>Polymorphic identity to identify
-(default: &#8216;GenericResults&#8217;)</td>
-<td>String(25)</td>
-</tr>
-<tr class="row-odd"><td>entity_name</td>
-<td>Variant or snp set identifier</td>
-<td>String(25)</td>
-</tr>
-<tr class="row-even"><td>phenotype</td>
-<td>Tested outcome</td>
-<td>String(30)</td>
-</tr>
-<tr class="row-odd"><td>significance</td>
-<td>Significance value (<cite>e.g.</cite>
-p-value)</td>
-<td>Float</td>
-</tr>
-<tr class="row-even"><td>coefficient</td>
-<td>Effect coefficient (<cite>e.g.</cite> beta)</td>
-<td>Float</td>
-</tr>
-<tr class="row-odd"><td>test_statistic</td>
-<td>Statistical test statistic
-(<cite>e.g.</cite> t-test statistic)</td>
-<td>Float</td>
-</tr>
-<tr class="row-even"><td>standard_error</td>
-<td>Standard error of the coefficient</td>
-<td>Float</td>
-</tr>
-<tr class="row-odd"><td>confidence_interval_min</td>
-<td>Lower bound of the 95% CI on the
-coefficient</td>
-<td>Float</td>
-</tr>
-<tr class="row-even"><td>confidence_interval_max</td>
-<td>Higher bound of the 95% CI on
-the coefficient</td>
-<td>Float</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition-todo admonition" id="index-0">
-<p class="first admonition-title">Todo</p>
-<p class="last">This could potentially be refactored so that tested_entity is a
-foreign key to the forward.genotype.Variant class. This would require
-using concrete table inheritance.</p>
-</div>
-</dd></dl>
-
-<dl class="class">
-<dt id="forward.experiment.RelatedPhenotypesExclusions">
-<em class="property">class </em><code class="descclassname">forward.experiment.</code><code class="descname">RelatedPhenotypesExclusions</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#RelatedPhenotypesExclusions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.RelatedPhenotypesExclusions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Record of the related phenotypes when the user asked for correlation
-based exclusions.</p>
-<p>When phenotypes are related (correlated), it is common practice in pheWAS
-to exclude samples that are unaffected for the considered outcome but
-affected for a correlated outcome. This keeps track of such exclusions.</p>
-<p>An important remark is that the sum of exclusions does not make up the
-total number of NAs, as we also need to count actual missing values.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="forward.experiment.result_table">
-<code class="descclassname">forward.experiment.</code><code class="descname">result_table</code><span class="sig-paren">(</span><em>cls</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/experiment.html#result_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.experiment.result_table" title="Permalink to this definition">¶</a></dt>
-<dd><p>Decorator to register result extensions.</p>
-<p>These classes&#8217; tables will automatically be created.</p>
-</dd></dl>
-
-</div>
 <div class="section" id="module-forward.backend">
 <span id="backend"></span><h2>Backend<a class="headerlink" href="#module-forward.backend" title="Permalink to this headline">¶</a></h2>
 <p>This module is a flask backend providing a REST api to add interactivity
@@ -276,11 +121,123 @@ creation and the rest api.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="forward.backend.Backend.get_configuration">
+<code class="descname">get_configuration</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#Backend.get_configuration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.Backend.get_configuration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the YAML configuration file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.backend.Backend.get_outcome_vector">
+<code class="descname">get_outcome_vector</code><span class="sig-paren">(</span><em>variable</em>, <em>transformation=None</em>, <em>nan=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#Backend.get_outcome_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.Backend.get_outcome_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an outcome vector (y).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>Numpy-like array</em>) &#8211; The variable to query.</li>
+<li><strong>transformation</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the transformation to apply (e.g.
+log)</li>
+<li><strong>nan</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If False, the returned vector will be stripped of NaN
+values.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This is parsed from the hdf5 file that is automatically created.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.backend.Backend.get_related_phenotypes_exclusions">
+<code class="descname">get_related_phenotypes_exclusions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#Backend.get_related_phenotypes_exclusions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.Backend.get_related_phenotypes_exclusions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get information on the exclusions based on phenotype correlation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.backend.Backend.get_results">
+<code class="descname">get_results</code><span class="sig-paren">(</span><em>task</em>, <em>filters=[]</em>, <em>order_by=None</em>, <em>ascending=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#Backend.get_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.Backend.get_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the results for a specific analysis.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.backend.Backend.get_task_info">
+<code class="descname">get_task_info</code><span class="sig-paren">(</span><em>task</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#Backend.get_task_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.Backend.get_task_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the serialized information associated with a task.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.backend.Backend.get_tasks">
+<code class="descname">get_tasks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#Backend.get_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.Backend.get_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of task names that were conducted in this experiment.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.backend.Backend.get_variable_corrplot">
+<code class="descname">get_variable_corrplot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#Backend.get_variable_corrplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.Backend.get_variable_corrplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the correlation matrix and the row/column names.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.backend.Backend.get_variable_histogram">
+<code class="descname">get_variable_histogram</code><span class="sig-paren">(</span><em>variable</em>, <em>transformation=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#Backend.get_variable_histogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.Backend.get_variable_histogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the bin counts for a given variable.</p>
+<p>This returns the numpy histogram&#8217;s function values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.backend.Backend.get_variable_normal_qqplot">
+<code class="descname">get_variable_normal_qqplot</code><span class="sig-paren">(</span><em>variable</em>, <em>transformation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#Backend.get_variable_normal_qqplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.Backend.get_variable_normal_qqplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get scatter values for a normal QQ plot associated with a variable.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.backend.Backend.get_variables">
+<code class="descname">get_variables</code><span class="sig-paren">(</span><em>var_type=None</em>, <em>order_by=None</em>, <em>ascending=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#Backend.get_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.Backend.get_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the variables that were analysed in the experiment.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>var_type</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Restrict to &#8220;discrete&#8221; or &#8220;continuous&#8221; variables
+(optional, default is None).</li>
+<li><strong>order_by</strong> &#8211; Key of the Variable instance for results ordering.</li>
+<li><strong>ascending</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Flag to determine sorting order.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.backend.Backend.get_variants">
+<code class="descname">get_variants</code><span class="sig-paren">(</span><em>add_maf=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#Backend.get_variants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.Backend.get_variants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of variants and related fields.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="forward.backend.Backend.p_value_qq_plot">
 <code class="descname">p_value_qq_plot</code><span class="sig-paren">(</span><em>task</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/backend.html#Backend.p_value_qq_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.backend.Backend.p_value_qq_plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the scatter data and confidence bands.</p>
 <p>This is assuming we&#8217;re expecting a uniform distribution. We also take
 a log transform to accentuate small differences.</p>
+<div class="highlight-json"><div class="highlight"><pre>out = {
+    &quot;ci&quot;: [(ci_low, ci_high)],
+    &quot;outcomes&quot;: [&quot;phen1&quot;, &quot;phen2&quot;, ...],
+    &quot;expected&quot;: [exp1, exp2, ...],
+    &quot;lines&quot;: {
+        &quot;phen1&quot;: [obs1, obs2, ...],
+        &quot;phen2&quot;: [obs1, obs2, ...],
+        ...
+    }
+}
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>

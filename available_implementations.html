@@ -1,0 +1,556 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Available Components &mdash; Forward 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="top" title="Forward 0.1 documentation" href="index.html" />
+    <link rel="next" title="Extending Forward" href="abstracts.html" />
+    <link rel="prev" title="Forward Documentation" href="index.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="abstracts.html" title="Extending Forward"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Forward Documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Forward 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Available Components</a><ul>
+<li><a class="reference internal" href="#tasks">Tasks</a></li>
+<li><a class="reference internal" href="#genotype-containers">Genotype containers</a></li>
+<li><a class="reference internal" href="#phenotype-containers">Phenotype containers</a></li>
+<li><a class="reference internal" href="#python-documentation">Python documentation</a><ul>
+<li><a class="reference internal" href="#id1">Tasks</a></li>
+<li><a class="reference internal" href="#id2">Genotype containers</a></li>
+<li><a class="reference internal" href="#id4">Phenotype containers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter"><cite>Forward</cite> Documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="abstracts.html"
+                        title="next chapter">Extending <cite>Forward</cite></a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/available_implementations.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="available-components">
+<h1>Available Components<a class="headerlink" href="#available-components" title="Permalink to this headline">¶</a></h1>
+<p><cite>Forward</cite> experiments use three modular components to standardize access to
+genetes, phenotypes and statistical testing. Some components are built-in with
+<cite>Forward</cite> and are compatible with common data formats (described here).</p>
+<p>Also note that you can write and use your own implementations. Simply follow
+the instructions from the <a class="reference internal" href="abstracts.html#abstracts"><span>Extending Forward</span></a> section.</p>
+<div class="section" id="tasks">
+<h2>Tasks<a class="headerlink" href="#tasks" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="15%" />
+<col width="16%" />
+<col width="10%" />
+<col width="29%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">class</th>
+<th class="head">parameters</th>
+<th class="head">variant type</th>
+<th class="head">outcome type</th>
+<th class="head">reference</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><a class="reference internal" href="#forward.tasks.LinearTest" title="forward.tasks.LinearTest"><code class="xref py py-class docutils literal"><span class="pre">forward.tasks.LinearTest</span></code></a></td>
+<td><ul class="first last simple">
+<li>outcomes</li>
+<li>covariates</li>
+<li>variants</li>
+<li>correction</li>
+<li>alpha</li>
+</ul>
+</td>
+<td>common (MAF &lt; 0.05)</td>
+<td>continuous</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#forward.tasks.LogisticTest" title="forward.tasks.LogisticTest"><code class="xref py py-class docutils literal"><span class="pre">forward.tasks.LogisticTest</span></code></a></td>
+<td><ul class="first last simple">
+<li>outcomes</li>
+<li>covariates</li>
+<li>variants</li>
+<li>correction</li>
+<li>alpha</li>
+</ul>
+</td>
+<td>common (MAF &lt; 0.05)</td>
+<td>discrete</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#forward.tasks.SKATTest" title="forward.tasks.SKATTest"><code class="xref py py-class docutils literal"><span class="pre">forward.tasks.SKATTest</span></code></a></td>
+<td><ul class="first last simple">
+<li>outcomes</li>
+<li>covariates</li>
+<li>variants</li>
+<li>correction</li>
+<li>alpha</li>
+<li><strong>snp_set_file</strong></li>
+</ul>
+</td>
+<td>Sets of variants.
+Can test rare or
+common.</td>
+<td>discrete or
+continuous</td>
+<td><a class="reference external" href="http://www.hsph.harvard.edu/skat/">website</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="genotype-containers">
+<h2>Genotype containers<a class="headerlink" href="#genotype-containers" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="37%" />
+<col width="16%" />
+<col width="11%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">class</th>
+<th class="head">parameters</th>
+<th class="head">file type</th>
+<th class="head">Notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><a class="reference internal" href="#forward.genotype.MemoryImpute2Geno" title="forward.genotype.MemoryImpute2Geno"><code class="xref py py-class docutils literal"><span class="pre">forward.genotype.MemoryImpute2Geno</span></code></a></td>
+<td><ul class="first last simple">
+<li>filter_name</li>
+<li>filter_maf</li>
+<li>filter_completion</li>
+<li>filename</li>
+<li>samples</li>
+<li>filter_probability</li>
+</ul>
+</td>
+<td>Small impute2
+files</td>
+<td>This container load the genotype file in memory.
+It is fast, but not suitable for large files.
+IMPUTE2 file parsing is done using
+<a class="reference external" href="http://github.org/legaultmarc/gepyto">gepyto</a></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#forward.genotype.PlinkGenotypeDatabase" title="forward.genotype.PlinkGenotypeDatabase"><code class="xref py py-class docutils literal"><span class="pre">forward.genotype.PlinkGenotypeDatabase</span></code></a></td>
+<td><ul class="first last simple">
+<li>prefix</li>
+<li>filter_maf</li>
+<li>filter_completion</li>
+</ul>
+</td>
+<td>Binary plink
+files (bed, bim
+, fam)</td>
+<td>This container uses <a class="reference external" href="http://github.org/lemieuxl/pyplink">pyplink</a> to parse
+the binary plink files.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="phenotype-containers">
+<h2>Phenotype containers<a class="headerlink" href="#phenotype-containers" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="26%" />
+<col width="18%" />
+<col width="12%" />
+<col width="44%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">class</th>
+<th class="head">parameters</th>
+<th class="head">file_type</th>
+<th class="head">Notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="xref py py-class docutils literal"><span class="pre">CSVPhenotypeDatabase</span></code></td>
+<td><ul class="first last simple">
+<li>filename</li>
+<li>sample_column</li>
+<li>sep</li>
+<li>compression</li>
+<li>header</li>
+<li>skiprows</li>
+<li>names</li>
+<li>na_values</li>
+<li>decimal</li>
+<li>exclude_correlated</li>
+</ul>
+</td>
+<td>delimited files
+(e.g. CSV, TSV)</td>
+<td>This is an implementation of
+<code class="xref py py-class docutils literal"><span class="pre">forward.phenotype.db.PandasPhenotypeDatabase</span></code>.
+Most of the parameters are passed to the Pandas parser. You
+can refer to
+<a class="reference external" href="http://bit.ly/1LrM3Co">their docs</a> for more information.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-class docutils literal"><span class="pre">ExcelPhenotypeDatabase</span></code></td>
+<td><ul class="first last simple">
+<li>filename</li>
+<li>sample_column</li>
+<li>missing_values</li>
+<li>exclude_correlated</li>
+</ul>
+</td>
+<td>Excel files</td>
+<td>This is an implementation of
+<code class="xref py py-class docutils literal"><span class="pre">forward.phenotype.db.PandasPhenotypeDatabase</span></code>.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="python-documentation">
+<h2>Python documentation<a class="headerlink" href="#python-documentation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>Tasks<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-forward.tasks"></span><p>This module provides actual implementations of the genetic tests.</p>
+<dl class="class">
+<dt id="forward.tasks.LinearTest">
+<em class="property">class </em><code class="descclassname">forward.tasks.</code><code class="descname">LinearTest</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/tasks.html#LinearTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.tasks.LinearTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear regression genetic test.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="forward.tasks.LogisticTest">
+<em class="property">class </em><code class="descclassname">forward.tasks.</code><code class="descname">LogisticTest</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/tasks.html#LogisticTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.tasks.LogisticTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logistic regression genetic test.</p>
+<dl class="method">
+<dt id="forward.tasks.LogisticTest.run_task">
+<code class="descname">run_task</code><span class="sig-paren">(</span><em>experiment</em>, <em>task_name</em>, <em>work_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/tasks.html#LogisticTest.run_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.tasks.LogisticTest.run_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the logistic regression.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forward.tasks.SKATTest">
+<em class="property">class </em><code class="descclassname">forward.tasks.</code><code class="descname">SKATTest</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/tasks.html#SKATTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.tasks.SKATTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Binding to SKAT (using rpy2).</p>
+<dl class="staticmethod">
+<dt id="forward.tasks.SKATTest.check_skat">
+<em class="property">static </em><code class="descname">check_skat</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/tasks.html#SKATTest.check_skat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.tasks.SKATTest.check_skat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if SKAT is installed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.tasks.SKATTest.run_task">
+<code class="descname">run_task</code><span class="sig-paren">(</span><em>experiment</em>, <em>task_name</em>, <em>work_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/tasks.html#SKATTest.run_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.tasks.SKATTest.run_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the SKAT analysis.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id2">
+<h3>Genotype containers<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-forward.genotype"></span><dl class="class">
+<dt id="forward.genotype.MemoryImpute2Geno">
+<em class="property">class </em><code class="descclassname">forward.genotype.</code><code class="descname">MemoryImpute2Geno</code><span class="sig-paren">(</span><em>filename</em>, <em>samples</em>, <em>filter_probability=0</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#MemoryImpute2Geno"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.MemoryImpute2Geno" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container for small(ish) IMPUTE2 files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The filename for the IMPUTE2 file.</li>
+<li><strong>samples</strong> &#8211; A list containing a single column and no header. The rows
+are the ordered sample IDs.</li>
+<li><strong>filter_probability</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; A cutoff for imputation probability. Only
+genotypes with an imputation probability above
+this threshold will be used for the analysis.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>This implementation load the whole file in memory (hence the name).
+Be careful and make sure that you have enough RAM to hold everything.</p>
+<p class="last">It would be fairly easy to subclass this and support lazily reading
+genotype data from the disk. Feel free to contribute this feature if
+you need it.</p>
+</div>
+<dl class="method">
+<dt id="forward.genotype.MemoryImpute2Geno.exclude_samples">
+<code class="descname">exclude_samples</code><span class="sig-paren">(</span><em>samples_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#MemoryImpute2Geno.exclude_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.MemoryImpute2Geno.exclude_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exclude samples in the list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>samples_list</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; A list of samples to exclude.</td>
+</tr>
+</tbody>
+</table>
+<p>The returned genotype vectors will not have genotypes for excluded
+samples (i.e. they will be n elements shorter, n = len(samples_list))</p>
+<p>This is a configuration option.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.genotype.MemoryImpute2Geno.experiment_init">
+<code class="descname">experiment_init</code><span class="sig-paren">(</span><em>experiment</em>, <em>batch_insert_n=100000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#MemoryImpute2Geno.experiment_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.MemoryImpute2Geno.experiment_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Experiment specific initialization.</p>
+<p>This takes care of initializing the database and filtering variants. It
+is automatically called by the Experiment.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.genotype.MemoryImpute2Geno.filter_completion">
+<code class="descname">filter_completion</code><span class="sig-paren">(</span><em>rate</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#MemoryImpute2Geno.filter_completion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.MemoryImpute2Geno.filter_completion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply a filter on completion rate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rate</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The minimum completion rate for inclusion.</td>
+</tr>
+</tbody>
+</table>
+<p>This is a configuration option.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.genotype.MemoryImpute2Geno.filter_maf">
+<code class="descname">filter_maf</code><span class="sig-paren">(</span><em>maf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#MemoryImpute2Geno.filter_maf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.MemoryImpute2Geno.filter_maf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply a filter on minor allele frequency.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rate</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The minimum maf for inclusion.</td>
+</tr>
+</tbody>
+</table>
+<p>This is a configuration option.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.genotype.MemoryImpute2Geno.filter_name">
+<code class="descname">filter_name</code><span class="sig-paren">(</span><em>names_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#MemoryImpute2Geno.filter_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.MemoryImpute2Geno.filter_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Only includes variants in a list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>names_list</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Either a list of variant names or the path to a file
+containing a single column of variant names.</td>
+</tr>
+</tbody>
+</table>
+<p>This is a configuration option.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.genotype.MemoryImpute2Geno.get_genotypes">
+<code class="descname">get_genotypes</code><span class="sig-paren">(</span><em>variant_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#MemoryImpute2Geno.get_genotypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.MemoryImpute2Geno.get_genotypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a vector of genotypes for a variant.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>variant_name</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The variant name (e.g. rs123456)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A vector of genotypes (g = 0, 1 or 2; the number of
+non-reference alleles).</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">np.nadarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forward.genotype.PlinkGenotypeDatabase">
+<em class="property">class </em><code class="descclassname">forward.genotype.</code><code class="descname">PlinkGenotypeDatabase</code><span class="sig-paren">(</span><em>prefix</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#PlinkGenotypeDatabase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.PlinkGenotypeDatabase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container for binary PLINK files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The prefix of the PLINK bed, bim, fam files.</td>
+</tr>
+</tbody>
+</table>
+<p>This container relies on <a class="reference external" href="http://github.org/lemieuxl/pyplink">pyplink</a>.</p>
+<dl class="method">
+<dt id="forward.genotype.PlinkGenotypeDatabase.experiment_init">
+<code class="descname">experiment_init</code><span class="sig-paren">(</span><em>experiment</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#PlinkGenotypeDatabase.experiment_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.PlinkGenotypeDatabase.experiment_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialization method called by the Experiment.</p>
+<p>Applies filtering, creates and fills the database.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.genotype.PlinkGenotypeDatabase.filter_completion">
+<code class="descname">filter_completion</code><span class="sig-paren">(</span><em>rate</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#PlinkGenotypeDatabase.filter_completion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.PlinkGenotypeDatabase.filter_completion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters variants by completion rate (rate of no-calls).</p>
+<p>This is a configuration option.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.genotype.PlinkGenotypeDatabase.filter_maf">
+<code class="descname">filter_maf</code><span class="sig-paren">(</span><em>maf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#PlinkGenotypeDatabase.filter_maf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.PlinkGenotypeDatabase.filter_maf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters variants by allele frequency (MAF).</p>
+<p>This is a configuration option.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.genotype.PlinkGenotypeDatabase.filter_name">
+<code class="descname">filter_name</code><span class="sig-paren">(</span><em>variant_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#PlinkGenotypeDatabase.filter_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.PlinkGenotypeDatabase.filter_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter by variant name.</p>
+<p>This is a configuration option.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.genotype.PlinkGenotypeDatabase.get_genotypes">
+<code class="descname">get_genotypes</code><span class="sig-paren">(</span><em>variant_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#PlinkGenotypeDatabase.get_genotypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.PlinkGenotypeDatabase.get_genotypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a genotype vector for the given variant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forward.genotype.PlinkGenotypeDatabase.get_sample_order">
+<code class="descname">get_sample_order</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/genotype.html#PlinkGenotypeDatabase.get_sample_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.genotype.PlinkGenotypeDatabase.get_sample_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of the (ordered) samples as represented in the
+database.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id4">
+<h3>Phenotype containers<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-forward.phenotype.db"></span><p>This module is used to formalize the expected phenotype structure for forward.
+It&#8217;s role is to provide a reusable interface to feed phenotype (and covariate)
+data to the statistical engine.</p>
+<dl class="class">
+<dt id="forward.phenotype.db.CSVPhenotypeDatabase">
+<em class="property">class </em><code class="descclassname">forward.phenotype.db.</code><code class="descname">CSVPhenotypeDatabase</code><span class="sig-paren">(</span><em>filename</em>, <em>sample_column</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#CSVPhenotypeDatabase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.CSVPhenotypeDatabase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collection of phenotypes based on a CSV file.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="forward.phenotype.db.ExcelPhenotypeDatabase">
+<em class="property">class </em><code class="descclassname">forward.phenotype.db.</code><code class="descname">ExcelPhenotypeDatabase</code><span class="sig-paren">(</span><em>filename</em>, <em>sample_column</em>, <em>missing_values=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/forward/phenotype/db.html#ExcelPhenotypeDatabase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forward.phenotype.db.ExcelPhenotypeDatabase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collection of phenotypes based on an Excel file.</p>
+<p>Only the first sheet is considered.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="abstracts.html" title="Extending Forward"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Forward Documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Forward 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Marc-André Legault.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

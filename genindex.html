@@ -78,12 +78,14 @@
 <div class="genindex-jumpbox">
  <a href="#A"><strong>A</strong></a>
  | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
@@ -125,6 +127,22 @@
   </dl></td>
 </tr></table>
 
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="available_implementations.html#forward.tasks.SKATTest.check_skat">check_skat() (forward.tasks.SKATTest static method)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="available_implementations.html#forward.phenotype.db.CSVPhenotypeDatabase">CSVPhenotypeDatabase (class in forward.phenotype.db)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
@@ -139,15 +157,15 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="available_implementations.html#forward.phenotype.db.ExcelPhenotypeDatabase">ExcelPhenotypeDatabase (class in forward.phenotype.db)</a>
+  </dt>
+
+      
   <dt><a href="abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.exclude_correlated">exclude_correlated() (forward.phenotype.db.AbstractPhenotypeDatabase method)</a>
   </dt>
 
       
-  <dt><a href="api.html#forward.experiment.Experiment">Experiment (class in forward.experiment)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#forward.experiment.Experiment.experiment_info_init">experiment_info_init() (forward.experiment.Experiment method)</a>
+  <dt><a href="available_implementations.html#forward.genotype.MemoryImpute2Geno.exclude_samples">exclude_samples() (forward.genotype.MemoryImpute2Geno method)</a>
   </dt>
 
   </dl></td>
@@ -156,8 +174,18 @@
   <dt><a href="abstracts.html#forward.genotype.AbstractGenotypeDatabase.experiment_init">experiment_init() (forward.genotype.AbstractGenotypeDatabase method)</a>
   </dt>
 
+      <dd><dl>
+        
+  <dt><a href="available_implementations.html#forward.genotype.MemoryImpute2Geno.experiment_init">(forward.genotype.MemoryImpute2Geno method)</a>
+  </dt>
+
+        
+  <dt><a href="available_implementations.html#forward.genotype.PlinkGenotypeDatabase.experiment_init">(forward.genotype.PlinkGenotypeDatabase method)</a>
+  </dt>
+
+      </dl></dd>
       
-  <dt><a href="api.html#forward.experiment.ExperimentResult">ExperimentResult (class in forward.experiment)</a>, <a href="database.html#forward.experiment.ExperimentResult">[1]</a>
+  <dt><a href="database.html#forward.experiment.ExperimentResult">ExperimentResult (class in forward.experiment)</a>
   </dt>
 
   </dl></td>
@@ -167,9 +195,39 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="available_implementations.html#forward.genotype.MemoryImpute2Geno.filter_completion">filter_completion() (forward.genotype.MemoryImpute2Geno method)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="available_implementations.html#forward.genotype.PlinkGenotypeDatabase.filter_completion">(forward.genotype.PlinkGenotypeDatabase method)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="available_implementations.html#forward.genotype.MemoryImpute2Geno.filter_maf">filter_maf() (forward.genotype.MemoryImpute2Geno method)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="available_implementations.html#forward.genotype.PlinkGenotypeDatabase.filter_maf">(forward.genotype.PlinkGenotypeDatabase method)</a>
+  </dt>
+
+      </dl></dd>
+      
   <dt><a href="abstracts.html#forward.genotype.AbstractGenotypeDatabase.filter_name">filter_name() (forward.genotype.AbstractGenotypeDatabase method)</a>
   </dt>
 
+      <dd><dl>
+        
+  <dt><a href="available_implementations.html#forward.genotype.MemoryImpute2Geno.filter_name">(forward.genotype.MemoryImpute2Geno method)</a>
+  </dt>
+
+        
+  <dt><a href="available_implementations.html#forward.genotype.PlinkGenotypeDatabase.filter_name">(forward.genotype.PlinkGenotypeDatabase method)</a>
+  </dt>
+
+      </dl></dd>
       
   <dt><a href="api.html#module-forward.backend">forward.backend (module)</a>
   </dt>
@@ -177,7 +235,15 @@
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api.html#module-forward.experiment">forward.experiment (module)</a>
+  <dt><a href="available_implementations.html#module-forward.genotype">forward.genotype (module)</a>
+  </dt>
+
+      
+  <dt><a href="available_implementations.html#module-forward.phenotype.db">forward.phenotype.db (module)</a>
+  </dt>
+
+      
+  <dt><a href="available_implementations.html#module-forward.tasks">forward.tasks (module)</a>
   </dt>
 
   </dl></td>
@@ -191,23 +257,35 @@
   </dt>
 
       
-  <dt><a href="abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_correlation_matrix">get_correlation_matrix() (forward.phenotype.db.AbstractPhenotypeDatabase method)</a>
+  <dt><a href="api.html#forward.backend.Backend.get_configuration">get_configuration() (forward.backend.Backend method)</a>
   </dt>
 
       
-  <dt><a href="api.html#forward.experiment.Experiment.get_engine">get_engine() (forward.experiment.Experiment static method)</a>
+  <dt><a href="abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_correlation_matrix">get_correlation_matrix() (forward.phenotype.db.AbstractPhenotypeDatabase method)</a>
   </dt>
 
       
   <dt><a href="abstracts.html#forward.genotype.AbstractGenotypeDatabase.get_genotypes">get_genotypes() (forward.genotype.AbstractGenotypeDatabase method)</a>
   </dt>
 
+      <dd><dl>
+        
+  <dt><a href="available_implementations.html#forward.genotype.MemoryImpute2Geno.get_genotypes">(forward.genotype.MemoryImpute2Geno method)</a>
+  </dt>
+
+        
+  <dt><a href="available_implementations.html#forward.genotype.PlinkGenotypeDatabase.get_genotypes">(forward.genotype.PlinkGenotypeDatabase method)</a>
+  </dt>
+
+      </dl></dd>
       
   <dt><a href="abstracts.html#forward.tasks.AbstractTask.get_meta">get_meta() (forward.tasks.AbstractTask method)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#forward.backend.Backend.get_outcome_vector">get_outcome_vector() (forward.backend.Backend method)</a>
+  </dt>
+
       
   <dt><a href="abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_phenotype_relation_threshold">get_phenotype_relation_threshold() (forward.phenotype.db.AbstractPhenotypeDatabase method)</a>
   </dt>
@@ -224,16 +302,58 @@
   <dt><a href="abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_related_phenotype_exclusions">get_related_phenotype_exclusions() (forward.phenotype.db.AbstractPhenotypeDatabase method)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#forward.backend.Backend.get_related_phenotypes_exclusions">get_related_phenotypes_exclusions() (forward.backend.Backend method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#forward.backend.Backend.get_results">get_results() (forward.backend.Backend method)</a>
+  </dt>
+
       
   <dt><a href="abstracts.html#forward.genotype.AbstractGenotypeDatabase.get_sample_order">get_sample_order() (forward.genotype.AbstractGenotypeDatabase method)</a>
   </dt>
 
       <dd><dl>
         
+  <dt><a href="available_implementations.html#forward.genotype.PlinkGenotypeDatabase.get_sample_order">(forward.genotype.PlinkGenotypeDatabase method)</a>
+  </dt>
+
+        
   <dt><a href="abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_sample_order">(forward.phenotype.db.AbstractPhenotypeDatabase method)</a>
   </dt>
 
       </dl></dd>
+      
+  <dt><a href="api.html#forward.backend.Backend.get_task_info">get_task_info() (forward.backend.Backend method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#forward.backend.Backend.get_tasks">get_tasks() (forward.backend.Backend method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#forward.backend.Backend.get_variable_corrplot">get_variable_corrplot() (forward.backend.Backend method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#forward.backend.Backend.get_variable_histogram">get_variable_histogram() (forward.backend.Backend method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#forward.backend.Backend.get_variable_normal_qqplot">get_variable_normal_qqplot() (forward.backend.Backend method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#forward.backend.Backend.get_variables">get_variables() (forward.backend.Backend method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#forward.backend.Backend.get_variants">get_variants() (forward.backend.Backend method)</a>
+  </dt>
+
   </dl></td>
 </tr></table>
 
@@ -251,6 +371,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="available_implementations.html#forward.tasks.LinearTest">LinearTest (class in forward.tasks)</a>
+  </dt>
+
+      
   <dt><a href="database.html#forward.tasks.LinearTestResults">LinearTestResults (class in forward.tasks)</a>
   </dt>
 
@@ -258,6 +382,20 @@
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="abstracts.html#forward.genotype.AbstractGenotypeDatabase.load_samples">load_samples() (forward.genotype.AbstractGenotypeDatabase static method)</a>
+  </dt>
+
+      
+  <dt><a href="available_implementations.html#forward.tasks.LogisticTest">LogisticTest (class in forward.tasks)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="available_implementations.html#forward.genotype.MemoryImpute2Geno">MemoryImpute2Geno (class in forward.genotype)</a>
   </dt>
 
   </dl></td>
@@ -268,6 +406,12 @@
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api.html#forward.backend.Backend.p_value_qq_plot">p_value_qq_plot() (forward.backend.Backend method)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="available_implementations.html#forward.genotype.PlinkGenotypeDatabase">PlinkGenotypeDatabase (class in forward.genotype)</a>
   </dt>
 
   </dl></td>
@@ -287,27 +431,19 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api.html#forward.experiment.RelatedPhenotypesExclusions">RelatedPhenotypesExclusions (class in forward.experiment)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#forward.experiment.result_table">result_table() (in module forward.experiment)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#forward.experiment.Experiment.results_init">results_init() (forward.experiment.Experiment method)</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
   <dt><a href="abstracts.html#forward.tasks.AbstractTask.run_task">run_task() (forward.tasks.AbstractTask method)</a>
   </dt>
 
-      
-  <dt><a href="api.html#forward.experiment.Experiment.run_tasks">run_tasks() (forward.experiment.Experiment method)</a>
+      <dd><dl>
+        
+  <dt><a href="available_implementations.html#forward.tasks.LogisticTest.run_task">(forward.tasks.LogisticTest method)</a>
   </dt>
 
+        
+  <dt><a href="available_implementations.html#forward.tasks.SKATTest.run_task">(forward.tasks.SKATTest method)</a>
+  </dt>
+
+      </dl></dd>
   </dl></td>
 </tr></table>
 
@@ -328,6 +464,10 @@
   <dt><a href="abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.set_sample_order">set_sample_order() (forward.phenotype.db.AbstractPhenotypeDatabase method)</a>
   </dt>
 
+      
+  <dt><a href="available_implementations.html#forward.tasks.SKATTest">SKATTest (class in forward.tasks)</a>
+  </dt>
+
   </dl></td>
 </tr></table>
 
@@ -336,10 +476,6 @@
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.validate_sample_sequences">validate_sample_sequences() (forward.phenotype.db.AbstractPhenotypeDatabase static method)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#forward.experiment.Experiment.variables_init">variables_init() (forward.experiment.Experiment method)</a>
   </dt>
 
   </dl></td>

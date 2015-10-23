@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/bizstyle.js"></script>
     <link rel="top" title="Forward 0.1 documentation" href="index.html" />
     <link rel="next" title="API Documentation" href="api.html" />
-    <link rel="prev" title="Forward Documentation" href="index.html" />
+    <link rel="prev" title="Available Components" href="available_implementations.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <!--[if lt IE 9]>
     <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
@@ -48,7 +48,7 @@
           <a href="api.html" title="API Documentation"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="Forward Documentation"
+          <a href="available_implementations.html" title="Available Components"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">Forward 0.1 documentation</a> &raquo;</li> 
       </ul>
@@ -66,8 +66,8 @@
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="index.html"
-                        title="previous chapter"><cite>Forward</cite> Documentation</a></p>
+  <p class="topless"><a href="available_implementations.html"
+                        title="previous chapter">Available Components</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="api.html"
                         title="next chapter">API Documentation</a></p>
@@ -100,17 +100,23 @@
           <div class="body" role="main">
             
   <div class="section" id="extending-forward">
-<h1>Extending <cite>Forward</cite><a class="headerlink" href="#extending-forward" title="Permalink to this headline">¶</a></h1>
+<span id="abstracts"></span><h1>Extending <cite>Forward</cite><a class="headerlink" href="#extending-forward" title="Permalink to this headline">¶</a></h1>
 <p><cite>Forward</cite> was designed to be easily extensible. To achieve this, we have
 adopted a modular structure and have developed abstract classes that serve as
 template for the different components. Bioinformaticians can implement their
 own versions of the phenotype and genotypes databases if they want to do
 specific optimizations. They can also add new statistical tests by implementing
 new Tasks.</p>
-<p>This section describes what is expected of the implementations of abstract
-classes.</p>
+<p>To summarize, the three modular components are the following:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#extend-phenotype"><span>Phenotype containers</span></a></li>
+<li><a class="reference internal" href="#extend-genotype"><span>Genotype containers</span></a></li>
+<li><a class="reference internal" href="#extend-tasks"><span>Statistical tests</span></a></li>
+</ul>
+<p>This section describes what is expected of the implementations of these
+abstract classes.</p>
 <div class="section" id="phenotype-databases">
-<h2>Phenotype databases<a class="headerlink" href="#phenotype-databases" title="Permalink to this headline">¶</a></h2>
+<span id="extend-phenotype"></span><h2>Phenotype databases<a class="headerlink" href="#phenotype-databases" title="Permalink to this headline">¶</a></h2>
 <p>Phenotype databases should inherit <a class="reference internal" href="#forward.phenotype.db.AbstractPhenotypeDatabase" title="forward.phenotype.db.AbstractPhenotypeDatabase"><code class="xref py py-class docutils literal"><span class="pre">forward.phenotype.db.AbstractPhenotypeDatabase</span></code></a></p>
 <dl class="class">
 <dt id="forward.phenotype.db.AbstractPhenotypeDatabase">
@@ -307,7 +313,7 @@ If new samples are added, a ValueError will be raised.</p>
 
 </div>
 <div class="section" id="genotype-databases">
-<h2>Genotype databases<a class="headerlink" href="#genotype-databases" title="Permalink to this headline">¶</a></h2>
+<span id="extend-genotype"></span><h2>Genotype databases<a class="headerlink" href="#genotype-databases" title="Permalink to this headline">¶</a></h2>
 <p>Genotype databases should inherit <a class="reference internal" href="#forward.genotype.AbstractGenotypeDatabase" title="forward.genotype.AbstractGenotypeDatabase"><code class="xref py py-class docutils literal"><span class="pre">forward.genotype.AbstractGenotypeDatabase</span></code></a></p>
 <dl class="class">
 <dt id="forward.genotype.AbstractGenotypeDatabase">
@@ -387,7 +393,7 @@ a shortcut to query it in a more pythonic way.</p>
 
 </div>
 <div class="section" id="tasks">
-<h2>Tasks<a class="headerlink" href="#tasks" title="Permalink to this headline">¶</a></h2>
+<span id="extend-tasks"></span><h2>Tasks<a class="headerlink" href="#tasks" title="Permalink to this headline">¶</a></h2>
 <p>Tasks are classes that take care of statistical testing. Their <code class="docutils literal"><span class="pre">run_task</span></code>
 method will sequentially be called by the experiment.</p>
 <dl class="class">
@@ -444,7 +450,7 @@ should take care of dumping metadata.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>experiment</strong> (<a class="reference internal" href="api.html#forward.experiment.Experiment" title="forward.experiment.Experiment"><code class="xref py py-class docutils literal"><span class="pre">forward.experiment.Experiment</span></code></a>) &#8211; The parent experiment which provides access to
+<li><strong>experiment</strong> (<code class="xref py py-class docutils literal"><span class="pre">forward.experiment.Experiment</span></code>) &#8211; The parent experiment which provides access to
 the whole experimental context.</li>
 <li><strong>task_name</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the task. This is useful to fill the
 results table, because the task name is one of the
@@ -494,7 +500,7 @@ subsequently be used by the backend and the dynamic report.</p>
           <a href="api.html" title="API Documentation"
              >next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="Forward Documentation"
+          <a href="available_implementations.html" title="Available Components"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">Forward 0.1 documentation</a> &raquo;</li> 
       </ul>

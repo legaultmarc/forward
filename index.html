@@ -27,7 +27,7 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/bizstyle.js"></script>
     <link rel="top" title="Forward 0.1 documentation" href="#" />
-    <link rel="next" title="Extending Forward" href="abstracts.html" />
+    <link rel="next" title="Available Components" href="available_implementations.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <!--[if lt IE 9]>
     <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
@@ -44,7 +44,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="abstracts.html" title="Extending Forward"
+          <a href="available_implementations.html" title="Available Components"
              accesskey="N">next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">Forward 0.1 documentation</a> &raquo;</li> 
       </ul>
@@ -54,19 +54,19 @@
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#"><cite>Forward</cite> Documentation</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
 <li><a class="reference internal" href="#quick-start">Quick start</a><ul>
 <li><a class="reference internal" href="#configuration-files">Configuration files</a></li>
 <li><a class="reference internal" href="#running-an-experiment">Running an experiment</a></li>
 <li><a class="reference internal" href="#browsing-results">Browsing results</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#contents">Contents</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 
   <h4>Next topic</h4>
-  <p class="topless"><a href="abstracts.html"
-                        title="next chapter">Extending <cite>Forward</cite></a></p>
+  <p class="topless"><a href="available_implementations.html"
+                        title="next chapter">Available Components</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -100,12 +100,51 @@
 <p>Forward is a bioinformatics utility to facilitate phenomic studies using
 genetic cohorts (<cite>i.e</cite> it was not designed for pheWAS studies based on
 electronic medical records). It was built with a strong emphasis on
-flexibility, performance and reproductibility. The documented interfaces make
+flexibility, performance and reproducibility. The documented interfaces make
 it easy for bioinformaticians to extend <cite>Forward</cite>&#8216;s capabilities by writing
 their own implementations (<cite>e.g.</cite> to add support for a new file format or to
 optimize computation for their dataset) and the automatic reporting and
 archiving functionality greatly facilitate the dissemination and reproduction
 of results.</p>
+<div class="figure align-center" id="id1">
+<span id="forward-schema-figure"></span><a class="reference internal image-reference" href="_images/forward_schema.png"><img alt="Application design schema." src="_images/forward_schema.png" style="width: 550px;" /></a>
+<p class="caption"><span class="caption-text">The different components of <cite>Forward</cite>. The customizable <cite>components</cite> have
+the tool icon.</span></p>
+</div>
+</div>
+<div class="section" id="contents">
+<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="available_implementations.html">Available Components</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="available_implementations.html#tasks">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available_implementations.html#genotype-containers">Genotype containers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available_implementations.html#phenotype-containers">Phenotype containers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available_implementations.html#python-documentation">Python documentation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="abstracts.html">Extending <cite>Forward</cite></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="abstracts.html#phenotype-databases">Phenotype databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abstracts.html#genotype-databases">Genotype databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abstracts.html#tasks">Tasks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-forward.backend">Backend</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="database.html">Forward&#8217;s database</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="database.html#variant-table">Variant table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="database.html#results-tables">Results tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">Interactive report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="report.html#run-the-server">Run the server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="report.html#extending-the-dynamic-report">Extending the dynamic report</a></li>
+</ul>
+</li>
+</ul>
+</div>
 </div>
 <div class="section" id="quick-start">
 <h1>Quick start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
@@ -271,29 +310,35 @@ are actively working on other statistical tests.</p>
 <div class="section" id="running-an-experiment">
 <h2>Running an experiment<a class="headerlink" href="#running-an-experiment" title="Permalink to this headline">¶</a></h2>
 <p>To run the newly created configuration file, you can use the command line
-interface script (<code class="docutils literal"><span class="pre">forward/scripts/cli.py</span></code>). Eventually, this will be
+interface script (<code class="docutils literal"><span class="pre">forward/scripts/forward-cli.py</span></code>). Eventually, this will be
 automatically installed. The usage is simple, just pass the path to the
 configuration file.</p>
-<div class="highlight-bash"><div class="highlight"><pre>./forward/scripts/cli.py my_configuration.yaml
+<div class="highlight-bash"><div class="highlight"><pre>forward-cli.py run my_configuration.yaml
 </pre></div>
 </div>
 <p>A sample outpout will then look like:</p>
 <div class="highlight-bash"><div class="highlight"><pre>INFO:forward.genotype:Loading samples from data/impute2/forward_samples.txt
 INFO:forward.genotype:Setting the MAF threshold to 0.01
 INFO:forward.genotype:Setting the completion threshold to 0.95
-INFO:forward.genotype:Keeping only variants with IDs in file: <span class="s1">&#39;/data/impute2/chr16.imputed.good_sites&#39;</span>
+INFO:forward.genotype:Keeping only variants with IDs in file: <span class="s1">&#39;data/impute2/chr16.imputed.good_sites&#39;</span>
 INFO:forward.experiment:The build <span class="nb">set </span><span class="k">for</span> this experiment is GRCh37.
 WARNING:forward.phenotype.db:Some samples were discarded when reordering phenotype information <span class="o">(</span><span class="m">1343</span> samples discarded<span class="o">)</span>. This could be because no genotype information is available <span class="k">for</span> these samples.
 INFO:forward.genotype:Built the variant database <span class="o">(</span><span class="m">17</span> entries<span class="o">)</span>.
 INFO:root:Running a logistic regression analysis.
 INFO:root:Running a linear regression analysis.
 INFO:forward.experiment:Completed all tasks in 00:00:51.
-INFO:werkzeug: * Running on http://127.0.0.1:5000/ <span class="o">(</span>Press CTRL+C to quit<span class="o">)</span>
-INFO:werkzeug: * Restarting with stat
+
+To view the interactive report, use the forward-cli.py script:
+
+forward-cli.py report my_experiment
 </pre></div>
 </div>
-<p>To view the generated interactive report, you can then go to
-<code class="docutils literal"><span class="pre">http://127.0.0.1:5000/</span></code> with your favorite browser and look at the results.</p>
+<p>To view the generated interactive report, you can then follow the on-screen
+instructions:</p>
+<div class="highlight-bash"><div class="highlight"><pre>forward-cli.py report my_experiment
+</pre></div>
+</div>
+<p>and go to <code class="docutils literal"><span class="pre">http://127.0.0.1:5000/forward</span></code> with your favorite browser.</p>
 <p>A sample report is available on <a class="reference external" href="http://www.statgen.org/forward/fto">StatGen&#8217;s website</a>.</p>
 <p>Also note that the interactive report is strictly optional and you can still
 browse the analyses results manually. See the next section for details.</p>
@@ -316,7 +361,7 @@ been created:</p>
 </pre></div>
 </div>
 <p>This contains all the results and information needed to describe the
-experiment. The only missing thing for perfect reproductibility is a copy of
+experiment. The only missing thing for perfect reproducibility is a copy of
 the input files. Eventually, an opt-out feature will allow users to have
 automatic archiving of the input files.</p>
 <p>Here is a description of all of the results files.</p>
@@ -385,29 +430,6 @@ easy access to experiment results, you can use the
 <a class="reference internal" href="api.html#forward.backend.Backend" title="forward.backend.Backend"><code class="xref py py-class docutils literal"><span class="pre">forward.backend.Backend</span></code></a> class directly from your own Python script.</p>
 </div>
 </div>
-<div class="section" id="contents">
-<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="abstracts.html">Extending <cite>Forward</cite></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="abstracts.html#phenotype-databases">Phenotype databases</a></li>
-<li class="toctree-l2"><a class="reference internal" href="abstracts.html#genotype-databases">Genotype databases</a></li>
-<li class="toctree-l2"><a class="reference internal" href="abstracts.html#tasks">Tasks</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api.html#module-forward.experiment">Experiment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#module-forward.backend">Backend</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="database.html">Forward&#8217;s database</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="database.html#variant-table">Variant table</a></li>
-<li class="toctree-l2"><a class="reference internal" href="database.html#results-tables">Results tables</a></li>
-</ul>
-</li>
-</ul>
-</div>
-</div>
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
@@ -433,7 +455,7 @@ easy access to experiment results, you can use the
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="abstracts.html" title="Extending Forward"
+          <a href="available_implementations.html" title="Available Components"
              >next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">Forward 0.1 documentation</a> &raquo;</li> 
       </ul>

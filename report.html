@@ -1,0 +1,282 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Interactive report &mdash; Forward 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="top" title="Forward 0.1 documentation" href="index.html" />
+    <link rel="prev" title="Forward’s database" href="database.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="database.html" title="Forward’s database"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Forward 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Interactive report</a><ul>
+<li><a class="reference internal" href="#run-the-server">Run the server</a><ul>
+<li><a class="reference internal" href="#alternative-method-for-sharing">Alternative method for sharing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#extending-the-dynamic-report">Extending the dynamic report</a><ul>
+<li><a class="reference internal" href="#backend">Backend</a></li>
+<li><a class="reference internal" href="#front-end">Front-end</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#rendering-sections">Rendering Sections</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="database.html"
+                        title="previous chapter">Forward&#8217;s database</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/report.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="interactive-report">
+<h1>Interactive report<a class="headerlink" href="#interactive-report" title="Permalink to this headline">¶</a></h1>
+<p>To help visualize and explore experiment results, an interactive report comes
+with <cite>Forward</cite>. This report is built on top of the
+<a class="reference internal" href="api.html#forward.backend.Backend" title="forward.backend.Backend"><code class="xref py py-class docutils literal"><span class="pre">forward.backend.Backend</span></code></a> which parses analysis results in standard
+Python data structures.</p>
+<div class="section" id="run-the-server">
+<h2>Run the server<a class="headerlink" href="#run-the-server" title="Permalink to this headline">¶</a></h2>
+<p>To run the server, the simplest alternative is to use the provided command-line
+interface (<cite>scripts/forward-cli.py</cite>).</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>forward-cli.py report experiment_name
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The current working directory needs to contain the experiment folder to
+use this command.</p>
+</div>
+<div class="section" id="alternative-method-for-sharing">
+<h3>Alternative method for sharing<a class="headerlink" href="#alternative-method-for-sharing" title="Permalink to this headline">¶</a></h3>
+<p>If you want to share the report with colleagues, or host it on a website after
+publication, it is best to use a more robust web server. The following script
+can be used:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">from</span> <span class="nn">tornado.wsgi</span> <span class="kn">import</span> <span class="n">WSGIContainer</span>
+<span class="kn">from</span> <span class="nn">tornado.httpserver</span> <span class="kn">import</span> <span class="n">HTTPServer</span>
+<span class="kn">from</span> <span class="nn">tornado.ioloop</span> <span class="kn">import</span> <span class="n">IOLoop</span>
+
+<span class="kn">import</span> <span class="nn">forward.backend</span>
+
+<span class="n">forward</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">initialize_application</span><span class="p">(</span><span class="s">&quot;EXPERIMENT_NAME&quot;</span><span class="p">)</span>
+
+<span class="n">http_server</span> <span class="o">=</span> <span class="n">HTTPServer</span><span class="p">(</span><span class="n">WSGIContainer</span><span class="p">(</span><span class="n">forward</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">app</span><span class="p">))</span>
+<span class="n">http_server</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="mi">5000</span><span class="p">)</span>  <span class="c"># Set the port here</span>
+<span class="n">IOLoop</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<p>It is also a good idea to use a process control system like <a class="reference external" href="http://supervisord.org/">supervisord</a> when hosting the report on a server.</p>
+</div>
+</div>
+<div class="section" id="extending-the-dynamic-report">
+<h2>Extending the dynamic report<a class="headerlink" href="#extending-the-dynamic-report" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="backend">
+<h3>Backend<a class="headerlink" href="#backend" title="Permalink to this headline">¶</a></h3>
+<p>The backend can be used to do your analysis without leaving Python. This can be
+useful if you&#8217;re not interested in the dynamic report or if you want to do
+something specific without worrying about integration in the web report.</p>
+<p>A <a class="reference external" href="https://github.com/legaultmarc/forward/blob/master/notebooks/Backend.ipynb">documented example</a>
+can be found on Github. It is a Jupyter notebook showing how to do a QQ plot of
+SKAT p-values using matplotlib. It is very simple and shows how to access data
+and how to get help interactively.</p>
+<p>For the interactive report, we use a Flask binding of most Backend methods.
+These bindings make the Backend queryable using HTTP requests. The returned
+data is either HTML (rarely) and json (most of the time).</p>
+</div>
+<div class="section" id="front-end">
+<h3>Front-end<a class="headerlink" href="#front-end" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="introduction">
+<h4>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h4>
+<p>The interface for the report was built using modern web technologies. It
+communicates with the backend using the Flask API (described above). The
+tables are <a class="reference external" href="https://facebook.github.io/react/">react</a> components that take
+care of querying the server and re-rendering themselves following user
+interaction. Most of the plots are generated using <a class="reference external" href="d3js.org">d3.js</a>, a
+JavaScript framework for DOM manipulation that is very popular for data
+visualization.</p>
+<p>The javascript dependencies are managed using <a class="reference external" href="http://bower.io">Bower</a>. All
+the files are in the <cite>forward/static</cite> subdirectory of the repo. If you want
+to extend the report without adding js dependencies, you don&#8217;t need to take
+care of Bower, because all of the required files are included in the repo. This
+decision was made to make it easier for developers to play with the frond-end
+without tedious configuration.</p>
+<p>Nonetheless, front-end developers will need to build their javascript. This is
+because <cite>react</cite> code uses <cite>JSX</cite> which needs to be converted to regular
+javascript. Documentation for this step is available
+<a class="reference external" href="https://facebook.github.io/react/docs/getting-started.html">here</a>. To
+summarize, you need to install babel:</p>
+<div class="highlight-bash"><div class="highlight"><pre>npm install --global babel
+</pre></div>
+</div>
+<p>And then run the build command:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nb">cd </span>forward/static/js
+babel src --watch --out-dir build
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">--watch</span></code> flag looks at activity on your filesystem and runs the
+conversion as soon as something changes.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Extending the report is not easy. If you have feature requests, feel free
+to use the <a class="reference external" href="https://github.com/legaultmarc/forward/issues">issue tracker</a>.
+You can also email us (<a class="reference external" href="https://github.com/legaultmarc">contact information</a> is available through github)
+with questions or comments.</p>
+</div>
+</div>
+<div class="section" id="rendering-sections">
+<h4>Rendering Sections<a class="headerlink" href="#rendering-sections" title="Permalink to this headline">¶</a></h4>
+<p>The report&#8217;s home page is rendered using
+<a class="reference external" href="http://jinja.pocoo.org/docs/dev/">jinja2</a>. The template for this page
+is found in <cite>forward/templates/default.html</cite>.</p>
+<p>This template is fairly empty. It loads some javascript and css, but it has
+no content whatsoever. Notice the following piece of code:</p>
+<div class="highlight-javascript"><div class="highlight"><pre><span class="c1">// Get the tasks.</span>
+<span class="nx">$</span><span class="p">.</span><span class="nx">getJSON</span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">pathname</span> <span class="o">+</span> <span class="s2">&quot;/experiment/tasks.json&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">tasks</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">tasks</span><span class="p">;</span>
+  <span class="c1">// For every task, fetch the html snippet.</span>
+  <span class="nx">tasks</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">task</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">forward</span><span class="p">.</span><span class="nx">handleTask</span><span class="p">(</span><span class="nx">task</span><span class="p">.</span><span class="nx">type</span><span class="p">,</span> <span class="nx">task</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+  <span class="p">});</span>
+  <span class="nx">forward</span><span class="p">.</span><span class="nx">xrefs</span><span class="p">.</span><span class="nx">reNumber</span><span class="p">();</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>This snippet (included in the <cite>default.html</cite> template) queries the tasks that
+were executed in this experiment and calls the <code class="docutils literal"><span class="pre">forward.handleTask</span></code> function
+to find an appropriate task handler. This function is basically a <code class="docutils literal"><span class="pre">switch</span> <span class="pre">...</span>
+<span class="pre">case</span></code> dispatching different handlers based on the task type.  Then, the
+handler is responsible for populating the relavant report section.</p>
+<p>Let&#8217;s take linear regression as an example. It&#8217;s handler is
+<code class="docutils literal"><span class="pre">forward._handleLinear</span></code>. The latter do the following:</p>
+<ol class="arabic simple">
+<li>Create a new DOM element (a div) with id <cite>section_TaskName</cite>. It appends it
+to the results div.</li>
+<li>It fetches an html snippet from the backend (in this case, it will request
+<code class="docutils literal"><span class="pre">API_ROOT/tasks/linear_section.html</span></code> from the API which will render
+<code class="docutils literal"><span class="pre">forward/templates/lineartest.html</span></code>). This contains only a couple of DOM
+elements that are needed to hookup the dynamic tables and plots. The
+dispatch method will then include this piece of HTML as the <code class="docutils literal"><span class="pre">innerHTML</span></code>
+of the div we created in step 1.</li>
+<li>The dispatch method also triggers the javascript rendering function, in this
+case it is defined in <code class="docutils literal"><span class="pre">section_glm.js</span></code>. This function call is finally
+responsible for rendering everything you see on screen.</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="database.html" title="Forward’s database"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Forward 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Marc-André Legault.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

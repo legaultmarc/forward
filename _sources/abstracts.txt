@@ -1,3 +1,5 @@
+.. _abstracts:
+
 Extending `Forward`
 ====================
 
@@ -8,8 +10,17 @@ own versions of the phenotype and genotypes databases if they want to do
 specific optimizations. They can also add new statistical tests by implementing
 new Tasks.
 
-This section describes what is expected of the implementations of abstract
-classes.
+To summarize, the three modular components are the following:
+
+- :ref:`Phenotype containers <extend_phenotype>` 
+- :ref:`Genotype containers <extend_genotype>` 
+- :ref:`Statistical tests <extend_tasks>` 
+
+This section describes what is expected of the implementations of these
+abstract classes.
+
+
+.. _extend_phenotype:
 
 Phenotype databases
 --------------------
@@ -19,6 +30,8 @@ Phenotype databases should inherit :py:class:`forward.phenotype.db.AbstractPheno
 .. autoclass:: forward.phenotype.db.AbstractPhenotypeDatabase
     :members:
 
+.. _extend_genotype:
+
 Genotype databases
 -------------------
 
@@ -26,6 +39,8 @@ Genotype databases should inherit :py:class:`forward.genotype.AbstractGenotypeDa
 
 .. autoclass:: forward.genotype.AbstractGenotypeDatabase
     :members:
+
+.. _extend_tasks:
 
 Tasks
 ------
