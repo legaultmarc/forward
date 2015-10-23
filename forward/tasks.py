@@ -479,7 +479,7 @@ class LinearTestResults(ExperimentResult):
     |                    | for :math:`x, y \sim \mathcal{N}(0,1)`   |         |
     +--------------------+------------------------------------------+---------+
     | std_beta_min       | Lower bound of the 95% CI for the        | Float   |
-    |                    | standardized :math:`\\beta`              |         |
+    |                    | standardized Beta                        |         |
     +--------------------+------------------------------------------+---------+
     | std_beta_max       | Higher bound of the 95% CI               | Float   |
     +--------------------+------------------------------------------+---------+

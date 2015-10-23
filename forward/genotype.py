@@ -67,9 +67,8 @@ class Variant(SQLAlchemyBase):
 
     Computed fields:
 
-        - ``maf``: :math:`mac / (2 \cdot n non missing)`
-        - ``completion_rate``:
-          :math:`n non missing / (n non missing + n missing)`
+        - ``maf``: mac / (2 :math:`\cdot` n non missing)
+        - ``completion_rate``: n non missing / (n non missing + n missing)
 
     """
 
@@ -204,6 +203,29 @@ class AbstractGenotypeDatabase(object):
 
 
 class MemoryImpute2Geno(AbstractGenotypeDatabase):
+    """Container for small(ish) IMPUTE2 files.
+
+    :param filename: The filename for the IMPUTE2 file.
+    :type filename: str
+
+    :param samples: A list containing a single column and no header. The rows
+                    are the ordered sample IDs.
+    :type sample: str
+
+    :param filter_probability: A cutoff for imputation probability. Only
+                               genotypes with an imputation probability above
+                               this threshold will be used for the analysis.
+    :type filter_probability: float
+
+    .. warning::
+        This implementation load the whole file in memory (hence the name).
+        Be careful and make sure that you have enough RAM to hold everything.
+
+        It would be fairly easy to subclass this and support lazily reading
+        genotype data from the disk. Feel free to contribute this feature if
+        you need it.
+
+    """
     def __init__(self, filename, samples, filter_probability=0, **kwargs):
         self.filename = expand(filename)
         self.samples = self.load_samples(expand(samples))
@@ -226,7 +248,8 @@ class MemoryImpute2Geno(AbstractGenotypeDatabase):
     def experiment_init(self, experiment, batch_insert_n=100000):
         """Experiment specific initialization.
 
-        This takes care of initializing the database and filtering variants.
+        This takes care of initializing the database and filtering variants. It
+        is automatically called by the Experiment.
 
         """
 
@@ -309,7 +332,17 @@ class MemoryImpute2Geno(AbstractGenotypeDatabase):
         self._frozen = True
 
     def get_genotypes(self, variant_name):
-        # We want to be able to get genotypes event before experiment
+        """Get a vector of genotypes for a variant.
+
+        :param variant_name: The variant name (e.g. rs123456)
+        :type variant_name: str
+
+        :returns: A vector of genotypes (g = 0, 1 or 2; the number of
+                  non-reference alleles).
+        :rtype: np.nadarray
+
+        """
+        # We want to be able to get genotypes even before experiment
         # initialization, mainly for testing. To support this, we will look for
         # the variant in the impute2 file and reset the file.
         if not hasattr(self, "_mat"):  # Check if it was init.
@@ -331,6 +364,14 @@ class MemoryImpute2Geno(AbstractGenotypeDatabase):
             raise ValueError(msg)
 
     def filter_completion(self, rate):
+        """Apply a filter on completion rate.
+
+        :param rate: The minimum completion rate for inclusion.
+        :type rate: float
+
+        This is a configuration option.
+
+        """
         if self._frozen:
             raise FrozenDatabaseError()
 
@@ -338,6 +379,14 @@ class MemoryImpute2Geno(AbstractGenotypeDatabase):
         self.thresh_completion = rate
 
     def filter_maf(self, maf):
+        """Apply a filter on minor allele frequency.
+
+        :param rate: The minimum maf for inclusion.
+        :type rate: float
+
+        This is a configuration option.
+
+        """
         if self._frozen:
             raise FrozenDatabaseError()
 
@@ -345,6 +394,15 @@ class MemoryImpute2Geno(AbstractGenotypeDatabase):
         self.thresh_maf = maf
 
     def filter_name(self, names_list):
+        """Only includes variants in a list.
+
+        :param names_list: Either a list of variant names or the path to a file
+                           containing a single column of variant names.
+        :type names_list: str
+
+        This is a configuration option.
+
+        """
         # TODO. By modifying gepyto, we could to better filtering on variant
         # names. We would simply not compute the dosage vector for variants
         # we want to ignore.
@@ -367,6 +425,17 @@ class MemoryImpute2Geno(AbstractGenotypeDatabase):
                 self.names = set(f.read().splitlines())
 
     def exclude_samples(self, samples_list):
+        """Exclude samples in the list.
+
+        :param samples_list: A list of samples to exclude.
+        :type samples_list: list
+
+        The returned genotype vectors will not have genotypes for excluded
+        samples (i.e. they will be n elements shorter, n = len(samples_list))
+
+        This is a configuration option.
+
+        """
         if self._frozen:
             raise FrozenDatabaseError()
 
@@ -395,7 +464,14 @@ class MemoryImpute2Geno(AbstractGenotypeDatabase):
 
 
 class PlinkGenotypeDatabase(AbstractGenotypeDatabase):
-    """Class representing genotypes from binary plink files."""
+    """Container for binary PLINK files.
+
+    :param prefix: The prefix of the PLINK bed, bim, fam files.
+    :type prefix: str
+
+    This container relies on `pyplink <http://github.org/lemieuxl/pyplink>`_.
+
+    """
     def __init__(self, prefix, **kwargs):
         if not HAS_PYPLINK:
             raise Exception("Install pyplink to use the '{}' class.".format(
@@ -415,12 +491,22 @@ class PlinkGenotypeDatabase(AbstractGenotypeDatabase):
         super(PlinkGenotypeDatabase, self).__init__(**kwargs)
 
     def get_sample_order(self):
+        """Return a list of the (ordered) samples as represented in the
+           database.
+
+        """
         return list(self.fam["iid"].values)
 
     def get_genotypes(self, variant_name):
+        """Returns a genotype vector for the given variant."""
         return self.ped.get_geno_marker(variant_name)
 
     def experiment_init(self, experiment):
+        """Initialization method called by the Experiment.
+
+        Applies filtering, creates and fills the database.
+
+        """
         # Create the table.
         super(PlinkGenotypeDatabase, self).experiment_init(experiment)
 
@@ -465,6 +551,11 @@ class PlinkGenotypeDatabase(AbstractGenotypeDatabase):
 
     # Filtering methods.
     def filter_name(self, variant_list):
+        """Filter by variant name.
+
+        This is a configuration option.
+
+        """
         if self._frozen:
             raise FrozenDatabaseError()
 
@@ -475,11 +566,21 @@ class PlinkGenotypeDatabase(AbstractGenotypeDatabase):
                 self.good_names = f.read().split()
 
     def filter_maf(self, maf):
+        """Filters variants by allele frequency (MAF).
+
+        This is a configuration option.
+
+        """
         if self._frozen:
             raise FrozenDatabaseError()
         self.min_maf = maf
 
     def filter_completion(self, rate):
+        """Filters variants by completion rate (rate of no-calls).
+
+        This is a configuration option.
+
+        """
         if self._frozen:
             raise FrozenDatabaseError()
         self.min_rate = rate

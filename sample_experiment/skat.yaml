@@ -6,51 +6,6 @@ Database:
     filename: ~/projects/StatGen/adcy9/data/phenotypes/cohort_phenotypes.xlsx
     exclude_correlated: 0.8
 
-Variables:
-    - name: Infarctus
-      type: discrete
-
-    - name: Valve
-      type: discrete
-
-    - name: Angine
-      type: discrete
-
-    - name: Diabete
-      type: discrete
-
-    - name: BMI
-      type: continuous
-      exclude_outliers: 3  # Samples that are |z| > 3sigma will be exluded.
-      transformation: log
-
-    - name: BPSystolic
-      type: continuous
-
-    - name: BPDiastolic
-      type: continuous
-      transformation: inverse-normal-transform
-
-    - name: PC1
-      type: continuous
-      covariate: Yes
-
-    - name: PC2
-      type: continuous
-      covariate: Yes
-
-    - name: PC3
-      type: continuous
-      covariate: Yes
-
-    - name: GenderFemale
-      type: discrete
-      covariate: Yes
-
-    - name: Age
-      type: continuous
-      covariate: Yes
-
 # Variants can be filtered in the genotype db or on a task specific basis.
 Genotypes:
     pyclass: MemoryImpute2Geno
@@ -73,3 +28,202 @@ Experiment:
           covariates: all # [PC1, PC2, PC3]
           alpha: 0.05
           snp_set_file: ~/projects/StatGen/adcy9/data/skat/snp_set.txt
+
+Variables:
+    - name: BPSystolic
+      type: continuous
+          
+    - name: BPDiastolic
+      type: continuous
+
+    - name: HeartRate
+      type: continuous
+
+    - name: Infarctus
+      type: discrete
+      
+    - name: PCI
+      type: discrete
+    
+    - name: Angine
+      type: discrete
+    
+    - name: Stroke
+      type: discrete
+    
+    - name: CHF
+      type: discrete
+
+    - name: Hypertension
+      type: discrete
+
+    - name: Diabete
+      type: discrete
+
+    - name: Dyslipedimie
+      type: discrete
+
+    - name: Valve
+      type: discrete
+
+    - name: Aorte
+      type: discrete
+
+    - name: Palpitations
+      type: discrete
+
+    - name: Syncope
+      type: discrete
+
+    - name: ArretCard
+      type: discrete
+
+    - name: Arythmie
+      type: discrete
+
+    - name: FibrillationAuriculaire
+      type: discrete
+
+    - name: TachycardieSupra
+      type: discrete
+
+    - name: FlutterAuriculaire
+      type: discrete
+
+    - name: TachyVentriculaire/Fibrillation
+      type: discrete
+
+    - name: BlocAV
+      type: discrete
+
+    - name: TraitementArythmie
+      type: discrete
+
+    - name: FamHxMortSubite
+      type: discrete
+
+    - name: FamHxFibrillation
+      type: discrete
+
+    - name: Depression
+      type: discrete
+
+    - name: colon_irritable
+      type: discrete
+
+    - name: crohn
+      type: discrete
+
+    - name: polypes_cancer
+      type: discrete
+
+    - name: motilite
+      type: discrete
+
+    - name: gastro_any
+      type: discrete
+
+    - name: Obesity
+      type: discrete
+
+    - name: Overweight
+      type: discrete
+
+    - name: MaladVascPerif
+      type: discrete
+
+    - name: Chirurgie
+      type: discrete
+
+    - name: ChirCABG
+      type: discrete
+
+    - name: ChirValveReplace
+      type: discrete
+
+    - name: ChirValveRepair
+      type: discrete
+
+    - name: HeartTrans
+      type: discrete
+
+    - name: ChirCardPeriph
+      type: discrete
+
+    - name: Cancer
+      type: discrete
+
+    - name: CancerOesophage
+      type: discrete
+
+    - name: CancerEstomac
+      type: discrete
+
+    - name: CancerColon
+      type: discrete
+
+    - name: CancerRectum
+      type: discrete
+
+    - name: CancerPancreas
+      type: discrete
+
+    - name: CancerLarynx
+      type: discrete
+
+    - name: CancerTrachBronchLung
+      type: discrete
+
+    - name: CancerSang
+      type: discrete
+
+    - name: CancerPeau
+      type: discrete
+
+    - name: CancerSein
+      type: discrete
+
+    - name: CancerCervixUterus
+      type: discrete
+
+    - name: CancerOvaire
+      type: discrete
+
+    - name: CancerProstate
+      type: discrete
+
+    - name: CancerBladder
+      type: discrete
+
+    - name: CancerKidney
+      type: discrete
+
+    - name: CancerLiver
+      type: discrete
+
+    - name: CancerBrain
+      type: discrete
+
+    - name: BMI
+      type: continuous
+      covariate: No
+
+    - name: PC1
+      type: continuous
+      covariate: Yes
+
+    - name: PC2
+      type: continuous
+      covariate: Yes
+
+    - name: PC3
+      type: continuous
+      covariate: Yes
+
+    - name: GenderFemale
+      type: discrete
+      covariate: Yes
+
+    - name: Age
+      type: continuous
+      covariate: Yes

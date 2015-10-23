@@ -245,6 +245,19 @@ class Backend(object):
         This is assuming we're expecting a uniform distribution. We also take
         a log transform to accentuate small differences.
 
+        .. code-block:: json
+
+            out = {
+                "ci": [(ci_low, ci_high)],
+                "outcomes": ["phen1", "phen2", ...],
+                "expected": [exp1, exp2, ...],
+                "lines": {
+                    "phen1": [obs1, obs2, ...],
+                    "phen2": [obs1, obs2, ...],
+                    ...
+                }
+            }
+
         """
         # Get the association p values (or other significance metric).
         # expected, observed, ci, phenotype, variant, effect.
@@ -277,16 +290,6 @@ class Backend(object):
         phenotype = None
         rank = 1
 
-        # out = {
-        #     "ci": [(ci_low, ci_high)],
-        #     "outcomes": ["phen1", "phen2", ...],
-        #     "expected": [exp1, exp2, ...],
-        #     "lines": {
-        #         "phen1": [obs1, obs2, ...],
-        #         "phen2": [obs1, obs2, ...],
-        #         ...
-        #     }
-        # }
         ranks = np.arange(1, n + 1)
         out = {
             "n": n,

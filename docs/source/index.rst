@@ -9,12 +9,39 @@
 Forward is a bioinformatics utility to facilitate phenomic studies using
 genetic cohorts (`i.e` it was not designed for pheWAS studies based on
 electronic medical records). It was built with a strong emphasis on
-flexibility, performance and reproductibility. The documented interfaces make
+flexibility, performance and reproducibility. The documented interfaces make
 it easy for bioinformaticians to extend `Forward`'s capabilities by writing
 their own implementations (`e.g.` to add support for a new file format or to
 optimize computation for their dataset) and the automatic reporting and
 archiving functionality greatly facilitate the dissemination and reproduction
 of results.
+
+.. _forward_schema_figure:
+
+.. figure:: _static/images/forward_schema.png
+    :align: center
+    :width: 550px
+    :alt: Application design schema.
+
+    The different components of `Forward`. The customizable `components` have
+    the tool icon.
+
+Contents
+=========
+
+.. toctree::
+   :maxdepth: 2
+
+   available_implementations.rst
+
+   abstracts.rst
+
+   api.rst
+
+   database.rst
+
+   report.rst
+
 
 Quick start
 ============
@@ -145,7 +172,7 @@ configuration file.
 
 .. code-block:: bash
 
-    ./forward/scripts/cli.py my_configuration.yaml
+    forward-cli.py run my_configuration.yaml
 
 A sample outpout will then look like:
 
@@ -161,11 +188,10 @@ A sample outpout will then look like:
     INFO:root:Running a logistic regression analysis.
     INFO:root:Running a linear regression analysis.
     INFO:forward.experiment:Completed all tasks in 00:00:51.
-    INFO:werkzeug: * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
-    INFO:werkzeug: * Restarting with stat
 
-To view the generated interactive report, you can then go to
-``http://127.0.0.1:5000/`` with your favorite browser and look at the results.
+To view the generated interactive report, you can then follow the on-screen
+instructions and go to
+``http://127.0.0.1:5000/`` with your favorite browser.
 
 A sample report is available on `StatGen's website <http://www.statgen.org/forward/fto>`_.
 
@@ -191,7 +217,7 @@ been created: ::
                 └── task_info.pkl
 
 This contains all the results and information needed to describe the
-experiment. The only missing thing for perfect reproductibility is a copy of
+experiment. The only missing thing for perfect reproducibility is a copy of
 the input files. Eventually, an opt-out feature will allow users to have
 automatic archiving of the input files.
 
@@ -255,20 +281,6 @@ This is the "low-level" alternative for browsing results from `Forward`
 experiments. Alternatively, if you dislike the web-based report but still want
 easy access to experiment results, you can use the
 :py:class:`forward.backend.Backend` class directly from your own Python script.
-
-
-
-Contents
-=========
-
-.. toctree::
-   :maxdepth: 2
-
-   abstracts.rst
-
-   api.rst
-
-   database.rst
 
 
 Indices and tables
