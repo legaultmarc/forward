@@ -166,7 +166,7 @@ Running an experiment
 ---------------------
 
 To run the newly created configuration file, you can use the command line
-interface script (``forward/scripts/cli.py``). Eventually, this will be
+interface script (``forward/scripts/forward-cli.py``). Eventually, this will be
 automatically installed. The usage is simple, just pass the path to the
 configuration file.
 
@@ -181,7 +181,7 @@ A sample outpout will then look like:
     INFO:forward.genotype:Loading samples from data/impute2/forward_samples.txt
     INFO:forward.genotype:Setting the MAF threshold to 0.01
     INFO:forward.genotype:Setting the completion threshold to 0.95
-    INFO:forward.genotype:Keeping only variants with IDs in file: '/data/impute2/chr16.imputed.good_sites'
+    INFO:forward.genotype:Keeping only variants with IDs in file: 'data/impute2/chr16.imputed.good_sites'
     INFO:forward.experiment:The build set for this experiment is GRCh37.
     WARNING:forward.phenotype.db:Some samples were discarded when reordering phenotype information (1343 samples discarded). This could be because no genotype information is available for these samples.
     INFO:forward.genotype:Built the variant database (17 entries).
@@ -189,9 +189,19 @@ A sample outpout will then look like:
     INFO:root:Running a linear regression analysis.
     INFO:forward.experiment:Completed all tasks in 00:00:51.
 
+    To view the interactive report, use the forward-cli.py script:
+
+    forward-cli.py report my_experiment
+    
+
 To view the generated interactive report, you can then follow the on-screen
-instructions and go to
-``http://127.0.0.1:5000/`` with your favorite browser.
+instructions:
+
+.. code-block:: bash
+
+    forward-cli.py report my_experiment
+
+and go to ``http://127.0.0.1:5000/forward`` with your favorite browser.
 
 A sample report is available on `StatGen's website <http://www.statgen.org/forward/fto>`_.
 

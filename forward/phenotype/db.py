@@ -20,7 +20,6 @@ import numpy as np
 
 from ..statistics.utilities import inverse_normal_transformation
 from ..utils import abstract, dispatch_methods, expand
-from .variables import ContinuousVariable, DiscreteVariable, Variable
 
 __all__ = ["ExcelPhenotypeDatabase"]
 
@@ -42,7 +41,7 @@ class AbstractPhenotypeDatabase(object):
 
     def get_phenotypes(self):
         """Returns a list of phenotypes available in this database.
-        
+
         :returns: List of available phenotype names.
         :rtype: str
 
@@ -107,22 +106,6 @@ class AbstractPhenotypeDatabase(object):
 
         :returns: A list of samples in the same order as the phenotype vector.
         :rtype: list
-
-        """
-        raise NotImplementedError()
-
-    def get_related_phenotype_exclusions(self):
-        """Get the phenotypes for which there was an exclusion based on
-        correlation.
-
-        Using Forward, it is possible to use the "exclude_correlated" function
-        to exclude from controls samples that are cases for a related
-        (correlated) phenotype.
-
-        Implementations often rely on simple attributes for this functionality.
-
-        In order to access this information in the report, it is necessary to
-        implement this function.
 
         """
         raise NotImplementedError()
@@ -197,7 +180,7 @@ class AbstractPhenotypeDatabase(object):
 
     def get_correlation_matrix(self, names):
         """Get a correlation matrix for the specified names.
-        
+
         :param names: A list of variable names.
         :type names: list
 
@@ -207,6 +190,7 @@ class AbstractPhenotypeDatabase(object):
         This is useful to exclude correlated phenotypes as controls.
         """
         raise NotImplementedError()
+
 
 @abstract
 class PandasPhenotypeDatabase(AbstractPhenotypeDatabase):
@@ -254,7 +238,7 @@ class PandasPhenotypeDatabase(AbstractPhenotypeDatabase):
             for j in np.where(abs(mat[i, :]) >= self._exclusion_threshold)[0]:
                 if j != i:
                     # j is a candidate related outcome.
-                    valid = (variables[j].variable_type == "discrete" and 
+                    valid = (variables[j].variable_type == "discrete" and
                              not variables[j].is_covariate)
                     if valid:
                         # Exclude and write down.
@@ -302,20 +286,15 @@ class PandasPhenotypeDatabase(AbstractPhenotypeDatabase):
         if name not in self.data.columns:
             raise ValueError("'{}' is not in the database.".format(name))
 
-        vect =  self.data.loc[:, name].values
+        vect = self.data.loc[:, name].values
         if variable.variable_type == "continuous" and variable.transformation:
             vect = apply_transformation(variable.transformation, vect)
 
         return vect
 
-    def get_related_phenotype_exclusions(self):
-        if hasattr(self, "related_phenotypes"):
-            return self.related_phenotypes
-        return None
-
     def exclude_correlated(self, threshold):
         """This is called if the user specified it in the configuration.
-        
+
         Because we need the Variables to properly compute the exclusions, we
         will just remember that the user wants exclusions and wait for the
         experiment to pass the variables to define the exclusion mappings.

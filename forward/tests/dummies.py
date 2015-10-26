@@ -14,7 +14,6 @@ import shutil
 import numpy as np
 
 from ..phenotype.db import AbstractPhenotypeDatabase
-from ..phenotype.variables import Variable
 from ..genotype import AbstractGenotypeDatabase, Variant
 from ..tasks import AbstractTask
 from ..experiment import Experiment
@@ -53,6 +52,27 @@ class DummyPhenDatabase(AbstractPhenotypeDatabase):
             # Can't put NaN in int vector.
             self.data[k] = self.data[k].astype(float)
             self.data[k][mask] = np.nan
+
+    def set_experiment_variables(self, variables):
+        db_vars = set(self.data.keys())
+        user_vars = set([i.name for i in variables])
+
+        missing = user_vars - db_vars
+
+        if missing:
+            raise ValueError("Could not find variable(s): '{}'".format(
+                ", ".join(list(missing))
+            ))
+
+        for extra in (db_vars - user_vars):
+            del self.data[extra]
+
+    def exclude_correlated(self):
+        raise NotImplementedError("This implementation is not smart enough "
+                                  "to exclude correlated outcomes.")
+
+    def get_phenotype_relation_threshold(self):
+        return float("+infinity")
 
     def get_phenotypes(self):
         return list(self.data.keys())
@@ -215,7 +235,7 @@ class DummyGenotypeDatabase(AbstractGenotypeDatabase):
 
 class DummyExperiment(Experiment):
     """Dummy experiment to use for testing.
-    
+
     This is used when testing the Genotype database implementation to make sure
     that the database gets filled.
 
@@ -229,7 +249,7 @@ class DummyExperiment(Experiment):
         # Create a directory for the experiment.
         try:
             os.makedirs(self.name)
-        except OSError as e:  # pragma: no cover
+        except OSError:  # pragma: no cover
             self.clean()
 
         # Create a sqlalchemy engine and bind it to the session.
@@ -241,6 +261,7 @@ class DummyExperiment(Experiment):
 
     def clean(self):
         shutil.rmtree(self.name)
+
 
 class DummyTask(AbstractTask):
     pass

@@ -39,6 +39,10 @@ class TestExperiment(unittest.TestCase):
         ]
         tasks = []
 
+        try:
+            shutil.rmtree(".fwd_test_experiment")
+        except Exception:
+            pass
         self.experiment = Experiment(".fwd_test_experiment", phen_db,
                                      geno_db, variables, tasks, 1)
 
@@ -86,8 +90,17 @@ class TestExperiment(unittest.TestCase):
 
     def test_add_result(self):
         """Add results using the experiment method."""
-        self.experiment.add_result("variant", "test1", "snp1", "var1", 1e-7, 3,
-                                   0.1, 2.9, 3.1)
+        self.experiment.add_result(
+            tested_entity="variant",
+            task_name="test1",
+            entity_name="snp1",
+            phenotype="var1",
+            significance=1e-7,
+            coefficient=3,
+            standard_error=0.1,
+            confidence_interval_min=2.9,
+            confidence_interval_max=3.1
+        )
         self.commit()
 
         result = self.query(ExperimentResult).one()
@@ -101,22 +114,13 @@ class TestExperiment(unittest.TestCase):
         self.assertEqual(result.confidence_interval_min, 2.9)
         self.assertEqual(result.confidence_interval_max, 3.1)
 
-    def test_add_result_variable(self):
-        """Add results using using a variable object."""
-        var = DiscreteVariable("var1")
-        self.experiment.add_result("variant", "test1", "snp1", var, 1e-7, 3,
-                                   0.1, 2.9, 3.1)
-        self.commit()
-
-        result = self.query(ExperimentResult.phenotype).one()[0]
-        self.assertEqual(var.name, result)
-
     def test_experiment_info_init(self):
         info = self.experiment.info
         self.assertEqual(info["name"], ".fwd_test_experiment")
+
         self.assertEqual(
             info["engine_url"],
-            Experiment.get_engine(info["name"], "sqlite").url
+            str(Experiment.get_engine(info["name"], "sqlite").url)
         )
         self.assertTrue(type(info["start_time"]) is datetime.datetime)
 

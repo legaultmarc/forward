@@ -85,6 +85,8 @@ class ExperimentResult(SQLAlchemyBase):
     | results_type            | Polymorphic identity to identify | String(25) |
     |                         | (default: 'GenericResults')      |            |
     +-------------------------+----------------------------------+------------+
+    | task_name               | Name of the task                 | String(25) |
+    +-------------------------+----------------------------------+------------+
     | entity_name             | Variant or snp set identifier    | String(25) |
     +-------------------------+----------------------------------+------------+
     | phenotype               | Tested outcome                   | String(30) |
@@ -232,7 +234,7 @@ class Experiment(object):
 
         for variable in self.variables:
             v = self.phenotypes.get_phenotype_vector(variable)
-            dataset = hdf5_file.create_dataset(variable.name, data=v)
+            hdf5_file.create_dataset(variable.name, data=v)
 
         hdf5_file.close()
 
@@ -254,6 +256,13 @@ class Experiment(object):
         })
 
     def add_result(self, **kwargs):
+        """Add a result to the experiment database.
+
+        The named parameters should be columns in the database and their
+        arguments should have the right type. An InterfaceError will be
+        raised by the ORM if it doesn't understand the data.
+
+        """
         result = ExperimentResult(**kwargs)
         self.session.add(result)
 
