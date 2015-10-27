@@ -85,7 +85,8 @@ the files are in the `forward/static` subdirectory of the repo. If you want
 to extend the report without adding js dependencies, you don't need to take
 care of Bower, because all of the required files are included in the repo. This
 decision was made to make it easier for developers to play with the frond-end
-without tedious configuration.
+without tedious configuration. If you want to update the js dependencies, you
+may edit the ``bower.json`` file and run ``bower update``.
 
 Nonetheless, front-end developers will need to build their javascript. This is
 because `react` code uses `JSX` which needs to be converted to regular

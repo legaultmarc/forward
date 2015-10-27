@@ -1,6 +1,6 @@
 {
   "name": "forwardUI",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "homepage": "https://github.com/legaultmarc/forward",
   "authors": [
     "Marc-André Legault <legaultmarc@gmail.com>"
@@ -13,7 +13,6 @@
   ],
   "dependencies": {
     "react": "0.13.3",
-    "bokehjs": "http://cdn.pydata.org/bokeh/release/bokeh-0.9.1.min.js",
     "jquery": "2.1.4",
     "d3": "3.5.6"
   },

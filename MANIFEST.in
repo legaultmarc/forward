@@ -1,5 +1,3 @@
 include README.md
 include LICENSE.txt
-include forward/templates/default.html
-recursive-include forward/templates *
-recursive-include forward/tests/data *
+prune forward/static/js/build/.module-cache
