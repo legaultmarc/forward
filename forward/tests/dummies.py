@@ -214,7 +214,7 @@ class DummyGenotypeDatabase(AbstractGenotypeDatabase):
 
     def get_genotypes(self, variant_name):
         try:
-            return self.genotypes[variant_name]
+            return self.genotypes[variant_name].copy()
         except KeyError:
             raise ValueError("Can't find variant '{}'.".format(variant_name))
 

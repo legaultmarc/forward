@@ -141,9 +141,6 @@ class TestLogisticTask(TestAbstractTask, unittest.TestCase):
             self.assertAlmostEqual(row["P"], result.significance, 3)
 
 
-        # for result in query(ExperimentResult):
-
-
 @unittest.skipIf(not STATSMODELS_AVAILABLE, "statsmodels needs to be installed"
                                             " to test the logistic task.")
 class TestLogisticTaskMultiprocessing(TestLogisticTask):

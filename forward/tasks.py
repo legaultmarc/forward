@@ -34,7 +34,7 @@ from .utils import abstract, Parallel, check_rpy2
 from .experiment import ExperimentResult, result_table
 
 
-__all__ = ["LogisticTest", ]
+__all__ = ["LogisticTest", "LinearTest", "SKATTest"]
 
 
 @abstract
@@ -377,17 +377,26 @@ class LogisticTest(AbstractTask):
         num_tests = 0
 
         # Build the covariate matrix.
-        covar_matrix = np.vstack(tuple([
-            experiment.phenotypes.get_phenotype_vector(covar)
-            for covar in self.covariates
-        ]))
+        if self.covariates:
+            covar_matrix = np.vstack(tuple([
+                experiment.phenotypes.get_phenotype_vector(covar)
+                for covar in self.covariates
+            ]))
 
-        # Add the intercept because statsmodels does not add it automatically.
-        covar_matrix = np.vstack(
-            (np.ones(covar_matrix.shape[1]), covar_matrix)
-        )
-        covar_matrix = covar_matrix.T
-        missing_covar = np.isnan(covar_matrix).any(axis=1)
+            # Add the intercept because statsmodels does not add it
+            # automatically.
+            covar_matrix = np.vstack(
+                (np.ones(covar_matrix.shape[1]), covar_matrix)
+            )
+            covar_matrix = covar_matrix.T
+            missing_covar = np.isnan(covar_matrix).any(axis=1)
+
+        else:
+            # If there are no covariates, we only add the intercept term.
+            n = len(experiment.phenotypes.get_sample_order())
+            covar_matrix = np.ones(n)
+            missing_covar = ~covar_matrix.astype(bool)
+            covar_matrix.shape = (n, 1)
 
         for phenotype in self.outcomes:
             y = experiment.phenotypes.get_phenotype_vector(phenotype)
