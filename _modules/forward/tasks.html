@@ -107,7 +107,7 @@
 <span class="kn">from</span> <span class="nn">.experiment</span> <span class="kn">import</span> <span class="n">ExperimentResult</span><span class="p">,</span> <span class="n">result_table</span>
 
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;LogisticTest&quot;</span><span class="p">,</span> <span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;LogisticTest&quot;</span><span class="p">,</span> <span class="s">&quot;LinearTest&quot;</span><span class="p">,</span> <span class="s">&quot;SKATTest&quot;</span><span class="p">]</span>
 
 
 <span class="nd">@abstract</span>
@@ -450,17 +450,26 @@
         <span class="n">num_tests</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="c"># Build the covariate matrix.</span>
-        <span class="n">covar_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="nb">tuple</span><span class="p">([</span>
-            <span class="n">experiment</span><span class="o">.</span><span class="n">phenotypes</span><span class="o">.</span><span class="n">get_phenotype_vector</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">covar</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">covariates</span>
-        <span class="p">]))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">covariates</span><span class="p">:</span>
+            <span class="n">covar_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="nb">tuple</span><span class="p">([</span>
+                <span class="n">experiment</span><span class="o">.</span><span class="n">phenotypes</span><span class="o">.</span><span class="n">get_phenotype_vector</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">covar</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">covariates</span>
+            <span class="p">]))</span>
 
-        <span class="c"># Add the intercept because statsmodels does not add it automatically.</span>
-        <span class="n">covar_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">covar_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">covar_matrix</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">covar_matrix</span> <span class="o">=</span> <span class="n">covar_matrix</span><span class="o">.</span><span class="n">T</span>
-        <span class="n">missing_covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">covar_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c"># Add the intercept because statsmodels does not add it</span>
+            <span class="c"># automatically.</span>
+            <span class="n">covar_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">covar_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">covar_matrix</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">covar_matrix</span> <span class="o">=</span> <span class="n">covar_matrix</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">missing_covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">covar_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># If there are no covariates, we only add the intercept term.</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">phenotypes</span><span class="o">.</span><span class="n">get_sample_order</span><span class="p">())</span>
+            <span class="n">covar_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">missing_covar</span> <span class="o">=</span> <span class="o">~</span><span class="n">covar_matrix</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+            <span class="n">covar_matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">phenotype</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span><span class="p">:</span>
             <span class="n">y</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">phenotypes</span><span class="o">.</span><span class="n">get_phenotype_vector</span><span class="p">(</span><span class="n">phenotype</span><span class="p">)</span>

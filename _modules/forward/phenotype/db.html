@@ -93,7 +93,6 @@
 
 <span class="kn">from</span> <span class="nn">..statistics.utilities</span> <span class="kn">import</span> <span class="n">inverse_normal_transformation</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">abstract</span><span class="p">,</span> <span class="n">dispatch_methods</span><span class="p">,</span> <span class="n">expand</span>
-<span class="kn">from</span> <span class="nn">.variables</span> <span class="kn">import</span> <span class="n">ContinuousVariable</span><span class="p">,</span> <span class="n">DiscreteVariable</span><span class="p">,</span> <span class="n">Variable</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;ExcelPhenotypeDatabase&quot;</span><span class="p">]</span>
 
@@ -115,7 +114,7 @@
 
 <div class="viewcode-block" id="AbstractPhenotypeDatabase.get_phenotypes"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_phenotypes">[docs]</a>    <span class="k">def</span> <span class="nf">get_phenotypes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns a list of phenotypes available in this database.</span>
-<span class="sd">        </span>
+
 <span class="sd">        :returns: List of available phenotype names.</span>
 <span class="sd">        :rtype: str</span>
 
@@ -180,22 +179,6 @@
 
 <span class="sd">        :returns: A list of samples in the same order as the phenotype vector.</span>
 <span class="sd">        :rtype: list</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
-</div>
-<div class="viewcode-block" id="AbstractPhenotypeDatabase.get_related_phenotype_exclusions"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_related_phenotype_exclusions">[docs]</a>    <span class="k">def</span> <span class="nf">get_related_phenotype_exclusions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the phenotypes for which there was an exclusion based on</span>
-<span class="sd">        correlation.</span>
-
-<span class="sd">        Using Forward, it is possible to use the &quot;exclude_correlated&quot; function</span>
-<span class="sd">        to exclude from controls samples that are cases for a related</span>
-<span class="sd">        (correlated) phenotype.</span>
-
-<span class="sd">        Implementations often rely on simple attributes for this functionality.</span>
-
-<span class="sd">        In order to access this information in the report, it is necessary to</span>
-<span class="sd">        implement this function.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
@@ -270,7 +253,7 @@
 </div>
 <div class="viewcode-block" id="AbstractPhenotypeDatabase.get_correlation_matrix"><a class="viewcode-back" href="../../../abstracts.html#forward.phenotype.db.AbstractPhenotypeDatabase.get_correlation_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">get_correlation_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get a correlation matrix for the specified names.</span>
-<span class="sd">        </span>
+
 <span class="sd">        :param names: A list of variable names.</span>
 <span class="sd">        :type names: list</span>
 
@@ -280,6 +263,7 @@
 <span class="sd">        This is useful to exclude correlated phenotypes as controls.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
 </div></div>
 <span class="nd">@abstract</span>
 <span class="k">class</span> <span class="nc">PandasPhenotypeDatabase</span><span class="p">(</span><span class="n">AbstractPhenotypeDatabase</span><span class="p">):</span>
@@ -327,7 +311,7 @@
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">mat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclusion_threshold</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="n">i</span><span class="p">:</span>
                     <span class="c"># j is a candidate related outcome.</span>
-                    <span class="n">valid</span> <span class="o">=</span> <span class="p">(</span><span class="n">variables</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">variable_type</span> <span class="o">==</span> <span class="s">&quot;discrete&quot;</span> <span class="ow">and</span> 
+                    <span class="n">valid</span> <span class="o">=</span> <span class="p">(</span><span class="n">variables</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">variable_type</span> <span class="o">==</span> <span class="s">&quot;discrete&quot;</span> <span class="ow">and</span>
                              <span class="ow">not</span> <span class="n">variables</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">is_covariate</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">valid</span><span class="p">:</span>
                         <span class="c"># Exclude and write down.</span>
@@ -375,20 +359,15 @@
         <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;&#39;{}&#39; is not in the database.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
 
-        <span class="n">vect</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">vect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
         <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">variable_type</span> <span class="o">==</span> <span class="s">&quot;continuous&quot;</span> <span class="ow">and</span> <span class="n">variable</span><span class="o">.</span><span class="n">transformation</span><span class="p">:</span>
             <span class="n">vect</span> <span class="o">=</span> <span class="n">apply_transformation</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">transformation</span><span class="p">,</span> <span class="n">vect</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">vect</span>
 
-    <span class="k">def</span> <span class="nf">get_related_phenotype_exclusions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;related_phenotypes&quot;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">related_phenotypes</span>
-        <span class="k">return</span> <span class="bp">None</span>
-
     <span class="k">def</span> <span class="nf">exclude_correlated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;This is called if the user specified it in the configuration.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Because we need the Variables to properly compute the exclusions, we</span>
 <span class="sd">        will just remember that the user wants exclusions and wait for the</span>
 <span class="sd">        experiment to pass the variables to define the exclusion mappings.</span>

@@ -55,6 +55,7 @@
   <ul>
 <li><a class="reference internal" href="#"><cite>Forward</cite> Documentation</a></li>
 <li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
 <li><a class="reference internal" href="#quick-start">Quick start</a><ul>
 <li><a class="reference internal" href="#configuration-files">Configuration files</a></li>
 <li><a class="reference internal" href="#running-an-experiment">Running an experiment</a></li>
@@ -144,6 +145,20 @@ the tool icon.</span></p>
 </ul>
 </li>
 </ul>
+</div>
+</div>
+<div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>To install Forward, simply run:</p>
+<div class="highlight-bash"><div class="highlight"><pre>pip install forward
+</pre></div>
+</div>
+<p>You can then run the tests using:</p>
+<div class="highlight-bash"><div class="highlight"><pre>python -c <span class="s1">&#39;import forward; forward.test()&#39;</span>
+
+<span class="c"># Or if you want more verbosity:</span>
+python -c <span class="s1">&#39;import forward; forward.test(2)&#39;</span>
+</pre></div>
 </div>
 </div>
 <div class="section" id="quick-start">
@@ -313,7 +328,7 @@ are actively working on other statistical tests.</p>
 interface script (<code class="docutils literal"><span class="pre">forward/scripts/forward-cli.py</span></code>). Eventually, this will be
 automatically installed. The usage is simple, just pass the path to the
 configuration file.</p>
-<div class="highlight-bash"><div class="highlight"><pre>forward-cli.py run my_configuration.yaml
+<div class="highlight-bash"><div class="highlight"><pre>forward-cli run my_configuration.yaml
 </pre></div>
 </div>
 <p>A sample outpout will then look like:</p>
@@ -328,14 +343,14 @@ INFO:root:Running a logistic regression analysis.
 INFO:root:Running a linear regression analysis.
 INFO:forward.experiment:Completed all tasks in 00:00:51.
 
-To view the interactive report, use the forward-cli.py script:
+To view the interactive report, use the forward-cli script:
 
-forward-cli.py report my_experiment
+forward-cli report my_experiment
 </pre></div>
 </div>
 <p>To view the generated interactive report, you can then follow the on-screen
 instructions:</p>
-<div class="highlight-bash"><div class="highlight"><pre>forward-cli.py report my_experiment
+<div class="highlight-bash"><div class="highlight"><pre>forward-cli report my_experiment
 </pre></div>
 </div>
 <p>and go to <code class="docutils literal"><span class="pre">http://127.0.0.1:5000/forward</span></code> with your favorite browser.</p>

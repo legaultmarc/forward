@@ -158,6 +158,8 @@
 <span class="sd">    | results_type            | Polymorphic identity to identify | String(25) |</span>
 <span class="sd">    |                         | (default: &#39;GenericResults&#39;)      |            |</span>
 <span class="sd">    +-------------------------+----------------------------------+------------+</span>
+<span class="sd">    | task_name               | Name of the task                 | String(25) |</span>
+<span class="sd">    +-------------------------+----------------------------------+------------+</span>
 <span class="sd">    | entity_name             | Variant or snp set identifier    | String(25) |</span>
 <span class="sd">    +-------------------------+----------------------------------+------------+</span>
 <span class="sd">    | phenotype               | Tested outcome                   | String(30) |</span>
@@ -305,7 +307,7 @@
 
         <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
             <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phenotypes</span><span class="o">.</span><span class="n">get_phenotype_vector</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
-            <span class="n">dataset</span> <span class="o">=</span> <span class="n">hdf5_file</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">hdf5_file</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
 
         <span class="n">hdf5_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
@@ -327,6 +329,13 @@
         <span class="p">})</span>
 
     <span class="k">def</span> <span class="nf">add_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a result to the experiment database.</span>
+
+<span class="sd">        The named parameters should be columns in the database and their</span>
+<span class="sd">        arguments should have the right type. An InterfaceError will be</span>
+<span class="sd">        raised by the ORM if it doesn&#39;t understand the data.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">ExperimentResult</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 
