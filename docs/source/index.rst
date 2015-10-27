@@ -42,6 +42,24 @@ Contents
 
    report.rst
 
+Installation
+=============
+
+To install Forward, simply run:
+
+.. code-block:: bash
+
+    pip install forward
+
+You can then run the tests using:
+
+.. code-block:: bash
+
+    python -c 'import forward; forward.test()'
+
+    # Or if you want more verbosity:
+    python -c 'import forward; forward.test(2)'
+
 
 Quick start
 ============
@@ -172,7 +190,7 @@ configuration file.
 
 .. code-block:: bash
 
-    forward-cli.py run my_configuration.yaml
+    forward-cli run my_configuration.yaml
 
 A sample outpout will then look like:
 
@@ -189,9 +207,9 @@ A sample outpout will then look like:
     INFO:root:Running a linear regression analysis.
     INFO:forward.experiment:Completed all tasks in 00:00:51.
 
-    To view the interactive report, use the forward-cli.py script:
+    To view the interactive report, use the forward-cli script:
 
-    forward-cli.py report my_experiment
+    forward-cli report my_experiment
     
 
 To view the generated interactive report, you can then follow the on-screen
@@ -199,7 +217,7 @@ instructions:
 
 .. code-block:: bash
 
-    forward-cli.py report my_experiment
+    forward-cli report my_experiment
 
 and go to ``http://127.0.0.1:5000/forward`` with your favorite browser.
 
