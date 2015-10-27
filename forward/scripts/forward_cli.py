@@ -26,9 +26,9 @@ def run_from_configuration(yaml_file):
     experiment.run_tasks()
 
     print()
-    print("To view the interactive report, use the forward-cli.py script:")
+    print("To view the interactive report, use the forward-cli script:")
     print()
-    print("forward-cli.py report {}".format(experiment.name))
+    print("forward-cli report {}".format(experiment.name))
     print()
 
 

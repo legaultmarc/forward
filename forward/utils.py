@@ -104,7 +104,40 @@ def check_rpy2():
         return False
 
 
-class Parallel(object):
+def Parallel(num_cpu, f):
+    if num_cpu == 1:
+        return SingleCoreWorkQueue(f)
+    elif num_cpu > 1:
+        return MultiprocessingQueue(num_cpu, f)
+    else:
+        raise ValueError("Invalid number of CPUs to use ({}).".format(num_cpu))
+
+
+class SingleCoreWorkQueue(object):
+    """Emulates the Parallel interface without using multiple CPUs.
+
+    :param f: The target function.
+    :type f: function
+
+    See :py:class:`Parallel` for more details.
+
+    """
+    def __init__(self, f):
+        self.f = f
+        self.results = []
+
+    def push_work(self, tu):
+        self.results.append(self.f(*tu))
+
+    def get_result(self):
+        if self.results:
+            return self.results.pop()
+
+    def done_pushing(self):
+        pass
+
+
+class MultiprocessingQueue(object):
     """Class used to parallelize computation.
 
     :param num_cpu: Number of CPUs to use (size of the worker pool).
