@@ -693,8 +693,8 @@ def handle_invalid_usage(error):
     return response
 
 
-def serve():
-    app.run(debug=True)
+def serve(port=5000, debug=True):
+    app.run(port=port, debug=debug)
 
 
 def nan_to_none(li):

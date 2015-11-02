@@ -14,10 +14,11 @@ Command line interface script to run gene-phenome experiments using the forward
 package.
 """
 
+import sys
 import argparse
 
 from forward.configuration import parse_configuration
-from forward import backend
+from forward import backend, FORWARD_REPORT_ROOT
 
 
 def run_from_configuration(yaml_file):
@@ -38,6 +39,10 @@ def show_report(experiment_name):
 
 
 def parse_args():
+    passthrough = sys.argv[-1] == "passthrough"
+    if passthrough:
+        sys.argv.pop()
+
     description = ("Command line utility to run Forward or to launch the "
                    "interactive report.")
     parser = argparse.ArgumentParser(description=description)
@@ -69,6 +74,13 @@ def parse_args():
         return run_from_configuration(args.yaml_filename)
 
     if args.command == "report":
+        if not passthrough:
+            print("Starting the server. Visit:")
+            print()
+            print("http://localhost:5000{}".format(FORWARD_REPORT_ROOT))
+            print()
+
+        sys.argv.append("passthrough")
         return show_report(args.experiment)
 
 if __name__ == "__main__":
